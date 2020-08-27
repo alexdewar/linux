@@ -197,6 +197,37 @@ sysfs_strscpy((dest), (src),                                         \
 		)                                                     \
 )
 
+/**
+ *	sysfs_sprinti - emit an integer-type value from a sysfs show method
+ *	@buf: destination buffer
+ *	@x: the variable whose value is to be shown
+ *
+ *	The appropriate format is passed to sprintf() according to the type of
+ *	x, preventing accidental misuse of format strings.
+ */
+#define sysfs_sprinti(buf, x)                                                               \
+({                                                                                          \
+	BUILD_BUG_ON(!__builtin_types_compatible_p(typeof(x), unsigned int) &&               \
+			!__builtin_types_compatible_p(typeof(x), unsigned long) &&           \
+			!__builtin_types_compatible_p(typeof(x), unsigned long long) &&      \
+			!__builtin_types_compatible_p(typeof(x), int) &&                     \
+			!__builtin_types_compatible_p(typeof(x), short) &&                   \
+			!__builtin_types_compatible_p(typeof(x), unsigned short));           \
+	__builtin_choose_expr(                                                               \
+		__builtin_types_compatible_p(typeof(x), unsigned int),                       \
+		sprintf(buf, "%u\n", (unsigned int)(x)),                                     \
+		__builtin_choose_expr(                                                       \
+			__builtin_types_compatible_p(typeof(x), unsigned long),              \
+			sprintf(buf, "%lu\n", (unsigned long)(x)),                           \
+			__builtin_choose_expr(                                               \
+				__builtin_types_compatible_p(typeof(x), unsigned long long), \
+				sprintf(buf, "%llu\n", (unsigned long long)(x)),             \
+				sprintf(buf, "%d\n", (int)(x))                               \
+			)                                                                    \
+		)                                                                            \
+	);                                                                                   \
+})
+
 struct file;
 struct vm_area_struct;
 
