@@ -707,3 +707,17 @@ int sysfs_change_owner(struct kobject *kobj, kuid_t kuid, kgid_t kgid)
 	return 0;
 }
 EXPORT_SYMBOL_GPL(sysfs_change_owner);
+
+ssize_t __sysfs_strscpy(char *dest, const char *src, size_t count)
+{
+	ssize_t written;
+
+	if (count > PAGE_SIZE)
+		return -EINVAL;
+
+	written = strscpy(dest, src, count - 1);
+	dest[written++] = '\n';
+	dest[written] = '\0';
+	return written;
+}
+EXPORT_SYMBOL_GPL(__sysfs_strscpy);

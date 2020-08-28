@@ -162,6 +162,41 @@ static const struct attribute_group _name##_group = {		\
 };								\
 __ATTRIBUTE_GROUPS(_name)
 
+/**
+ *	sysfs_strscpy - return a string from a show method with terminating
+ *	newline to a maximum of count bytes
+ *	@dest: destination buffer
+ *	@src: string to be emitted
+ *	@count: maximum number of bytes to be written to dest
+ */
+#define sysfs_strscpy(dest, src, count)                                       \
+({                                                                            \
+	BUILD_BUG_ON(__builtin_constant_p(count) && (count) > PAGE_SIZE);      \
+	__sysfs_strscpy((dest), (src), (count));                               \
+})
+
+ssize_t __sysfs_strscpy(char *dest, const char *src, size_t count);
+
+/**
+ *	sysfs_strcpy - return a string from a show method with terminating
+ *	newline
+ *	@dest: destination buffer
+ *	@src: string to be emitted
+ *
+ *	This method will only write a maximum of PAGE_SIZE bytes to dest,
+ *	ensuring that the output buffer is not overflown. If src is a
+ *	fixed-size array, a maximum of sizeof(src) bytes will be copied,
+ *	ensuring that memory is not read beyond the end of the array.
+ */
+#define sysfs_strcpy(dest, src)                                      \
+sysfs_strscpy((dest), (src),                                         \
+		__builtin_choose_expr(                                \
+			__same_type((src), &(src)[0]),                \
+			PAGE_SIZE,                                    \
+			min(sizeof(src) + 2, PAGE_SIZE)               \
+		)                                                     \
+)
+
 struct file;
 struct vm_area_struct;
 
