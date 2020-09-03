@@ -16,6 +16,7 @@
 #include <linux/i2c.h>
 #include <linux/module.h>
 #include <drm/drm_crtc.h>
+#include <drm/drm_bridge.h>
 
 /* Register addresses */
 #define VENDOR_ID_REG 0x00
