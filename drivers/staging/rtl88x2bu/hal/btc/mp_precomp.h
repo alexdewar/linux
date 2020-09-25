@@ -21,12 +21,8 @@
 
 #define BT_TMP_BUF_SIZE	100
 
-#ifdef PLATFORM_LINUX
 #define rsprintf snprintf
 #define rstrncat(dst, src, src_size) strncat(dst, src, src_size)
-#elif defined(PLATFORM_WINDOWS)
-#define rsprintf sprintf_s
-#endif
 
 #define DCMD_Printf			DBG_BT_INFO
 

@@ -34,17 +34,9 @@
 	#include <net/arp.h>
 #endif
 
-#ifdef PLATFORM_OS_XP
-	#include <drv_types_xp.h>
-#endif
 
-#ifdef PLATFORM_OS_CE
-	#include <drv_types_ce.h>
-#endif
 
-#ifdef PLATFORM_LINUX
 	#include <drv_types_linux.h>
-#endif
 
 enum _NIC_VERSION {
 
@@ -1183,13 +1175,11 @@ struct dvobj_priv {
 
 	struct rtw_traffic_statistics	traffic_stat;
 
-#ifdef PLATFORM_LINUX
 	_thread_hdl_ rtnl_lock_holder;
 
 	#if defined(CONFIG_IOCTL_CFG80211) && defined(RTW_SINGLE_WIPHY)
 	struct wiphy *wiphy;
 	#endif
-#endif /* PLATFORM_LINUX */
 
 #ifdef CONFIG_SWTIMER_BASED_TXBCN
 	_timer txbcn_timer;
@@ -1246,15 +1236,9 @@ struct dvobj_priv {
 	u8 *usb_vendor_req_buf;
 #endif
 
-#ifdef PLATFORM_LINUX
 	struct usb_interface *pusbintf;
 	struct usb_device *pusbdev;
-#endif/* PLATFORM_LINUX */
 
-#ifdef PLATFORM_FREEBSD
-	struct usb_interface *pusbintf;
-	struct usb_device *pusbdev;
-#endif/* PLATFORM_FREEBSD */
 
 #endif/* CONFIG_USB_HCI */
 
@@ -1262,7 +1246,6 @@ struct dvobj_priv {
 
 #ifdef CONFIG_PCI_HCI
 
-#ifdef PLATFORM_LINUX
 	struct pci_dev *ppcidev;
 
 	/* PCI MEM map */
@@ -1293,7 +1276,6 @@ struct dvobj_priv {
 	_lock	irq_th_lock;
 
 	u8	bdma64;
-#endif/* PLATFORM_LINUX */
 
 #endif/* CONFIG_PCI_HCI */
 
@@ -1373,7 +1355,6 @@ static inline void dev_clr_drv_stopped(struct dvobj_priv *dvobj)
 #define dev_is_surprise_removed(dvobj)	(ATOMIC_READ(&dvobj->bSurpriseRemoved) == _TRUE)
 #define dev_is_drv_stopped(dvobj)		(ATOMIC_READ(&dvobj->bDriverStopped) == _TRUE)
 
-#ifdef PLATFORM_LINUX
 static inline struct device *dvobj_to_dev(struct dvobj_priv *dvobj)
 {
 	/* todo: get interface type from dvobj and the return the dev accordingly */
@@ -1393,7 +1374,6 @@ static inline struct device *dvobj_to_dev(struct dvobj_priv *dvobj)
 	return &dvobj->ppcidev->dev;
 #endif
 }
-#endif
 
 _adapter *dvobj_get_port0_adapter(struct dvobj_priv *dvobj);
 _adapter *dvobj_get_unregisterd_adapter(struct dvobj_priv *dvobj);
@@ -1569,7 +1549,6 @@ struct _ADAPTER {
 	void (*intf_start)(_adapter *adapter);
 	void (*intf_stop)(_adapter *adapter);
 
-#ifdef PLATFORM_LINUX
 	_nic_hdl pnetdev;
 	char old_ifname[IFNAMSIZ];
 
@@ -1602,13 +1581,7 @@ struct _ADAPTER {
 
 #endif /* CONFIG_IOCTL_CFG80211 */
 
-#endif /* PLATFORM_LINUX */
 
-#ifdef PLATFORM_FREEBSD
-	_nic_hdl pifp;
-	int bup;
-	_lock glock;
-#endif /* PLATFORM_FREEBSD */
 	u8 mac_addr[ETH_ALEN];
 	int net_closed;
 

@@ -1097,12 +1097,6 @@ static void halbtc8822b1ant_update_wifi_link_info(struct btc_coexist *btc,
 	 * Only PCIe/USB can set 0x454[6] = 1 to solve this issue,
 	 * WL SDIO/USB interface need driver support.
 	 */
-#ifdef PLATFORM_WINDOWS
-	if (btc->chip_interface != BTC_INTF_SDIO)
-		btc->btc_write_1byte_bitmask(btc, 0x454, BIT(6), 0x1);
-	else
-		btc->btc_write_1byte_bitmask(btc, 0x454, BIT(6), 0x0);
-#endif
 }
 
 static void halbtc8822b1ant_update_bt_link_info(struct btc_coexist *btc)
@@ -2620,15 +2614,6 @@ void halbtc8822b1ant_set_ant_path(struct btc_coexist *btc,
 			    "[BTCoex], set_ant_path - 1ANT_PHASE_2G_RUNTIME\n");
 		BTC_TRACE(trace_buf);
 
-#ifdef PLATFORM_WINDOWS
-		if (phase == BT_8822B_1ANT_PHASE_2G_FREERUN) {
-			/* set GNT_BT to SW Hi */
-			halbtc8822b1ant_set_gnt_bt(btc, BTC_GNT_SET_SW_HIGH);
-
-			/* Set GNT_WL to SW Hi */
-			halbtc8822b1ant_set_gnt_wl(btc, BTC_GNT_SET_SW_HIGH);
-		} else
-#endif
 		{
 			/* set GNT_BT to PTA */
 			halbtc8822b1ant_set_gnt_bt(btc, BTC_GNT_SET_HW_PTA);
@@ -2735,13 +2720,6 @@ void halbtc8822b1ant_set_ant_path(struct btc_coexist *btc,
 			break;
 		default:
 		case BTC_ANT_PATH_PTA:
-#ifdef PLATFORM_WINDOWS
-			if (phase == BT_8822B_1ANT_PHASE_2G_WLBT ||
-			    phase == BT_8822B_1ANT_PHASE_2G_FREERUN) {
-				ctrl_type = BT_8822B_1ANT_CTRL_BY_BBSW;
-				pos_type = BT_8822B_1ANT_TO_S0WLG_S1BT;
-			} else
-#endif
 			{
 				ctrl_type = BT_8822B_1ANT_CTRL_BY_PTA;
 				pos_type = BT_8822B_1ANT_TO_NOCARE;
@@ -3564,12 +3542,6 @@ halbtc8822b1ant_action_wifi_multiport2g(struct btc_coexist *btc)
 			ant_pase = BT_8822B_1ANT_PHASE_2G_FREERUN;
 			halbtc8822b1ant_set_ant_path(btc, BTC_ANT_PATH_AUTO,
 						     NM_EXCU, ant_pase);
-#ifdef PLATFORM_WINDOWS
-			if (btc->chip_interface == BTC_INTF_PCI &&
-			    coex_sta->a2dp_exist && !coex_sta->is_bt_multi_link)
-				halbtc8822b1ant_table(btc, NM_EXCU, 10);
-			else
-#endif
 				halbtc8822b1ant_table(btc, NM_EXCU, 18);
 			halbtc8822b1ant_tdma(btc, NM_EXCU, FALSE, 8);
 			break;

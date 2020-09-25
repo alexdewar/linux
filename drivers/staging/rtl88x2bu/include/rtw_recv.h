@@ -369,15 +369,12 @@ struct recv_priv {
 	ATOMIC_T	rx_pending_cnt;
 
 #ifdef CONFIG_USB_INTERRUPT_IN_PIPE
-#ifdef PLATFORM_LINUX
 	PURB	int_in_urb;
-#endif
 
 	u8	*int_in_buf;
 #endif /* CONFIG_USB_INTERRUPT_IN_PIPE */
 
 #endif
-#if defined(PLATFORM_LINUX) || defined(PLATFORM_FREEBSD)
 	_tasklet irq_prepare_beacon_tasklet;
 	_tasklet recv_tasklet;
 
@@ -391,7 +388,6 @@ struct recv_priv {
 	struct ifqueue rx_indicate_queue;
 #endif /* CONFIG_RX_INDICATE_QUEUE */
 
-#endif /* defined(PLATFORM_LINUX) || defined(PLATFORM_FREEBSD) */
 
 	u8 *pallocated_recv_buf;
 	u8 *precv_buf;    /* 4 alignment */
@@ -513,11 +509,7 @@ struct recv_buf {
 	int  transfer_len;
 #endif
 
-#if defined(PLATFORM_LINUX)
 	_pkt *pskb;
-#elif defined(PLATFORM_FREEBSD) /* skb solution */
-	struct sk_buff *pskb;
-#endif
 };
 
 

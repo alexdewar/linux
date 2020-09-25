@@ -415,7 +415,6 @@ struct ieee_ibss_seq {
 	_list	list;
 };
 
-#if defined(PLATFORM_LINUX) || defined(PLATFORM_FREEBSD)
 
 struct rtw_ieee80211_hdr {
 	u16 frame_ctl;
@@ -488,7 +487,6 @@ struct rtw_ieee80211s_hdr {
 	u32 rann_interval;
 	u32 rann_metric;
 } __attribute__((packed));
-#endif
 
 enum eap_type {
 	EAP_PACKET = 0,
@@ -598,7 +596,6 @@ enum eap_type {
 
 #define P80211_OUI_LEN 3
 
-#if defined(PLATFORM_LINUX) || defined(PLATFORM_FREEBSD)
 
 struct ieee80211_snap_hdr {
 
@@ -609,7 +606,6 @@ struct ieee80211_snap_hdr {
 
 } __attribute__((packed));
 
-#endif
 
 #define SNAP_SIZE sizeof(struct ieee80211_snap_hdr)
 
@@ -1108,7 +1104,6 @@ struct ieee80211_frag_entry {
 	u8 dst_addr[ETH_ALEN];
 };
 
-#ifndef PLATFORM_FREEBSD /* Baron BSD has already defined */
 struct ieee80211_stats {
 	uint tx_unicast_frames;
 	uint tx_multicast_frames;
@@ -1132,7 +1127,6 @@ struct ieee80211_stats {
 	uint rx_message_in_msg_fragments;
 	uint rx_message_in_bad_msg_fragments;
 };
-#endif /* PLATFORM_FREEBSD */
 struct ieee80211_softmac_stats {
 	uint rx_ass_ok;
 	uint rx_ass_err;
@@ -1174,7 +1168,6 @@ struct ieee80211_softmac_stats {
 #define BIP_MAX_KEYID 5
 #define BIP_AAD_SIZE  20
 
-#if defined(PLATFORM_LINUX)
 struct ieee80211_security {
 	u16 active_key:2,
 	    enabled:1,
@@ -1187,7 +1180,6 @@ struct ieee80211_security {
 	u16 flags;
 } __attribute__((packed));
 
-#endif
 
 /*
 
@@ -1229,7 +1221,6 @@ struct ieee80211_header_data {
 #define MFIE_TYPE_RATES_EX   50
 #define MFIE_TYPE_GENERIC    221
 
-#if defined(PLATFORM_LINUX)
 struct ieee80211_info_element_hdr {
 	u8 id;
 	u8 len;
@@ -1240,7 +1231,6 @@ struct ieee80211_info_element {
 	u8 len;
 	u8 data[0];
 } __attribute__((packed));
-#endif
 
 
 /*
@@ -1264,7 +1254,6 @@ struct ieee80211_info_element {
 #define IEEE80211_DEFAULT_BASIC_RATE 10
 
 
-#if defined(PLATFORM_LINUX)
 struct ieee80211_authentication {
 	struct ieee80211_header_data header;
 	u16 algorithm;
@@ -1302,7 +1291,6 @@ struct ieee80211_assoc_response_frame {
 	u16 aid;
 	/*	struct ieee80211_info_element info_element;  supported rates  */
 } __attribute__((packed));
-#endif
 
 struct ieee80211_txb {
 	u8 nr_frags;
@@ -1399,7 +1387,6 @@ join_res:
 > 0: TID
 */
 
-#ifndef PLATFORM_FREEBSD /* Baron BSD has already defined */
 
 enum ieee80211_state {
 
@@ -1439,7 +1426,6 @@ enum ieee80211_state {
 	IEEE80211_LINKED_SCANNING,
 
 };
-#endif /* PLATFORM_FREEBSD */
 
 #define DEFAULT_MAX_SCAN_AGE (15 * HZ)
 #define DEFAULT_FTS 2346
@@ -1667,9 +1653,7 @@ enum rtw_ieee80211_wnm_actioncode {
 
 #define OUI_MICROSOFT 0x0050f2 /* Microsoft (also used in Wi-Fi specs)
 				* 00:50:F2 */
-#ifndef PLATFORM_FREEBSD /* Baron BSD has defined */
 	#define WME_OUI_TYPE 2
-#endif /* PLATFORM_FREEBSD */
 #define WME_OUI_SUBTYPE_INFORMATION_ELEMENT 0
 #define WME_OUI_SUBTYPE_PARAMETER_ELEMENT 1
 #define WME_OUI_SUBTYPE_TSPEC_ELEMENT 2

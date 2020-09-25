@@ -2445,7 +2445,6 @@ exiting:
 
 #if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
 #ifndef CONFIG_SDIO_RX_COPY
-#ifdef PLATFORM_LINUX
 static void recvframe_expand_pkt(
 	PADAPTER padapter,
 	union recv_frame *prframe)
@@ -2498,9 +2497,6 @@ static void recvframe_expand_pkt(
 	pfhdr->rx_tail = skb_tail_pointer(ppkt);
 	pfhdr->rx_end = skb_end_pointer(ppkt);
 }
-#else /*!= PLATFORM_LINUX*/
-#warning "recvframe_expand_pkt not implement, defrag may crash system"
-#endif
 #endif /*#ifndef CONFIG_SDIO_RX_COPY*/
 #endif
 
@@ -4869,11 +4865,9 @@ thread_return rtw_recv_thread(thread_context context)
 	struct recv_priv *recvpriv = &adapter->recvpriv;
 	s32 err = _SUCCESS;
 #ifdef RTW_RECV_THREAD_HIGH_PRIORITY
-#ifdef PLATFORM_LINUX
 	struct sched_param param = { .sched_priority = 1 };
 
 	sched_setscheduler(current, SCHED_FIFO, &param);
-#endif /* PLATFORM_LINUX */
 #endif /*RTW_RECV_THREAD_HIGH_PRIORITY*/
 	thread_enter("RTW_RECV_THREAD");
 

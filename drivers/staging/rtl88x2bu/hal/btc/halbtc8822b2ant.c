@@ -1177,12 +1177,6 @@ static void halbtc8822b2ant_update_wifi_link_info(struct btc_coexist *btc,
 	 * Only PCIe/USB can set 0x454[6] = 1 to solve this issue,
 	 * WL SDIO/USB interface need driver support.
 	 */
-#ifdef PLATFORM_WINDOWS
-	if (btc->chip_interface != BTC_INTF_SDIO)
-		btc->btc_write_1byte_bitmask(btc, 0x454, BIT(6), 0x1);
-	else
-		btc->btc_write_1byte_bitmask(btc, 0x454, BIT(6), 0x0);
-#endif
 }
 
 static void halbtc8822b2ant_update_bt_link_info(struct btc_coexist *btc)
@@ -2978,13 +2972,6 @@ static void halbtc8822b2ant_action_bt_idle(struct btc_coexist *btc)
 		halbtc8822b2ant_set_ant_path(btc, BTC_ANT_PATH_AUTO, NM_EXCU,
 					     BT_8822B_2ANT_PHASE_2G);
 
-#ifdef PLATFORM_WINDOWS
-	if (coex_sta->wl_noisy_level > 0) {
-		halbtc8822b2ant_table(btc, NM_EXCU, 17);
-		halbtc8822b2ant_tdma(btc, NM_EXCU, FALSE, 0);
-		return;
-	}
-#endif
 
 	if (!coex_sta->gl_wifi_busy) {
 		halbtc8822b2ant_table(btc, NM_EXCU, 8);
