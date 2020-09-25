@@ -95,20 +95,10 @@ struct	evt_priv {
 	#define C2H_QUEUE_MAX_LEN 10
 #endif
 
-#ifdef CONFIG_H2CLBK
-	_sema	lbkevt_done;
-	u8	lbkevt_limit;
-	u8	lbkevt_num;
-	u8	*cmdevt_parm;
-#endif
 	ATOMIC_T event_seq;
 	u8	*evt_buf;	/* shall be non-paged, and 4 bytes aligned		 */
 	u8	*evt_allocated_buf;
 	u32	evt_done_cnt;
-#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
-	u8	*c2h_mem;
-	u8	*allocated_c2h_mem;
-#endif
 
 };
 
@@ -184,7 +174,6 @@ extern void rtw_evt_notify_isr(struct evt_priv *pevtpriv);
 #ifdef CONFIG_P2P
 u8 p2p_protocol_wk_cmd(_adapter *padapter, int intCmdType);
 
-#ifdef CONFIG_IOCTL_CFG80211
 struct p2p_roch_parm {
 	u64 cookie;
 	struct wireless_dev *wdev;
@@ -201,10 +190,8 @@ u8 p2p_roch_cmd(_adapter *adapter
 );
 u8 p2p_cancel_roch_cmd(_adapter *adapter, u64 cookie, struct wireless_dev *wdev, u8 flags);
 
-#endif /* CONFIG_IOCTL_CFG80211 */
 #endif /* CONFIG_P2P */
 
-#ifdef CONFIG_IOCTL_CFG80211 
 u8 rtw_mgnt_tx_cmd(_adapter *adapter, u8 tx_ch, u8 no_cck, const u8 *buf, size_t len, int wait_ack, u8 flags);
 struct mgnt_tx_parm {
 	u8 tx_ch;
@@ -213,7 +200,6 @@ struct mgnt_tx_parm {
 	size_t len;
 	int wait_ack;
 };
-#endif
 
 enum rtw_drvextra_cmd_id {
 	NONE_WK_CID,
@@ -245,9 +231,6 @@ enum rtw_drvextra_cmd_id {
 	TEST_H2C_CID,
 	MP_CMD_WK_CID,
 	CUSTOMER_STR_WK_CID,
-#ifdef CONFIG_RTW_REPEATER_SON
-	RSON_SCAN_WK_CID,
-#endif
 	MGNT_TX_WK_CID,
 	REQ_PER_CMD_WK_CID,
 	SSMPS_WK_CID,
@@ -255,9 +238,7 @@ enum rtw_drvextra_cmd_id {
 	TXSS_WK_CID,
 #endif
 	AC_PARM_CMD_WK_CID,
-#ifdef CONFIG_AP_MODE
 	STOP_AP_WK_CID,
-#endif
 	MAX_WK_CID
 };
 
@@ -688,35 +669,6 @@ struct Tx_Beacon_param {
 
 */
 
-#ifdef CONFIG_H2CLBK
-
-struct seth2clbk_parm {
-	u8 mac[6];
-	u16	s0;
-	u16	s1;
-	u32	w0;
-	u8	b0;
-	u16  s2;
-	u8	b1;
-	u32	w1;
-};
-
-struct geth2clbk_parm {
-	u32 rsv;
-};
-
-struct geth2clbk_rsp {
-	u8	mac[6];
-	u16	s0;
-	u16	s1;
-	u32	w0;
-	u8	b0;
-	u16	s2;
-	u8	b1;
-	u32	w1;
-};
-
-#endif	/* CONFIG_H2CLBK */
 
 /* CMD param Formart for driver extra cmd handler */
 struct drvextra_cmd_parm {
@@ -1029,9 +981,7 @@ extern u8 rtw_clearstakey_cmd(_adapter *padapter, struct sta_info *sta, u8 enque
 
 extern u8 rtw_joinbss_cmd(_adapter  *padapter, struct wlan_network *pnetwork);
 u8 rtw_disassoc_cmd(_adapter *padapter, u32 deauth_timeout_ms, int flags);
-#ifdef CONFIG_AP_MODE
 u8 rtw_stop_ap_cmd(_adapter *adapter, u8 flags);
-#endif
 extern u8 rtw_setopmode_cmd(_adapter  *padapter, NDIS_802_11_NETWORK_INFRASTRUCTURE networktype, u8 flags);
 extern u8 rtw_setdatarate_cmd(_adapter  *padapter, u8 *rateset);
 extern u8 rtw_setbasicrate_cmd(_adapter  *padapter, u8 *rateset);
@@ -1068,9 +1018,6 @@ u8 rtw_lps_change_dtim_cmd(_adapter *padapter, u8 dtim);
 u8 rtw_rpt_timer_cfg_cmd(_adapter *padapter, u16 minRptTime);
 #endif
 
-#ifdef CONFIG_ANTENNA_DIVERSITY
-extern  u8 rtw_antenna_select_cmd(_adapter *padapter, u8 antenna, u8 enqueue);
-#endif
 
 u8 rtw_dm_ra_mask_wk_cmd(_adapter *padapter, u8 *psta);
 
@@ -1080,7 +1027,6 @@ extern u8 rtw_ps_cmd(_adapter *padapter);
 void rtw_dfs_ch_switch_hdl(struct dvobj_priv *dvobj);
 #endif
 
-#ifdef CONFIG_AP_MODE
 u8 rtw_chk_hi_queue_cmd(_adapter *padapter);
 #ifdef CONFIG_DFS_MASTER
 u8 rtw_dfs_rd_cmd(_adapter *adapter, bool enqueue);
@@ -1088,12 +1034,9 @@ void rtw_dfs_rd_timer_hdl(void *ctx);
 void rtw_dfs_rd_en_decision(_adapter *adapter, u8 mlme_act, u8 excl_ifbmp);
 u8 rtw_dfs_rd_en_decision_cmd(_adapter *adapter);
 #endif /* CONFIG_DFS_MASTER */
-#endif /* CONFIG_AP_MODE */
 
-#ifdef CONFIG_BT_COEXIST
 u8 rtw_btinfo_cmd(PADAPTER padapter, u8 *pbuf, u16 length);
 u8 rtw_btc_reduce_wl_txpwr_cmd(_adapter *adapter, u32 val);
-#endif
 
 u8 rtw_test_h2c_cmd(_adapter *adapter, u8 *buf, u8 len);
 
@@ -1123,11 +1066,6 @@ u8 rtw_c2h_reg_wk_cmd(_adapter *adapter, u8 *c2h_evt);
 u8 rtw_c2h_packet_wk_cmd(_adapter *adapter, u8 *c2h_evt, u16 length);
 #endif
 
-#ifdef CONFIG_RTW_REPEATER_SON
-#define RSON_SCAN_PROCESS		10
-#define RSON_SCAN_DISABLE		11
-u8 rtw_rson_scan_wk_cmd(_adapter *adapter, int op);
-#endif
 
 u8 rtw_run_in_thread_cmd(_adapter *adapter, void (*func)(void *), void *context);
 u8 rtw_run_in_thread_cmd_wait(_adapter *adapter, void (*func)(void *), void *context, s32 timeout_ms);

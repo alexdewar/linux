@@ -54,13 +54,9 @@ typedef struct _ADAPTER _adapter, ADAPTER, *PADAPTER;
 #include <rtw_rf.h>
 #include "../core/rtw_chplan.h"
 
-#ifdef CONFIG_80211N_HT
 	#include <rtw_ht.h>
-#endif
 
-#ifdef CONFIG_80211AC_VHT
 	#include <rtw_vht.h>
-#endif
 
 #include <rtw_cmd.h>
 #include <cmd_osdep.h>
@@ -70,9 +66,7 @@ typedef struct _ADAPTER _adapter, ADAPTER, *PADAPTER;
 #include <rtw_recv.h>
 #include <rtw_rm.h>
 
-#ifdef CONFIG_BEAMFORMING
 	#include <rtw_beamforming.h>
-#endif
 
 #include <recv_osdep.h>
 #include <rtw_efuse.h>
@@ -110,21 +104,11 @@ typedef struct _ADAPTER _adapter, ADAPTER, *PADAPTER;
 
 #include <rtw_p2p.h>
 
-#ifdef CONFIG_TDLS
-	#include <rtw_tdls.h>
-#endif /* CONFIG_TDLS */
 
-#ifdef CONFIG_WAPI_SUPPORT
-	#include <rtw_wapi.h>
-#endif /* CONFIG_WAPI_SUPPORT */
 
-#ifdef CONFIG_MP_INCLUDED
 	#include <rtw_mp.h>
-#endif /* CONFIG_MP_INCLUDED */
 
-#ifdef CONFIG_BR_EXT
 	#include <rtw_br_ext.h>
-#endif /* CONFIG_BR_EXT */
 
 #ifdef CONFIG_IOL
 	#include <rtw_iol.h>
@@ -140,13 +124,7 @@ typedef struct _ADAPTER _adapter, ADAPTER, *PADAPTER;
 #include <rtw_btcoex_wifionly.h>
 #include <rtw_btcoex.h>
 
-#ifdef CONFIG_MCC_MODE
-	#include <rtw_mcc.h>
-#endif /*CONFIG_MCC_MODE */
 
-#ifdef CONFIG_RTW_REPEATER_SON
-	#include <rtw_rson.h>
-#endif /*CONFIG_RTW_REPEATER_SON */
 
 #define SPEC_DEV_ID_NONE BIT(0)
 #define SPEC_DEV_ID_DISABLE_HT BIT(1)
@@ -189,17 +167,8 @@ struct registry_priv {
 	u8	lps_1t1r;
 #endif
 	u8	lps_chk_by_tp;
-#ifdef CONFIG_WOWLAN
-	u8	wow_power_mgnt;
-	u8	wow_lps_level;
-	#ifdef CONFIG_LPS_1T1R
-	u8	wow_lps_1t1r;
-	#endif
-#endif /* CONFIG_WOWLAN */
 	u8	smart_ps;
-#ifdef CONFIG_WMMPS_STA
 	u8	wmm_smart_ps;
-#endif /* CONFIG_WMMPS_STA */
 	u8   usb_rxagg_mode;
 	u8	dynamic_agg_enable;
 	u8	long_retry_lmt;
@@ -223,12 +192,10 @@ struct registry_priv {
 	u8	acm_method;
 	/* WMM */
 	u8	wmm_enable;
-#ifdef CONFIG_WMMPS_STA
 	/* uapsd (unscheduled automatic power-save delivery) = a kind of wmmps */
 	u8	uapsd_max_sp_len;
 	/* BIT0: AC_VO UAPSD, BIT1: AC_VI UAPSD, BIT2: AC_BK UAPSD, BIT3: AC_BE UAPSD */
 	u8	uapsd_ac_enable;
-#endif /* CONFIG_WMMPS_STA */
 
 	WLAN_BSSID_EX    dev_network;
 
@@ -238,10 +205,7 @@ struct registry_priv {
 #endif
 
 	u8 tx_bw_mode;
-#ifdef CONFIG_AP_MODE
 	u8 bmc_tx_rate;
-#endif
-#ifdef CONFIG_80211N_HT
 	u8	ht_enable;
 	/* 0: 20 MHz, 1: 40 MHz, 2: 80 MHz, 3: 160MHz */
 	/* 2.4G use bit 0 ~ 3, 5G use bit 4 ~ 7 */
@@ -279,13 +243,10 @@ struct registry_priv {
 	u8	beamform_cap;
 	u8	beamformer_rf_num;
 	u8	beamformee_rf_num;
-#endif /* CONFIG_80211N_HT */
 
-#ifdef CONFIG_80211AC_VHT
 	u8	vht_enable; /* 0:disable, 1:enable, 2:auto */
 	u8	ampdu_factor;
 	u8 vht_rx_mcs_map[2];
-#endif /* CONFIG_80211AC_VHT */
 
 	u8	lowrate_two_xmit;
 
@@ -302,14 +263,12 @@ struct registry_priv {
 	u8	excl_chs[MAX_CHANNEL_NUM];
 	u8	full_ch_in_p2p_handshake; /* 0: reply only softap channel, 1: reply full channel list*/
 
-#ifdef CONFIG_BT_COEXIST
 	u8	btcoex;
 	u8	bt_iso;
 	u8	bt_sco;
 	u8	bt_ampdu;
 	u8	ant_num;
 	u8	single_ant_path;
-#endif
 	BOOLEAN	bAcceptAddbaReq;
 
 	u8	antdiv_cfg;
@@ -328,9 +287,7 @@ struct registry_priv {
 	char	adaptor_info_caching_file_path[PATH_LENGTH_MAX];
 #endif
 
-#ifdef CONFIG_LAYER2_ROAMING
 	u8	max_roaming_times; /* the max number driver will try to roaming */
-#endif
 
 #ifdef CONFIG_IOL
 	u8 fw_iol; /* enable iol without other concern */
@@ -374,10 +331,8 @@ struct registry_priv {
 	u8  check_fw_ps;
 	u8	RegPwrTrimEnable;
 
-#ifdef CONFIG_LOAD_PHY_PARA_FROM_FILE
 	u8	load_phy_file;
 	u8	RegDecryptCustomFile;
-#endif
 #ifdef CONFIG_CONCURRENT_MODE
 	u8 virtual_iface_num;
 #ifdef CONFIG_P2P
@@ -412,35 +367,13 @@ struct registry_priv {
 	u8 dfs_region_domain;
 #endif
 
-#ifdef CONFIG_MCC_MODE
-	u8 en_mcc;
-	u32 rtw_mcc_single_tx_cri;
-	u32 rtw_mcc_ap_bw20_target_tx_tp;
-	u32 rtw_mcc_ap_bw40_target_tx_tp;
-	u32 rtw_mcc_ap_bw80_target_tx_tp;
-	u32 rtw_mcc_sta_bw20_target_tx_tp;
-	u32 rtw_mcc_sta_bw40_target_tx_tp;
-	u32 rtw_mcc_sta_bw80_target_tx_tp;
-	s8 rtw_mcc_policy_table_idx;
-	u8 rtw_mcc_duration;
-	u8 rtw_mcc_enable_runtime_duration;
-	u8 rtw_mcc_phydm_offload;
-#endif /* CONFIG_MCC_MODE */
 
-#ifdef CONFIG_RTW_NAPI
 	u8 en_napi;
 #ifdef CONFIG_RTW_NAPI_DYNAMIC
 	u32 napi_threshold;	/* unit: Mbps */
 #endif /* CONFIG_RTW_NAPI_DYNAMIC */
-#ifdef CONFIG_RTW_GRO
 	u8 en_gro;
-#endif /* CONFIG_RTW_GRO */
-#endif /* CONFIG_RTW_NAPI */
 
-#ifdef CONFIG_WOWLAN
-	u8 wakeup_event;
-	u8 suspend_type;
-#endif
 
 #ifdef CONFIG_SUPPORT_TRX_SHARED
 	u8 trx_share_mode;
@@ -448,17 +381,10 @@ struct registry_priv {
 	u8 check_hw_status;
 	u8 wowlan_sta_mix_mode;
 
-#ifdef CONFIG_PCI_HCI
-	u32 pci_aspm_config;
-	u32 pci_dynamic_aspm_linkctrl;
-#endif
 
 	u8 iqk_fw_offload;
 	u8 ch_switch_offload;
 
-#ifdef CONFIG_TDLS
-	u8 en_tdls;
-#endif
 
 #ifdef CONFIG_ADVANCE_OTA
 	u8	adv_ota;
@@ -521,13 +447,8 @@ struct registry_priv {
 
 #define BW_MODE_2G(bw_mode) ((bw_mode) & 0x0F)
 #define BW_MODE_5G(bw_mode) ((bw_mode) >> 4)
-#ifdef CONFIG_80211N_HT
 #define REGSTY_BW_2G(regsty) BW_MODE_2G((regsty)->bw_mode)
 #define REGSTY_BW_5G(regsty) BW_MODE_5G((regsty)->bw_mode)
-#else
-#define REGSTY_BW_2G(regsty) CHANNEL_WIDTH_20
-#define REGSTY_BW_5G(regsty) CHANNEL_WIDTH_20
-#endif
 #define REGSTY_IS_BW_2G_SUPPORT(regsty, bw) (REGSTY_BW_2G((regsty)) >= (bw))
 #define REGSTY_IS_BW_5G_SUPPORT(regsty, bw) (REGSTY_BW_5G((regsty)) >= (bw))
 
@@ -545,16 +466,6 @@ typedef struct rtw_if_operations {
 				 size_t len, bool fixed);
 } RTW_IF_OPS, *PRTW_IF_OPS;
 
-#ifdef CONFIG_SDIO_HCI
-	#include <drv_types_sdio.h>
-	#define INTF_DATA	SDIO_DATA
-	#define INTF_OPS	PRTW_IF_OPS
-#elif defined(CONFIG_GSPI_HCI)
-	#include <drv_types_gspi.h>
-	#define INTF_DATA GSPI_DATA
-#elif defined(CONFIG_PCI_HCI)
-	#include <drv_types_pci.h>
-#endif
 
 #define get_hw_port(adapter) (adapter->hw_port)
 
@@ -1017,7 +928,6 @@ struct mbid_cam_cache {
 };
 #endif /*CONFIG_MBSSID_CAM*/
 
-#ifdef RTW_HALMAC
 struct halmac_indicator {
 	struct submit_ctx *sctx;
 	u8 *buffer;
@@ -1033,12 +943,7 @@ struct halmacpriv {
 	struct halmac_indicator *indicator;
 
 	/* Hardware parameters */
-#ifdef CONFIG_SDIO_HCI
-	/* Store hardware tx queue page number setting */
-	u16 txpage[HW_QUEUE_ENTRY];
-#endif /* CONFIG_SDIO_HCI */
 };
-#endif /* RTW_HALMAC */
 
 #ifdef CONFIG_FW_MULTI_PORT_SUPPORT
 /*info for H2C-0x2C*/
@@ -1061,17 +966,8 @@ struct protsel {
 	u32 sel;		/* save the last sel port */
 };
 
-#ifdef CONFIG_RTL8814B
-#define MAX_BULKOUT_NUM 7
-#ifdef CONFIG_USB_HCI
-#define MAX_ENDPOINT_NUM 8
-#endif
-#else
 #define MAX_BULKOUT_NUM 4
-#ifdef CONFIG_USB_HCI
 #define MAX_ENDPOINT_NUM 6
-#endif
-#endif
 
 struct dvobj_priv {
 	/*-------- below is common data --------*/
@@ -1117,7 +1013,6 @@ struct dvobj_priv {
 	u8 iface_nums; /* total number of ifaces used runtime */
 	struct mi_state iface_state;
 
-#ifdef CONFIG_AP_MODE
 	#ifdef CONFIG_SUPPORT_MULTI_BCN
 	u8		nr_ap_if; /* total interface number of ap /go /mesh / nan mode. */
 	u16		inter_bcn_space; /* unit:ms */
@@ -1126,10 +1021,6 @@ struct dvobj_priv {
 	u8		fw_bcn_offload;
 	u8		vap_tbtt_rpt_map;
 	#endif /*CONFIG_SUPPORT_MULTI_BCN*/
-	#ifdef CONFIG_RTW_REPEATER_SON
-	struct rtw_rson_struct  rson_data;
-	#endif
-#endif
 #ifdef CONFIG_CLIENT_PORT_CFG
 	struct clt_port_t clt_port;
 #endif
@@ -1190,19 +1081,14 @@ struct dvobj_priv {
 	u8 en_napi_dynamic;
 #endif /* CONFIG_RTW_NAPI_DYNAMIC */
 
-#ifdef RTW_HALMAC
 	void *halmac;
 	struct halmacpriv hmpriv;
-#endif /* RTW_HALMAC */
 
 #ifdef CONFIG_FW_MULTI_PORT_SUPPORT
 	/*info for H2C-0x2C*/
 	struct dft_info dft;
 #endif
 
-#ifdef CONFIG_RTW_WIFI_HAL
-	u32 nodfs;
-#endif
 
 	/*-------- below is for SDIO INTERFACE --------*/
 
@@ -1215,7 +1101,6 @@ struct dvobj_priv {
 
 	/*-------- below is for USB INTERFACE --------*/
 
-#ifdef CONFIG_USB_HCI
 
 	u8	usb_speed; /* 1.1, 2.0 or 3.0 */
 	u8	nr_endpoint;
@@ -1227,61 +1112,19 @@ struct dvobj_priv {
 
 	_sema	usb_suspend_sema;
 
-#ifdef CONFIG_USB_VENDOR_REQ_MUTEX
 	_mutex  usb_vendor_req_mutex;
-#endif
 
-#ifdef CONFIG_USB_VENDOR_REQ_BUFFER_PREALLOC
 	u8 *usb_alloc_vendor_req_buf;
 	u8 *usb_vendor_req_buf;
-#endif
 
 	struct usb_interface *pusbintf;
 	struct usb_device *pusbdev;
 
 
-#endif/* CONFIG_USB_HCI */
 
 	/*-------- below is for PCIE INTERFACE --------*/
 
-#ifdef CONFIG_PCI_HCI
 
-	struct pci_dev *ppcidev;
-
-	/* PCI MEM map */
-	unsigned long	pci_mem_end;	/* shared mem end	*/
-	unsigned long	pci_mem_start;	/* shared mem start	*/
-
-	/* PCI IO map */
-	unsigned long	pci_base_addr;	/* device I/O address	*/
-
-#ifdef RTK_129X_PLATFORM
-	unsigned long	ctrl_start;
-	/* PCI MASK addr */
-	unsigned long	mask_addr;
-
-	/* PCI TRANSLATE addr */
-	unsigned long	tran_addr;
-
-	_lock   io_reg_lock;
-#endif
-
-	/* PciBridge */
-	struct pci_priv	pcipriv;
-
-	unsigned int irq; /* get from pci_dev.irq, store to net_device.irq */
-	u16	irqline;
-	u8	irq_enabled;
-	RT_ISR_CONTENT	isr_content;
-	_lock	irq_th_lock;
-
-	u8	bdma64;
-
-#endif/* CONFIG_PCI_HCI */
-
-#ifdef CONFIG_MCC_MODE
-	struct mcc_obj_priv mcc_objpriv;
-#endif /*CONFIG_MCC_MODE */
 
 #ifdef CONFIG_RTW_TPT_MODE
 	u8 tpt_mode; /* RTK T/P Testing Mode, 0:default mode */
@@ -1361,18 +1204,7 @@ static inline struct device *dvobj_to_dev(struct dvobj_priv *dvobj)
 #ifdef RTW_DVOBJ_CHIP_HW_TYPE
 #endif
 
-#ifdef CONFIG_USB_HCI
 	return &dvobj->pusbintf->dev;
-#endif
-#ifdef CONFIG_SDIO_HCI
-	return &dvobj->intf_data.func->dev;
-#endif
-#ifdef CONFIG_GSPI_HCI
-	return &dvobj->intf_data.func->dev;
-#endif
-#ifdef CONFIG_PCI_HCI
-	return &dvobj->ppcidev->dev;
-#endif
 }
 
 _adapter *dvobj_get_port0_adapter(struct dvobj_priv *dvobj);
@@ -1414,12 +1246,10 @@ typedef enum _DRIVER_STATE {
 	DRIVER_REPLACE_DONGLE = 2,
 } DRIVER_STATE;
 
-#ifdef CONFIG_RTW_NAPI
 enum _NAPI_STATE {
 	NAPI_DISABLE = 0,
 	NAPI_ENABLE = 1,
 };
-#endif
 
 #ifdef CONFIG_MAC_LOOPBACK_DRIVER
 typedef struct loopbackdata {
@@ -1467,24 +1297,16 @@ struct _ADAPTER {
 	_lock   security_key_mutex; /* add for CONFIG_IEEE80211W, none 11w also can use */
 	struct	registry_priv	registrypriv;
 
-#ifdef CONFIG_RTW_NAPI
 	struct	napi_struct napi;
 	u8	napi_state;
-#endif
 
-#ifdef CONFIG_MP_INCLUDED
 	struct	mp_priv	mppriv;
-#endif
 
-#ifdef CONFIG_AP_MODE
 	struct	hostapd_priv	*phostapdpriv;
-#endif
 
-#ifdef CONFIG_IOCTL_CFG80211
 #ifdef CONFIG_P2P
 	struct cfg80211_wifidirect_info	cfg80211_wdinfo;
 #endif /* CONFIG_P2P */
-#endif /* CONFIG_IOCTL_CFG80211 */
 	u32	setband;
 	ATOMIC_T bandskip;
 
@@ -1492,22 +1314,10 @@ struct _ADAPTER {
 	struct wifidirect_info	wdinfo;
 #endif /* CONFIG_P2P */
 
-#ifdef CONFIG_TDLS
-	struct tdls_info	tdlsinfo;
-#endif /* CONFIG_TDLS */
 
-#ifdef CONFIG_WAPI_SUPPORT
-	u8	WapiSupport;
-	RT_WAPI_T	wapiInfo;
-#endif
 
-#ifdef CONFIG_RTW_REPEATER_SON
-	u8	rtw_rson_scanstage;
-#endif
 
-#ifdef CONFIG_WFD
 	struct wifi_display_info wfd_info;
-#endif /* CONFIG_WFD */
 
 #ifdef CONFIG_BT_COEXIST_SOCKET_TRX
 	struct bt_coex_info coex_info;
@@ -1538,9 +1348,6 @@ struct _ADAPTER {
 #ifdef CONFIG_EVENT_THREAD_MODE
 	_thread_hdl_ evtThread;
 #endif
-#ifdef CONFIG_XMIT_THREAD_MODE
-	_thread_hdl_ xmitThread;
-#endif
 #ifdef CONFIG_RECV_THREAD_MODE
 	_thread_hdl_ recvThread;
 #endif
@@ -1567,11 +1374,7 @@ struct _ADAPTER {
 	struct proc_dir_entry *dir_dev;/* for proc directory */
 	struct proc_dir_entry *dir_odm;
 
-#ifdef CONFIG_MCC_MODE
-	struct proc_dir_entry *dir_mcc;
-#endif /* CONFIG_MCC_MODE */
 
-#ifdef CONFIG_IOCTL_CFG80211
 	struct wireless_dev *rtw_wdev;
 	struct rtw_wdev_priv wdev_data;
 
@@ -1579,7 +1382,6 @@ struct _ADAPTER {
 	struct wiphy *wiphy;
 #endif
 
-#endif /* CONFIG_IOCTL_CFG80211 */
 
 
 	u8 mac_addr[ETH_ALEN];
@@ -1618,7 +1420,6 @@ struct _ADAPTER {
 	/*extend to support multi interface*/
 	u8 iface_id;
 
-#ifdef CONFIG_BR_EXT
 	_lock					br_ext_lock;
 	/* unsigned int			macclone_completed; */
 	struct nat25_network_db_entry	*nethash[NAT25_HASH_SIZE];
@@ -1631,14 +1432,11 @@ struct _ADAPTER {
 	unsigned char			br_ip[4];
 
 	struct br_ext_info		ethBrExtInfo;
-#endif /* CONFIG_BR_EXT */
 
 #ifdef CONFIG_MAC_LOOPBACK_DRIVER
 	PLOOPBACKDATA ploopback;
 #endif
-#ifdef CONFIG_AP_MODE
 	u8 bmc_tx_rate;
-#endif
 
 	/* for debug purpose */
 	u8 fix_rate;
@@ -1679,9 +1477,6 @@ struct _ADAPTER {
 	struct int_logs int_logs;
 #endif
 
-#ifdef CONFIG_MCC_MODE
-	struct mcc_adapter_priv mcc_adapterpriv;
-#endif /* CONFIG_MCC_MODE */
 
 #ifdef CONFIG_RTW_MESH
 	struct rtw_mesh_cfg mesh_cfg;
@@ -1784,44 +1579,15 @@ __inline static void RTW_ENABLE_FUNC(_adapter *padapter, int func_bit)
 	(RTW_CANNOT_RUN(padapter) || \
 	 RTW_IS_FUNC_DISABLED((padapter), DF_TX_BIT))
 
-#ifdef CONFIG_PNO_SUPPORT
-int rtw_parse_ssid_list_tlv(char **list_str, pno_ssid_t *ssid, int max, int *bytes_left);
-int rtw_dev_pno_set(struct net_device *net, pno_ssid_t *ssid, int num,
-		    int pno_time, int pno_repeat, int pno_freq_expo_max);
-#ifdef CONFIG_PNO_SET_DEBUG
-	void rtw_dev_pno_debug(struct net_device *net);
-#endif /* CONFIG_PNO_SET_DEBUG */
-#endif /* CONFIG_PNO_SUPPORT */
 
 int rtw_suspend_free_assoc_resource(_adapter *padapter);
-#ifdef CONFIG_WOWLAN
-	int rtw_suspend_wow(_adapter *padapter);
-	int rtw_resume_process_wow(_adapter *padapter);
-#endif
 
 /* HCI Related header file */
-#ifdef CONFIG_USB_HCI
 	#include <usb_osintf.h>
 	#include <usb_ops.h>
 	#include <usb_hal.h>
-#endif
 
-#ifdef CONFIG_SDIO_HCI
-	#include <sdio_osintf.h>
-	#include <sdio_ops.h>
-	#include <sdio_hal.h>
-#endif
 
-#ifdef CONFIG_GSPI_HCI
-	#include <gspi_osintf.h>
-	#include <gspi_ops.h>
-	#include <gspi_hal.h>
-#endif
 
-#ifdef CONFIG_PCI_HCI
-	#include <pci_osintf.h>
-	#include <pci_ops.h>
-	#include <pci_hal.h>
-#endif
 
 #endif /* __DRV_TYPES_H__ */

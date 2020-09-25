@@ -111,7 +111,6 @@
 	#define ASSERT(expr)
 #endif
 
-#if DBG
 #if (DM_ODM_SUPPORT_TYPE == ODM_AP)
 #define PHYDM_DBG(dm, comp, fmt, args...)			\
 	do {							\
@@ -278,41 +277,6 @@ static __inline void PHYDM_DBG_F(PDM_ODM_T dm, int comp, char *fmt, ...)
 	} while (0)
 #endif
 
-#else /*@#if DBG*/
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-static __inline void PHYDM_DBG(struct dm_struct *dm, int comp, char *fmt, ...)
-{
-	RT_STATUS rt_status;
-	va_list args;
-	char buf[PRINT_MAX_SIZE] = {0};
-
-	if ((comp & dm->debug_components) == 0)
-		return;
-
-	if (fmt == NULL)
-		return;
-
-	va_start(args, fmt);
-	rt_status = (RT_STATUS)RtlStringCbVPrintfA(buf, PRINT_MAX_SIZE, fmt, args);
-	va_end(args);
-
-	if (rt_status != RT_STATUS_SUCCESS) {
-		DbgPrint("Failed (%d) to print message to buffer\n", rt_status);
-		return;
-	}
-
-	PHYDM_TRACE(buf);
-}
-static __inline void PHYDM_DBG_F(struct dm_struct *dm, int comp, char *fmt, ...)
-{
-}
-#else
-#define PHYDM_DBG(dm, comp, fmt, args...)
-#define PHYDM_DBG_F(dm, comp, fmt, args...)
-#endif
-#define PHYDM_PRINT_ADDR(dm, comp, title_str, ptr)
-
-#endif
 
 #define	DBGPORT_PRI_3	3	/*@Debug function (the highest priority)*/
 #define	DBGPORT_PRI_2	2	/*@Check hang function & Strong function*/

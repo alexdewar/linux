@@ -1345,7 +1345,6 @@ phydm_get_txbf_en(
 #if (DM_ODM_SUPPORT_TYPE & ODM_WIN)
 #elif (DM_ODM_SUPPORT_TYPE & ODM_CE) && !defined(DM_ODM_CE_MAC80211)
 
-#ifdef CONFIG_BEAMFORMING
 	enum beamforming_cap beamform_cap;
 	void *adapter = dm->adapter;
 	#ifdef PHYDM_BEAMFORMING_SUPPORT
@@ -1359,7 +1358,6 @@ phydm_get_txbf_en(
 		txbf_en = true;
 	else
 		txbf_en = false;
-#endif /*@#ifdef CONFIG_BEAMFORMING*/
 
 #elif (DM_ODM_SUPPORT_TYPE & ODM_AP)
 
@@ -1461,18 +1459,14 @@ u8 phydm_get_tx_rate(struct dm_struct *dm)
 	if (*dm->mp_mode == 1) {
 #if (DM_ODM_SUPPORT_TYPE & (ODM_WIN | ODM_CE))
 #if (DM_ODM_SUPPORT_TYPE & ODM_WIN)
-#if (MP_DRIVER == 1)
 		PMPT_CONTEXT p_mpt_ctx = &adapter->MptCtx;
 
 		tx_rate = MptToMgntRate(p_mpt_ctx->MptRateIndex);
-#endif
 #elif (DM_ODM_SUPPORT_TYPE & ODM_CE)
-#ifdef CONFIG_MP_INCLUDED
 		if (rf->mp_rate_index)
 			mpt_rate_index = *rf->mp_rate_index;
 
 		tx_rate = mpt_to_mgnt_rate(mpt_rate_index);
-#endif
 #endif
 #endif
 	} else {

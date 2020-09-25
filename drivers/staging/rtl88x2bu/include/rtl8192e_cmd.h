@@ -77,9 +77,6 @@ struct H2C_SS_RFOFF_PARAM {
 
 typedef struct JOINBSSRPT_PARM_92E {
 	u8 OpMode;	/* RT_MEDIA_STATUS */
-#ifdef CONFIG_WOWLAN
-	u8 MacID;       /* MACID */
-#endif /* CONFIG_WOWLAN */
 } JOINBSSRPT_PARM_92E, *PJOINBSSRPT_PARM_92E;
 
 /* move to hal_com_h2c.h
@@ -119,18 +116,9 @@ s32 FillH2CCmd_8192E(PADAPTER padapter, u8 ElementID, u32 CmdLen, u8 *pCmdBuffer
 u8 GetTxBufferRsvdPageNum8192E(_adapter *padapter, bool wowlan);
 /* u8 rtl8192c_set_FwSelectSuspend_cmd(PADAPTER padapter, u8 bfwpoll, u16 period); */
 s32 c2h_handler_8192e(_adapter *adapter, u8 id, u8 seq, u8 plen, u8 *payload);
-#ifdef CONFIG_BT_COEXIST
 	void rtl8192e_download_BTCoex_AP_mode_rsvd_page(PADAPTER padapter);
-#endif /* CONFIG_BT_COEXIST */
-#ifdef CONFIG_P2P_PS
 	void rtl8192e_set_p2p_ps_offload_cmd(PADAPTER padapter, u8 p2p_ps_state);
-#endif /* CONFIG_P2P */
 
-#ifdef CONFIG_TDLS
-	#ifdef CONFIG_TDLS_CH_SW
-		void rtl8192e_set_BcnEarly_C2H_Rpt_cmd(PADAPTER padapter, u8 enable);
-	#endif
-#endif
 
 /* / TX Feedback Content */
 #define	USEC_UNIT_FOR_8192E_C2H_TX_RPT_QUEUE_TIME			256

@@ -16,7 +16,6 @@
 #include <drv_types.h>
 #include <hal_data.h>
 
-#ifdef CONFIG_RTW_LED
 void dump_led_config(void *sel, _adapter *adapter)
 {
 	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
@@ -24,12 +23,10 @@ void dump_led_config(void *sel, _adapter *adapter)
 	int i;
 
 	RTW_PRINT_SEL(sel, "strategy:%u\n", ledpriv->LedStrategy);
-#ifdef CONFIG_RTW_SW_LED
 	RTW_PRINT_SEL(sel, "bRegUseLed:%u\n", ledpriv->bRegUseLed);
 	RTW_PRINT_SEL(sel, "iface_en_mask:0x%02X\n", ledpriv->iface_en_mask);
 	for (i = 0; i < dvobj->iface_nums; i++)
 		RTW_PRINT_SEL(sel, "ctl_en_mask[%d]:0x%08X\n", i, ledpriv->ctl_en_mask[i]);
-#endif
 }
 
 void rtw_led_set_strategy(_adapter *adapter, u8 strategy)
@@ -37,17 +34,9 @@ void rtw_led_set_strategy(_adapter *adapter, u8 strategy)
 	struct led_priv *ledpriv = adapter_to_led(adapter);
 	_adapter *pri_adapter = GET_PRIMARY_ADAPTER(adapter);
 
-#ifndef CONFIG_RTW_SW_LED
-	if (IS_SW_LED_STRATEGY(strategy)) {
-		RTW_WARN("CONFIG_RTW_SW_LED is not defined\n");
-		return;
-	}
-#endif
 
-#ifdef CONFIG_RTW_SW_LED
 	if (!ledpriv->bRegUseLed)
 		return;
-#endif
 
 	if (ledpriv->LedStrategy == strategy)
 		return;
@@ -59,14 +48,11 @@ void rtw_led_set_strategy(_adapter *adapter, u8 strategy)
 
 	ledpriv->LedStrategy = strategy;
 
-#ifdef CONFIG_RTW_SW_LED
 	rtw_hal_sw_led_deinit(pri_adapter);
-#endif
 
 	rtw_led_control(pri_adapter, LED_CTL_POWER_OFF);
 }
 
-#ifdef CONFIG_RTW_SW_LED
 #if CONFIG_RTW_SW_LED_TRX_DA_CLASSIFY
 void rtw_sw_led_blink_uc_trx_only(LED_DATA *led)
 {
@@ -248,7 +234,5 @@ void rtw_led_set_ctl_en_mask_virtual(_adapter *adapter)
 		| BIT(LED_CTL_TX) | BIT(LED_CTL_RX)
 	);
 }
-#endif /* CONFIG_RTW_SW_LED */
 
-#endif /* CONFIG_RTW_LED */
 

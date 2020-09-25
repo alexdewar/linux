@@ -22,13 +22,7 @@
 #ifdef CONFIG_SINGLE_RECV_BUF
 	#define NR_RECVBUFF (1)
 #else
-	#if defined(CONFIG_GSPI_HCI)
-		#define NR_RECVBUFF (32)
-	#elif defined(CONFIG_SDIO_HCI)
 		#define NR_RECVBUFF (8)
-	#else
-		#define NR_RECVBUFF (8)
-	#endif
 #endif /* CONFIG_SINGLE_RECV_BUF */
 #ifdef CONFIG_PREALLOC_RX_SKB_BUFFER
 	#define NR_PREALLOC_RECV_SKB (rtw_rtkm_get_nr_recv_skb()>>1)
@@ -36,17 +30,9 @@
 	#define NR_PREALLOC_RECV_SKB 8
 #endif /* CONFIG_PREALLOC_RX_SKB_BUFFER */
 
-#ifdef CONFIG_RTW_NAPI
 	#define RTL_NAPI_WEIGHT (32)
-#endif
 
 
-#if defined(CONFIG_RTL8821C) && defined(CONFIG_SDIO_HCI) && defined(CONFIG_RECV_THREAD_MODE)
-	#ifdef NR_RECVBUFF
-	#undef NR_RECVBUFF
-	#define NR_RECVBUFF (32)
-	#endif
-#endif
 
 #define NR_RECVFRAME 256
 
@@ -223,16 +209,10 @@ struct rx_pkt_attrib	{
 /* #define REORDER_ENTRY_NUM	128 */
 #define REORDER_WAIT_TIME	(50) /* (ms) */
 
-#if defined(CONFIG_PLATFORM_RTK390X) && defined(CONFIG_USB_HCI)
-	#define RECVBUFF_ALIGN_SZ 32
-#else
 	#define RECVBUFF_ALIGN_SZ 8
-#endif
 
 #ifdef CONFIG_TRX_BD_ARCH
 	#define RX_WIFI_INFO_SIZE	24
-#elif (defined(CONFIG_RTL8192E) || defined(CONFIG_RTL8814A) || defined(CONFIG_RTL8822B)) && defined(CONFIG_PCI_HCI)
-	#define RXBD_SIZE	sizeof(struct recv_stat)
 #endif
 
 #define RXDESC_SIZE	24
@@ -257,46 +237,21 @@ struct recv_stat {
 
 	unsigned int rxdw1;
 
-#if !((defined(CONFIG_RTL8192E) || defined(CONFIG_RTL8814A) || defined(CONFIG_RTL8822B) || defined(CONFIG_RTL8821C) || defined(CONFIG_RTL8822C)) && defined(CONFIG_PCI_HCI))  /* exclude 8192ee, 8814ae, 8822be, 8821ce */
 	unsigned int rxdw2;
 
 	unsigned int rxdw3;
-#endif
 
 #ifndef BUF_DESC_ARCH
 	unsigned int rxdw4;
 
 	unsigned int rxdw5;
 
-#ifdef CONFIG_PCI_HCI
-	unsigned int rxdw6;
-
-	unsigned int rxdw7;
-#endif
 #endif /* if BUF_DESC_ARCH is defined, rx_buf_desc occupy 4 double words */
 };
 #endif
 
 #define EOR BIT(30)
 
-#ifdef CONFIG_PCI_HCI
-#define PCI_MAX_RX_QUEUE		1/* MSDU packet queue, Rx Command Queue */
-#define PCI_MAX_RX_COUNT		128
-#ifdef CONFIG_TRX_BD_ARCH
-#define RX_BD_NUM				PCI_MAX_RX_COUNT	/* alias */
-#endif
-
-struct rtw_rx_ring {
-#ifdef CONFIG_TRX_BD_ARCH
-	struct rx_buf_desc	*buf_desc;
-#else
-	struct recv_stat	*desc;
-#endif
-	dma_addr_t		dma;
-	unsigned int		idx;
-	struct sk_buff	*rx_buf[PCI_MAX_RX_COUNT];
-};
-#endif
 
 
 
@@ -362,7 +317,6 @@ struct recv_priv {
 	uint  rx_smallpacket_crcerr;
 	uint  rx_middlepacket_crcerr;
 
-#ifdef CONFIG_USB_HCI
 	/* u8 *pallocated_urb_buf; */
 	_sema allrxreturnevt;
 	uint	ff_hwaddr;
@@ -374,15 +328,12 @@ struct recv_priv {
 	u8	*int_in_buf;
 #endif /* CONFIG_USB_INTERRUPT_IN_PIPE */
 
-#endif
 	_tasklet irq_prepare_beacon_tasklet;
 	_tasklet recv_tasklet;
 
 	struct sk_buff_head free_recv_skb_queue;
 	struct sk_buff_head rx_skb_queue;
-#ifdef CONFIG_RTW_NAPI
 		struct sk_buff_head rx_napi_skb_queue;
-#endif 
 #ifdef CONFIG_RX_INDICATE_QUEUE
 	_tasklet rx_indicate_tasklet;
 	struct ifqueue rx_indicate_queue;
@@ -394,16 +345,8 @@ struct recv_priv {
 	_queue	free_recv_buf_queue;
 	u32	free_recv_buf_queue_cnt;
 
-#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI) || defined(CONFIG_USB_HCI)
 	_queue	recv_buf_pending_queue;
-#endif
 
-#ifdef CONFIG_PCI_HCI
-	/* Rx */
-	struct rtw_rx_ring	rx_ring[PCI_MAX_RX_QUEUE];
-	int rxringcount;	/* size should be PCI_MAX_RX_QUEUE */
-	u32	rxbuffersize;
-#endif
 
 	/* For display the phy informatiom */
 	u8 is_signal_dbg;	/* for debug */
@@ -419,16 +362,11 @@ struct recv_priv {
 	/* int FalseAlmCnt_all; */
 
 
-#ifdef CONFIG_NEW_SIGNAL_STAT_PROCESS
 	_timer signal_stat_timer;
 	u32 signal_stat_sampling_interval;
 	/* u32 signal_stat_converging_constant; */
 	struct signal_stat signal_qual_data;
 	struct signal_stat signal_strength_data;
-#else /* CONFIG_NEW_SIGNAL_STAT_PROCESS */
-	struct smooth_rssi_data signal_qual_data;
-	struct smooth_rssi_data signal_strength_data;
-#endif /* CONFIG_NEW_SIGNAL_STAT_PROCESS */
 	u16 sink_udpport, pre_rtp_rxseq, cur_rtp_rxseq;
 
 	BOOLEAN store_law_data_flag;
@@ -458,9 +396,7 @@ void dump_rx_bh_tk(void *sel, struct recv_priv *recv);
 #define dump_rx_bh_tk(sel, recv) do {} while (0)
 #endif
 
-#ifdef CONFIG_NEW_SIGNAL_STAT_PROCESS
 #define rtw_set_signal_stat_timer(recvpriv) _set_timer(&(recvpriv)->signal_stat_timer, (recvpriv)->signal_stat_sampling_interval)
-#endif /* CONFIG_NEW_SIGNAL_STAT_PROCESS */
 
 struct sta_recv_priv {
 
@@ -500,14 +436,12 @@ struct recv_buf {
 	u8	*ptail;
 	u8	*pend;
 
-#ifdef CONFIG_USB_HCI
 	PURB	purb;
 	dma_addr_t dma_transfer_addr;	/* (in) dma addr for transfer_buffer */
 	u32 alloc_sz;
 
 	u8  irp_pending;
 	int  transfer_len;
-#endif
 
 	_pkt *pskb;
 };
@@ -555,13 +489,6 @@ struct recv_frame_hdr {
 	/* for A-MPDU Rx reordering buffer control */
 	struct recv_reorder_ctrl *preorder_ctrl;
 
-#ifdef CONFIG_WAPI_SUPPORT
-	u8 UserPriority;
-	u8 WapiTempPN[16];
-	u8 WapiSrcAddr[6];
-	u8 bWapiCheckPNInDecrypt;
-	u8 bIsWaiPacket;
-#endif
 
 };
 
@@ -604,9 +531,7 @@ sint rtw_enqueue_recvbuf_to_head(struct recv_buf *precvbuf, _queue *queue);
 sint rtw_enqueue_recvbuf(struct recv_buf *precvbuf, _queue *queue);
 struct recv_buf *rtw_dequeue_recvbuf(_queue *queue);
 
-#if defined(CONFIG_80211N_HT) && defined(CONFIG_RECV_REORDERING_CTRL)
 void rtw_reordering_ctrl_timeout_handler(void *pcontext);
-#endif
 
 void rx_query_phy_status(union recv_frame *rframe, u8 *phy_stat);
 int rtw_inc_and_chk_continual_no_rx_packet(struct sta_info *sta, int tid_index);

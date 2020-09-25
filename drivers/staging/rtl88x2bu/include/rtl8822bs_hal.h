@@ -20,9 +20,6 @@
 /* rtl8822bs_ops.c */
 void rtl8822bs_set_hal_ops(PADAPTER);
 
-#if defined(CONFIG_WOWLAN) || defined(CONFIG_AP_WOWLAN)
-void rtl8822bs_disable_interrupt_but_cpwm2(PADAPTER adapter);
-#endif
 
 /* rtl8822bs_xmit.c */
 s32 rtl8822bs_dequeue_writeport(PADAPTER);

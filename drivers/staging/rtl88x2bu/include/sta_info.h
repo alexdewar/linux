@@ -61,9 +61,6 @@ struct pre_link_sta_ctl_t {
 	struct pre_link_sta_node_t node[RTW_PRE_LINK_STA_NUM];
 };
 
-#ifdef CONFIG_TDLS
-#define MAX_ALLOWED_TDLS_STA_NUM	4
-#endif
 
 enum sta_info_update_type {
 	STA_INFO_UPDATE_NONE = 0,
@@ -122,10 +119,6 @@ struct	stainfo_stats	{
 	u64 last_rx_data_mc_pkts;
 	u64 last_rx_data_qos_pkts[TID_NUM]; /* unicast only */
 
-#ifdef CONFIG_TDLS
-	u64 rx_tdls_disc_rsp_pkts;
-	u64 last_rx_tdls_disc_rsp_pkts;
-#endif
 
 	u64	rx_bytes;
 	u64	rx_bc_bytes;
@@ -224,12 +217,6 @@ bool rtw_st_ctl_chk_reg_rule(struct st_ctl_t *st_ctl, _adapter *adapter, u8 *loc
 void rtw_st_ctl_rx(struct sta_info *sta, u8 *ehdr_pos);
 void dump_st_ctl(void *sel, struct st_ctl_t *st_ctl);
 
-#ifdef CONFIG_TDLS
-struct TDLS_PeerKey {
-	u8 kck[16]; /* TPK-KCK */
-	u8 tk[16]; /* TPK-TK; only CCMP will be used */
-} ;
-#endif /* CONFIG_TDLS */
 
 #ifdef DBG_RX_DFRAME_RAW_DATA
 struct sta_recv_dframe_info {
@@ -301,22 +288,18 @@ struct sta_info {
 	u8 gtk_bmp;
 	union Keytype gtk;
 	union pn48 gtk_pn;
-	#ifdef CONFIG_IEEE80211W
 	/* peer's IGTK, RX only */
 	u8 igtk_bmp;
 	u8 igtk_id;
 	union Keytype igtk;
 	union pn48 igtk_pn;
-	#endif /* CONFIG_IEEE80211W */
 #endif /* CONFIG_RTW_MESH */
 #ifdef CONFIG_GTK_OL
 	u8 kek[RTW_KEK_LEN];
 	u8 kck[RTW_KCK_LEN];
 	u8 replay_ctr[RTW_REPLAY_CTR_LEN];
 #endif /* CONFIG_GTK_OL */
-#ifdef CONFIG_IEEE80211W
 	_timer dot11w_expire_timer;
-#endif /* CONFIG_IEEE80211W */
 
 	u8	bssrateset[16];
 	u32	bssratelen;
@@ -329,28 +312,6 @@ struct sta_info {
 
 	struct stainfo_stats sta_stats;
 
-#ifdef CONFIG_TDLS
-	u32	tdls_sta_state;
-	u8	SNonce[32];
-	u8	ANonce[32];
-	u32	TDLS_PeerKey_Lifetime;
-	u32	TPK_count;
-	_timer	TPK_timer;
-	struct TDLS_PeerKey	tpk;
-#ifdef CONFIG_TDLS_CH_SW
-	u16	ch_switch_time;
-	u16	ch_switch_timeout;
-	/* u8	option; */
-	_timer	ch_sw_timer;
-	_timer	delay_timer;
-	_timer	stay_on_base_chnl_timer;
-	_timer	ch_sw_monitor_timer;
-#endif
-	_timer handshake_timer;
-	u8 alive_count;
-	_timer	pti_timer;
-	u8	TDLS_RSNIE[20];	/* Save peer's RSNIE, used for sending TDLS_SETUP_RSP */
-#endif /* CONFIG_TDLS */
 
 	/* for A-MPDU TX, ADDBA timeout check	 */
 	_timer addba_retry_timer;
@@ -363,13 +324,9 @@ struct sta_info {
 	u16	BA_starting_seqctrl[16];
 
 
-#ifdef CONFIG_80211N_HT
 	struct ht_priv	htpriv;
-#endif
 
-#ifdef CONFIG_80211AC_VHT
 	struct vht_priv	vhtpriv;
-#endif
 
 	/* Notes:	 */
 	/* STA_Mode: */
@@ -382,7 +339,6 @@ struct sta_info {
 
 	unsigned int expire_to;
 
-#ifdef CONFIG_AP_MODE
 
 	_list asoc_list;
 	_list auth_list;
@@ -452,9 +408,7 @@ struct sta_info {
 	u8 dev_name[32];
 #endif /* CONFIG_P2P */
 
-#ifdef CONFIG_WFD
 	u8 op_wfd_mode;
-#endif
 
 #ifdef CONFIG_TX_MCAST2UNI
 	u8 under_exist_checking;
@@ -467,7 +421,6 @@ struct sta_info {
 	u16 pid; /* pairing id */
 #endif
 
-#endif /* CONFIG_AP_MODE	 */
 
 #ifdef CONFIG_RTW_MESH
 	struct mesh_plink_ent *plink;
@@ -481,12 +434,10 @@ struct sta_info {
 	BOOLEAN alive;
 #endif
 
-#ifdef CONFIG_IOCTL_CFG80211
 	u8 *pauth_frame;
 	u32 auth_len;
 	u8 *passoc_req;
 	u32 assoc_req_len;
-#endif
 
 	u8		IOTPeer;			/* Enum value.	HT_IOT_PEER_E */
 #ifdef CONFIG_LPS_PG
@@ -632,13 +583,8 @@ struct sta_info {
 #define sta_rx_uc_bytes(sta) (sta->sta_stats.rx_bytes - sta->sta_stats.rx_bc_bytes - sta->sta_stats.rx_mc_bytes)
 #define sta_last_rx_uc_bytes(sta) (sta->sta_stats.last_rx_bytes - sta->sta_stats.last_rx_bc_bytes - sta->sta_stats.last_rx_mc_bytes)
 
-#ifdef CONFIG_WFD
 #define STA_OP_WFD_MODE(sta) (sta)->op_wfd_mode
 #define STA_SET_OP_WFD_MODE(sta, mode) (sta)->op_wfd_mode = (mode)
-#else
-#define STA_OP_WFD_MODE(sta) 0
-#define STA_SET_OP_WFD_MODE(sta, mode) do {} while (0)
-#endif
 
 #define AID_BMP_LEN(max_aid) ((max_aid + 1) / 8 + (((max_aid + 1) % 8) ? 1 : 0))
 
@@ -660,7 +606,6 @@ struct	sta_priv {
 
 	int rx_chk_limit;
 
-#ifdef CONFIG_AP_MODE
 	_list asoc_list;
 	_list auth_list;
 	_lock asoc_list_lock;
@@ -694,7 +639,6 @@ struct	sta_priv {
 	struct pre_link_sta_ctl_t pre_link_sta_ctl;
 	#endif
 
-#endif /* CONFIG_AP_MODE */
 
 #ifdef CONFIG_ATMEL_RC_PATCH
 	u8 atmel_rc_pattern[6];
@@ -737,10 +681,8 @@ extern struct sta_info *rtw_get_stainfo(struct sta_priv *pstapriv, const u8 *hwa
 extern u32 rtw_init_bcmc_stainfo(_adapter *padapter);
 extern struct sta_info *rtw_get_bcmc_stainfo(_adapter *padapter);
 
-#ifdef CONFIG_AP_MODE
 u16 rtw_aid_alloc(_adapter *adapter, struct sta_info *sta);
 void dump_aid_status(void *sel, _adapter *adapter);
-#endif
 
 #if CONFIG_RTW_MACADDR_ACL
 extern u8 rtw_access_ctrl(_adapter *adapter, const u8 *mac_addr);

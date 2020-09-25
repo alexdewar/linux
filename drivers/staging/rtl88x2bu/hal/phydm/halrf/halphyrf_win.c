@@ -229,9 +229,7 @@ odm_txpowertracking_callback_thermal_meter(
 	<Kordan> We should keep updating the control variable according to HalData.
 	<Kordan> rf_calibrate_info.rega24 will be initialized when ODM HW configuring, but MP configures with para files. */
 #if (DM_ODM_SUPPORT_TYPE & ODM_WIN)
-#if (MP_DRIVER == 1)
 	cali_info->rega24 = 0x090e1317;
-#endif
 #elif (DM_ODM_SUPPORT_TYPE & ODM_CE)
 	if (*(dm->mp_mode) == true)
 		cali_info->rega24 = 0x090e1317;
@@ -1072,9 +1070,7 @@ void phydm_rf_watchdog(struct dm_struct *dm)
 	FunctionIn(COMP_MLME);
 
 	if (*dm->mp_mode == 1) {
-#if (MP_DRIVER == 1)
 		odm_txpowertracking_check(dm);
-#endif
 	} else {
 		odm_txpowertracking_check(dm);
 

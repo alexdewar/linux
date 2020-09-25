@@ -27,9 +27,7 @@
 #include "Hal8723DPwrSeq.h"
 #include "Hal8723DPhyReg.h"
 #include "Hal8723DPhyCfg.h"
-#ifdef DBG_CONFIG_ERROR_DETECT
 	#include "rtl8723d_sreset.h"
-#endif
 #ifdef CONFIG_LPS_POFF
 	#include "rtl8723d_lps_poff.h"
 #endif
@@ -43,11 +41,7 @@
 
 typedef struct _RT_FIRMWARE {
 	FIRMWARE_SOURCE	eFWSource;
-#ifdef CONFIG_EMBEDDED_FWIMG
 	u8			*szFwBuffer;
-#else
-	u8			szFwBuffer[FW_8723D_SIZE];
-#endif
 	u32			ulFwLength;
 } RT_FIRMWARE_8723D, *PRT_FIRMWARE_8723D;
 
@@ -93,11 +87,7 @@ typedef struct _RT_8723D_FIRMWARE_HDR {
 #define TX_DMA_SIZE_8723D			0x8000	/* 32K(TX) */
 #define RX_DMA_SIZE_8723D			0x4000	/* 16K(RX) */
 
-#ifdef CONFIG_WOWLAN
-	#define RESV_FMWF	(WKFMCAM_SIZE * MAX_WKFM_CAM_NUM) /* 16 entries, for each is 24 bytes*/
-#else
 	#define RESV_FMWF	0
-#endif
 
 #ifdef CONFIG_FW_C2H_DEBUG
 	#define RX_DMA_RESERVED_SIZE_8723D	0x100	/* 256B, reserved for c2h debug message */
@@ -120,20 +110,9 @@ typedef struct _RT_8723D_FIRMWARE_HDR {
  * ARP Rsp:1, RWC:1, GTK Info:1,GTK RSP:2,GTK EXT MEM:2, AOAC rpt 1, PNO: 6
  * NS offload: 2 NDP info: 1
  */
-#ifdef CONFIG_WOWLAN
-	#define WOWLAN_PAGE_NUM_8723D	0x0b
-#else
 	#define WOWLAN_PAGE_NUM_8723D	0x00
-#endif
 
-#ifdef CONFIG_PNO_SUPPORT
-	#undef WOWLAN_PAGE_NUM_8723D
-	#define WOWLAN_PAGE_NUM_8723D	0x15
-#endif
 
-#ifdef CONFIG_AP_WOWLAN
-	#define AP_WOWLAN_PAGE_NUM_8723D	0x02
-#endif
 
 #define TX_TOTAL_PAGE_NUMBER_8723D\
 	(0xFF - BCNQ_PAGE_NUM_8723D - WOWLAN_PAGE_NUM_8723D)
@@ -199,13 +178,6 @@ typedef enum tag_Package_Definition {
 #define INCLUDE_MULTI_FUNC_GPS(_Adapter) \
 	(GET_HAL_DATA(_Adapter)->MultiFunc & RT_MULTI_FUNC_GPS)
 
-#ifdef CONFIG_FILE_FWIMG
-	extern char *rtw_fw_file_path;
-	extern char *rtw_fw_wow_file_path;
-	#ifdef CONFIG_MP_INCLUDED
-		extern char *rtw_fw_mp_bt_file_path;
-	#endif /* CONFIG_MP_INCLUDED */
-#endif /* CONFIG_FILE_FWIMG */
 
 /* rtl8723d_hal_init.c */
 s32 rtl8723d_FirmwareDownload(PADAPTER padapter, BOOLEAN  bUsedWoWLANFw);
@@ -259,9 +231,6 @@ void rtl8723d_InitBeaconParameters(PADAPTER padapter);
 void rtl8723d_InitBeaconMaxError(PADAPTER padapter, u8 InfraMode);
 void _InitMacAPLLSetting_8723D(PADAPTER Adapter);
 void _8051Reset8723(PADAPTER padapter);
-#ifdef CONFIG_WOWLAN
-	void Hal_DetectWoWMode(PADAPTER pAdapter);
-#endif /* CONFIG_WOWLAN */
 
 void rtl8723d_start_thread(_adapter *padapter);
 void rtl8723d_stop_thread(_adapter *padapter);
@@ -273,12 +242,7 @@ void rtl8723d_stop_thread(_adapter *padapter);
 	void rtl8723ds_hal_check_bt_hang(_adapter *adapter);
 #endif
 
-#ifdef CONFIG_GPIO_WAKEUP
-	void HalSetOutPutGPIO(PADAPTER padapter, u8 index, u8 OutPutValue);
-#endif
-#ifdef CONFIG_MP_INCLUDED
 int FirmwareDownloadBT(PADAPTER Adapter, PRT_MP_FIRMWARE pFirmware);
-#endif
 void CCX_FwC2HTxRpt_8723d(PADAPTER padapter, u8 *pdata, u8 len);
 
 u8 MRateToHwRate8723D(u8 rate);
@@ -290,14 +254,7 @@ void Hal_ReadRFGainOffset(PADAPTER pAdapter, u8 *hwinfo, BOOLEAN AutoLoadFail);
 	void check_bt_status_work(void *data);
 #endif
 
-#ifdef CONFIG_USB_HCI
 	void rtl8723d_cal_txdesc_chksum(struct tx_desc *ptxdesc);
-#endif
 
-#ifdef CONFIG_PCI_HCI
-	BOOLEAN	InterruptRecognized8723DE(PADAPTER Adapter);
-	void	UpdateInterruptMask8723DE(PADAPTER Adapter, u32 AddMSR, u32 AddMSR1, u32 RemoveMSR, u32 RemoveMSR1);
-	u16 get_txbd_rw_reg(u16 ff_hwaddr);
-#endif
 
 #endif

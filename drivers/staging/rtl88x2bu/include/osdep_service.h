@@ -135,80 +135,6 @@ typedef enum mstat_status {
 	MSTAT_FREE
 } MSTAT_STATUS;
 
-#ifdef DBG_MEM_ALLOC
-void rtw_mstat_update(const enum mstat_f flags, const MSTAT_STATUS status, u32 sz);
-void rtw_mstat_dump(void *sel);
-bool match_mstat_sniff_rules(const enum mstat_f flags, const size_t size);
-void *dbg_rtw_vmalloc(u32 sz, const enum mstat_f flags, const char *func, const int line);
-void *dbg_rtw_zvmalloc(u32 sz, const enum mstat_f flags, const char *func, const int line);
-void dbg_rtw_vmfree(void *pbuf, const enum mstat_f flags, u32 sz, const char *func, const int line);
-void *dbg_rtw_malloc(u32 sz, const enum mstat_f flags, const char *func, const int line);
-void *dbg_rtw_zmalloc(u32 sz, const enum mstat_f flags, const char *func, const int line);
-void dbg_rtw_mfree(void *pbuf, const enum mstat_f flags, u32 sz, const char *func, const int line);
-
-struct sk_buff *dbg_rtw_skb_alloc(unsigned int size, const enum mstat_f flags, const char *func, const int line);
-void dbg_rtw_skb_free(struct sk_buff *skb, const enum mstat_f flags, const char *func, const int line);
-struct sk_buff *dbg_rtw_skb_copy(const struct sk_buff *skb, const enum mstat_f flags, const char *func, const int line);
-struct sk_buff *dbg_rtw_skb_clone(struct sk_buff *skb, const enum mstat_f flags, const char *func, const int line);
-int dbg_rtw_netif_rx(_nic_hdl ndev, struct sk_buff *skb, const enum mstat_f flags, const char *func, int line);
-#ifdef CONFIG_RTW_NAPI
-int dbg_rtw_netif_receive_skb(_nic_hdl ndev, struct sk_buff *skb, const enum mstat_f flags, const char *func, int line);
-#ifdef CONFIG_RTW_GRO
-gro_result_t dbg_rtw_napi_gro_receive(struct napi_struct *napi, struct sk_buff *skb, const enum mstat_f flags, const char *func, int line);
-#endif
-#endif /* CONFIG_RTW_NAPI */
-void dbg_rtw_skb_queue_purge(struct sk_buff_head *list, enum mstat_f flags, const char *func, int line);
-#ifdef CONFIG_USB_HCI
-void *dbg_rtw_usb_buffer_alloc(struct usb_device *dev, size_t size, dma_addr_t *dma, const enum mstat_f flags, const char *func, const int line);
-void dbg_rtw_usb_buffer_free(struct usb_device *dev, size_t size, void *addr, dma_addr_t dma, const enum mstat_f flags, const char *func, const int line);
-#endif /* CONFIG_USB_HCI */
-
-#ifdef CONFIG_USE_VMALLOC
-#define rtw_vmalloc(sz)			dbg_rtw_vmalloc((sz), MSTAT_TYPE_VIR, __FUNCTION__, __LINE__)
-#define rtw_zvmalloc(sz)			dbg_rtw_zvmalloc((sz), MSTAT_TYPE_VIR, __FUNCTION__, __LINE__)
-#define rtw_vmfree(pbuf, sz)		dbg_rtw_vmfree((pbuf), (sz), MSTAT_TYPE_VIR, __FUNCTION__, __LINE__)
-#define rtw_vmalloc_f(sz, mstat_f)			dbg_rtw_vmalloc((sz), ((mstat_f) & 0xff00) | MSTAT_TYPE_VIR, __FUNCTION__, __LINE__)
-#define rtw_zvmalloc_f(sz, mstat_f)		dbg_rtw_zvmalloc((sz), ((mstat_f) & 0xff00) | MSTAT_TYPE_VIR, __FUNCTION__, __LINE__)
-#define rtw_vmfree_f(pbuf, sz, mstat_f)	dbg_rtw_vmfree((pbuf), (sz), ((mstat_f) & 0xff00) | MSTAT_TYPE_VIR, __FUNCTION__, __LINE__)
-#else /* CONFIG_USE_VMALLOC */
-#define rtw_vmalloc(sz)			dbg_rtw_malloc((sz), MSTAT_TYPE_PHY, __FUNCTION__, __LINE__)
-#define rtw_zvmalloc(sz)			dbg_rtw_zmalloc((sz), MSTAT_TYPE_PHY, __FUNCTION__, __LINE__)
-#define rtw_vmfree(pbuf, sz)		dbg_rtw_mfree((pbuf), (sz), MSTAT_TYPE_PHY, __FUNCTION__, __LINE__)
-#define rtw_vmalloc_f(sz, mstat_f)			dbg_rtw_malloc((sz), ((mstat_f) & 0xff00) | MSTAT_TYPE_PHY, __FUNCTION__, __LINE__)
-#define rtw_zvmalloc_f(sz, mstat_f)		dbg_rtw_zmalloc((sz), ((mstat_f) & 0xff00) | MSTAT_TYPE_PHY, __FUNCTION__, __LINE__)
-#define rtw_vmfree_f(pbuf, sz, mstat_f)	dbg_rtw_mfree((pbuf), (sz), ((mstat_f) & 0xff00) | MSTAT_TYPE_PHY, __FUNCTION__, __LINE__)
-#endif /* CONFIG_USE_VMALLOC */
-#define rtw_malloc(sz)			dbg_rtw_malloc((sz), MSTAT_TYPE_PHY, __FUNCTION__, __LINE__)
-#define rtw_zmalloc(sz)			dbg_rtw_zmalloc((sz), MSTAT_TYPE_PHY, __FUNCTION__, __LINE__)
-#define rtw_mfree(pbuf, sz)		dbg_rtw_mfree((pbuf), (sz), MSTAT_TYPE_PHY, __FUNCTION__, __LINE__)
-#define rtw_malloc_f(sz, mstat_f)			dbg_rtw_malloc((sz), ((mstat_f) & 0xff00) | MSTAT_TYPE_PHY, __FUNCTION__, __LINE__)
-#define rtw_zmalloc_f(sz, mstat_f)			dbg_rtw_zmalloc((sz), ((mstat_f) & 0xff00) | MSTAT_TYPE_PHY, __FUNCTION__, __LINE__)
-#define rtw_mfree_f(pbuf, sz, mstat_f)		dbg_rtw_mfree((pbuf), (sz), ((mstat_f) & 0xff00) | MSTAT_TYPE_PHY, __FUNCTION__, __LINE__)
-
-#define rtw_skb_alloc(size)	dbg_rtw_skb_alloc((size), MSTAT_TYPE_SKB, __FUNCTION__, __LINE__)
-#define rtw_skb_free(skb)	dbg_rtw_skb_free((skb), MSTAT_TYPE_SKB, __FUNCTION__, __LINE__)
-#define rtw_skb_alloc_f(size, mstat_f)	dbg_rtw_skb_alloc((size), ((mstat_f) & 0xff00) | MSTAT_TYPE_SKB, __FUNCTION__, __LINE__)
-#define rtw_skb_free_f(skb, mstat_f)	dbg_rtw_skb_free((skb), ((mstat_f) & 0xff00) | MSTAT_TYPE_SKB, __FUNCTION__, __LINE__)
-#define rtw_skb_copy(skb)	dbg_rtw_skb_copy((skb), MSTAT_TYPE_SKB, __FUNCTION__, __LINE__)
-#define rtw_skb_clone(skb)	dbg_rtw_skb_clone((skb), MSTAT_TYPE_SKB, __FUNCTION__, __LINE__)
-#define rtw_skb_copy_f(skb, mstat_f)	dbg_rtw_skb_copy((skb), ((mstat_f) & 0xff00) | MSTAT_TYPE_SKB, __FUNCTION__, __LINE__)
-#define rtw_skb_clone_f(skb, mstat_f)	dbg_rtw_skb_clone((skb), ((mstat_f) & 0xff00) | MSTAT_TYPE_SKB, __FUNCTION__, __LINE__)
-#define rtw_netif_rx(ndev, skb)	dbg_rtw_netif_rx(ndev, skb, MSTAT_TYPE_SKB, __FUNCTION__, __LINE__)
-#ifdef CONFIG_RTW_NAPI
-#define rtw_netif_receive_skb(ndev, skb) dbg_rtw_netif_receive_skb(ndev, skb, MSTAT_TYPE_SKB, __FUNCTION__, __LINE__)
-#ifdef CONFIG_RTW_GRO
-#define rtw_napi_gro_receive(napi, skb) dbg_rtw_napi_gro_receive(napi, skb, MSTAT_TYPE_SKB, __FUNCTION__, __LINE__)
-#endif
-#endif /* CONFIG_RTW_NAPI */
-#define rtw_skb_queue_purge(sk_buff_head) dbg_rtw_skb_queue_purge(sk_buff_head, MSTAT_TYPE_SKB, __FUNCTION__, __LINE__)
-#ifdef CONFIG_USB_HCI
-#define rtw_usb_buffer_alloc(dev, size, dma)		dbg_rtw_usb_buffer_alloc((dev), (size), (dma), MSTAT_TYPE_USB, __FUNCTION__, __LINE__)
-#define rtw_usb_buffer_free(dev, size, addr, dma)	dbg_rtw_usb_buffer_free((dev), (size), (addr), (dma), MSTAT_TYPE_USB, __FUNCTION__, __LINE__)
-#define rtw_usb_buffer_alloc_f(dev, size, dma, mstat_f)			dbg_rtw_usb_buffer_alloc((dev), (size), (dma), ((mstat_f) & 0xff00) | MSTAT_TYPE_USB, __FUNCTION__, __LINE__)
-#define rtw_usb_buffer_free_f(dev, size, addr, dma, mstat_f)	dbg_rtw_usb_buffer_free((dev), (size), (addr), (dma), ((mstat_f) & 0xff00) | MSTAT_TYPE_USB, __FUNCTION__, __LINE__)
-#endif /* CONFIG_USB_HCI */
-
-#else /* DBG_MEM_ALLOC */
 #define rtw_mstat_update(flag, status, sz) do {} while (0)
 #define rtw_mstat_dump(sel) do {} while (0)
 #define match_mstat_sniff_rules(flags, size) _FALSE
@@ -224,18 +150,12 @@ void _rtw_skb_free(struct sk_buff *skb);
 struct sk_buff *_rtw_skb_copy(const struct sk_buff *skb);
 struct sk_buff *_rtw_skb_clone(struct sk_buff *skb);
 int _rtw_netif_rx(_nic_hdl ndev, struct sk_buff *skb);
-#ifdef CONFIG_RTW_NAPI
 int _rtw_netif_receive_skb(_nic_hdl ndev, struct sk_buff *skb);
-#ifdef CONFIG_RTW_GRO
 gro_result_t _rtw_napi_gro_receive(struct napi_struct *napi, struct sk_buff *skb);
-#endif
-#endif /* CONFIG_RTW_NAPI */
 void _rtw_skb_queue_purge(struct sk_buff_head *list);
 
-#ifdef CONFIG_USB_HCI
 void *_rtw_usb_buffer_alloc(struct usb_device *dev, size_t size, dma_addr_t *dma);
 void _rtw_usb_buffer_free(struct usb_device *dev, size_t size, void *addr, dma_addr_t dma);
-#endif /* CONFIG_USB_HCI */
 
 #ifdef CONFIG_USE_VMALLOC
 #define rtw_vmalloc(sz)			_rtw_vmalloc((sz))
@@ -268,20 +188,13 @@ void _rtw_usb_buffer_free(struct usb_device *dev, size_t size, void *addr, dma_a
 #define rtw_skb_copy_f(skb, mstat_f)	_rtw_skb_copy((skb))
 #define rtw_skb_clone_f(skb, mstat_f)	_rtw_skb_clone((skb))
 #define rtw_netif_rx(ndev, skb) _rtw_netif_rx(ndev, skb)
-#ifdef CONFIG_RTW_NAPI
 #define rtw_netif_receive_skb(ndev, skb) _rtw_netif_receive_skb(ndev, skb)
-#ifdef CONFIG_RTW_GRO
 #define rtw_napi_gro_receive(napi, skb) _rtw_napi_gro_receive(napi, skb)
-#endif
-#endif /* CONFIG_RTW_NAPI */
 #define rtw_skb_queue_purge(sk_buff_head) _rtw_skb_queue_purge(sk_buff_head)
-#ifdef CONFIG_USB_HCI
 #define rtw_usb_buffer_alloc(dev, size, dma) _rtw_usb_buffer_alloc((dev), (size), (dma))
 #define rtw_usb_buffer_free(dev, size, addr, dma) _rtw_usb_buffer_free((dev), (size), (addr), (dma))
 #define rtw_usb_buffer_alloc_f(dev, size, dma, mstat_f) _rtw_usb_buffer_alloc((dev), (size), (dma))
 #define rtw_usb_buffer_free_f(dev, size, addr, dma, mstat_f) _rtw_usb_buffer_free((dev), (size), (addr), (dma))
-#endif /* CONFIG_USB_HCI */
-#endif /* DBG_MEM_ALLOC */
 
 extern void	*rtw_malloc2d(int h, int w, size_t size);
 extern void	rtw_mfree2d(void *pbuf, int h, int w, int size);
@@ -368,15 +281,8 @@ extern void	rtw_usleep_os(int us);
 
 extern u32	rtw_atoi(u8 *s);
 
-#ifdef DBG_DELAY_OS
-#define rtw_mdelay_os(ms) _rtw_mdelay_os((ms), __FUNCTION__, __LINE__)
-#define rtw_udelay_os(ms) _rtw_udelay_os((ms), __FUNCTION__, __LINE__)
-extern void _rtw_mdelay_os(int ms, const char *func, const int line);
-extern void _rtw_udelay_os(int us, const char *func, const int line);
-#else
 extern void	rtw_mdelay_os(int ms);
 extern void	rtw_udelay_os(int us);
-#endif
 
 extern void rtw_yield_os(void);
 
@@ -565,10 +471,6 @@ extern void rtw_lock_suspend_timeout(u32 timeout_ms);
 extern void rtw_lock_traffic_suspend_timeout(u32 timeout_ms);
 extern void rtw_resume_lock_suspend(void);
 extern void rtw_resume_unlock_suspend(void);
-#ifdef CONFIG_AP_WOWLAN
-extern void rtw_softap_lock_suspend(void);
-extern void rtw_softap_unlock_suspend(void);
-#endif
 
 extern void rtw_set_bit(int nr, unsigned long *addr);
 extern void rtw_clear_bit(int nr, unsigned long *addr);

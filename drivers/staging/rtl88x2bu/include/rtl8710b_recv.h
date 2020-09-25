@@ -19,25 +19,13 @@
 #define RECV_BLK_CNT 16
 #define RECV_BLK_TH RECV_BLK_CNT
 
-#if defined(CONFIG_USB_HCI)
 	#ifndef MAX_RECVBUF_SZ
-		#ifdef CONFIG_MINIMAL_MEMORY_USAGE
-			#define MAX_RECVBUF_SZ (4000) /* about 4K */
-		#else
-			#ifdef CONFIG_PLATFORM_MSTAR
-				#define MAX_RECVBUF_SZ (8192) /* 8K */
-				#elif defined(CONFIG_PLATFORM_HISILICON)
-				#define MAX_RECVBUF_SZ (16384) /* 16k */
-			#else
 				#define MAX_RECVBUF_SZ (15360) /* 15k < 16k */
 				/* #define MAX_RECVBUF_SZ (32768) */ /* 32k */
 				/* #define MAX_RECVBUF_SZ (20480) */ /* 20K */
 				/* #define MAX_RECVBUF_SZ (10240)  */ /* 10K */
 				/* #define MAX_RECVBUF_SZ (16384) */ /* 16k - 92E RX BUF :16K */
-			#endif
-		#endif
 	#endif /* !MAX_RECVBUF_SZ */
-#endif
 
 /* Rx smooth factor */
 #define	Rx_Smooth_Factor (20)
@@ -70,11 +58,9 @@
 	#define SET_RX_BUFFER_PHYSICAL_HIGH_8710B(__pRxStatusDesc, __Value)
 #endif
 
-#ifdef CONFIG_USB_HCI
 	int rtl8710bu_init_recv_priv(_adapter *padapter);
 	void rtl8710bu_free_recv_priv(_adapter *padapter);
 	void rtl8710bu_init_recvbuf(_adapter *padapter, struct recv_buf *precvbuf);
-#endif
 
 void rtl8710b_query_rx_desc_status(union recv_frame *precvframe, u8 *pdesc);
 

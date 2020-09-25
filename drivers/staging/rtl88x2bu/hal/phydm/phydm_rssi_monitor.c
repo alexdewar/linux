@@ -38,9 +38,7 @@ void phydm_rssi_monitor_h2c(void *dm_void, u8 macid)
 	struct ra_table *ra_t = &dm->dm_ra_table;
 	struct cmn_sta_info *sta = dm->phydm_sta_info[macid];
 	struct ra_sta_info *ra = NULL;
-	#ifdef CONFIG_BEAMFORMING
 	struct bf_cmn_info *bf = NULL;
-	#endif
 	u8 h2c[H2C_MAX_LENGTH] = {0};
 	u8 stbc_en, ldpc_en;
 	u8 bf_en = 0;
@@ -61,13 +59,11 @@ void phydm_rssi_monitor_h2c(void *dm_void, u8 macid)
 	stbc_en = (sta->stbc_en) ? 1 : 0;
 	ldpc_en = (sta->ldpc_en) ? 1 : 0;
 
-	#ifdef CONFIG_BEAMFORMING
 	bf = &sta->bf_info;
 
 	if ((bf->ht_beamform_cap & BEAMFORMING_HT_BEAMFORMEE_ENABLE) ||
 	    (bf->vht_beamform_cap & BEAMFORMING_VHT_BEAMFORMEE_ENABLE))
 		bf_en = 1;
-	#endif
 
 	PHYDM_DBG(dm, DBG_RSSI_MNTR, "RA_th_ofst=(( %s%d ))\n",
 		  ((ra_t->ra_ofst_direc) ? "+" : "-"), ra_t->ra_th_ofst);

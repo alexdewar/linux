@@ -18,7 +18,6 @@
 #include <hal_data.h>		/* PHAL_DATA_TYPE */
 #include <hal_com_led.h>	/* PLED_USB */
 #include "../../hal_halmac.h" /* HALMAC API */
-#ifdef CONFIG_RTW_SW_LED
 
 /*
  * =============================================================================
@@ -135,4 +134,3 @@ void rtl8822bu_deinitswleds(PADAPTER padapter)
 	DeInitLed(&(ledpriv->SwLed1));
 	DeInitLed(&(ledpriv->SwLed2));
 }
-#endif

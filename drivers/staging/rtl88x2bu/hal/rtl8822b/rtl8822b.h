@@ -122,16 +122,8 @@ void rtl8822b_query_rx_desc(union recv_frame *, u8 *pdesc);
 s32 rtl8822b_fillh2ccmd(PADAPTER, u8 id, u32 buf_len, u8 *pbuf);
 void rtl8822b_set_FwPwrMode_cmd(PADAPTER, u8 psmode);
 
-#ifdef CONFIG_TDLS
-#ifdef CONFIG_TDLS_CH_SW
-void rtl8822b_set_BcnEarly_C2H_Rpt_cmd(PADAPTER padapter, u8 enable);
-#endif
-#endif
 
 void rtl8822b_set_FwPwrModeInIPS_cmd(PADAPTER adapter, u8 cmd_param);
-#ifdef CONFIG_WOWLAN
-void rtl8822b_set_fw_pwrmode_inips_cmd_wowlan(PADAPTER padapter, u8 ps_mode);
-#endif /* CONFIG_WOWLAN */
 void rtl8822b_req_txrpt_cmd(PADAPTER, u8 macid);
 void rtl8822b_c2h_handler(PADAPTER, u8 *pbuf, u16 length);
 void rtl8822b_c2h_handler_no_io(PADAPTER, u8 *pbuf, u16 length);
@@ -141,9 +133,7 @@ void rtl8822b_set_fw_thermal_rpt_cmd(_adapter *adapter, u8 enable, u8 thermal_va
 void rtw_lps_pwr_tracking(_adapter *adapter, u8 thermal_value);
 #endif
 
-#ifdef CONFIG_BT_COEXIST
 void rtl8822b_download_BTCoex_AP_mode_rsvd_page(PADAPTER);
-#endif /* CONFIG_BT_COEXIST */
 
 /* rtl8822b_phy.c */
 u8 rtl8822b_phy_init_mac_register(PADAPTER);
@@ -160,13 +150,11 @@ void rtl8822b_set_channel_bw(PADAPTER adapter, u8 center_ch, enum channel_width,
 void rtl8822b_set_tx_power_level(PADAPTER, u8 channel);
 void rtl8822b_set_tx_power_index(PADAPTER adapter, u32 powerindex, enum rf_path rfpath, u8 rate);
 void rtl8822b_notch_filter_switch(PADAPTER, bool enable);
-#ifdef CONFIG_BEAMFORMING
 void rtl8822b_phy_bf_init(PADAPTER);
 void rtl8822b_phy_bf_enter(PADAPTER, struct sta_info*);
 void rtl8822b_phy_bf_leave(PADAPTER, u8 *addr);
 void rtl8822b_phy_bf_set_gid_table(PADAPTER, struct beamformer_entry*);
 void rtl8822b_phy_bf_set_csi_report(PADAPTER, struct _RT_CSI_INFO*);
 void rtl8822b_phy_bf_sounding_status(PADAPTER, u8 status);
-#endif /* CONFIG_BEAMFORMING */
 
 #endif /* _RTL8822B_H_ */

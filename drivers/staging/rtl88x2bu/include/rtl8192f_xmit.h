@@ -116,10 +116,6 @@
 	LE_BITS_TO_4BYTE(__pRxStatusDesc+12, 11, 1)
 #define GET_RX_STATUS_DESC_BSSID_FIT_8192F(__pRxStatusDesc) \
 	LE_BITS_TO_4BYTE(__pRxStatusDesc+12, 12, 2)
-#ifdef CONFIG_USB_RX_AGGREGATION
-#define GET_RX_STATUS_DESC_USB_AGG_PKTNUM_8192F(__pRxStatusDesc) \
-	LE_BITS_TO_4BYTE(__pRxStatusDesc+12, 16, 8)
-#endif
 #define GET_RX_STATUS_DESC_PATTERN_MATCH_8192F(__pRxDesc) \
 	LE_BITS_TO_4BYTE(__pRxDesc+12, 29, 1)
 #define GET_RX_STATUS_DESC_UNICAST_MATCH_8192F(__pRxDesc) \
@@ -294,20 +290,10 @@
 	SET_BITS_TO_LE_4BYTE(__pTxDesc+24, 16, 3, __Value)
 
 /* Dword 7 */
-#ifdef CONFIG_PCI_HCI
-#define SET_TX_DESC_TX_BUFFER_SIZE_8192F(__pTxDesc, __Value) \
-	SET_BITS_TO_LE_4BYTE(__pTxDesc+28, 0, 16, __Value)
-#endif
 
-#ifdef CONFIG_USB_HCI
 #define SET_TX_DESC_TX_DESC_CHECKSUM_8192F(__pTxDesc, __Value) \
 	SET_BITS_TO_LE_4BYTE(__pTxDesc+28, 0, 16, __Value)
-#endif
 
-#ifdef CONFIG_SDIO_HCI
-#define SET_TX_DESC_TX_TIMESTAMP_8192F(__pTxDesc, __Value) \
-	SET_BITS_TO_LE_4BYTE(__pTxDesc+28, 6, 18, __Value)
-#endif
 
 #define SET_TX_DESC_USB_TXAGG_NUM_8192F(__pTxDesc, __Value) \
 	SET_BITS_TO_LE_4BYTE(__pTxDesc+28, 24, 8, __Value)
@@ -490,18 +476,7 @@ void rtl8192f_fill_fake_txdesc(PADAPTER padapter, u8 *pDesc, u32 BufferLen, u8 I
 #endif
 void fill_txdesc_bmc_tx_rate(struct pkt_attrib *pattrib, u8 *ptxdesc);
 
-#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
-	s32 rtl8192fs_init_xmit_priv(PADAPTER padapter);
-	void rtl8192fs_free_xmit_priv(PADAPTER padapter);
-	s32 rtl8192fs_hal_xmit(PADAPTER padapter, struct xmit_frame *pxmitframe);
-	s32 rtl8192fs_mgnt_xmit(PADAPTER padapter, struct xmit_frame *pmgntframe);
-	s32	rtl8192fs_hal_xmitframe_enqueue(_adapter *padapter, struct xmit_frame *pxmitframe);
-	s32 rtl8192fs_xmit_buf_handler(PADAPTER padapter);
-	thread_return rtl8192fs_xmit_thread(thread_context context);
-	#define hal_xmit_handler rtl8192fs_xmit_buf_handler
-#endif
 
-#ifdef CONFIG_USB_HCI
 	s32 rtl8192fu_init_xmit_priv(PADAPTER padapter);
 	void rtl8192fu_free_xmit_priv(PADAPTER padapter);
 	s32 rtl8192fu_hal_xmit(PADAPTER padapter, struct xmit_frame *pxmitframe);
@@ -512,18 +487,7 @@ void fill_txdesc_bmc_tx_rate(struct pkt_attrib *pattrib, u8 *ptxdesc);
 	void rtl8192fu_xmit_tasklet(void *priv);
 	s32 rtl8192fu_xmitframe_complete(_adapter *padapter, struct xmit_priv *pxmitpriv, struct xmit_buf *pxmitbuf);
 	void _dbg_dump_tx_info(_adapter	*padapter,int frame_tag,struct tx_desc *ptxdesc);
-#endif
 
-#ifdef CONFIG_PCI_HCI
-	s32 rtl8192fe_init_xmit_priv(PADAPTER padapter);
-	void rtl8192fe_free_xmit_priv(PADAPTER padapter);
-	struct xmit_buf *rtl8192fe_dequeue_xmitbuf(struct rtw_tx_ring *ring);
-	void    rtl8192fe_xmitframe_resume(_adapter *padapter);
-	s32 rtl8192fe_hal_xmit(PADAPTER padapter, struct xmit_frame *pxmitframe);
-	s32 rtl8192fe_mgnt_xmit(PADAPTER padapter, struct xmit_frame *pmgntframe);
-	s32     rtl8192fe_hal_xmitframe_enqueue(_adapter *padapter, struct xmit_frame *pxmitframe);
-	void rtl8192fe_xmit_tasklet(void *priv);
-#endif
 
 u8	BWMapping_8192F(PADAPTER Adapter, struct pkt_attrib *pattrib);
 u8	SCMapping_8192F(PADAPTER Adapter, struct pkt_attrib	*pattrib);

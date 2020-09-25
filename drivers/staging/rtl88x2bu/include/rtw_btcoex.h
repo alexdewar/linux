@@ -12,7 +12,6 @@
  * more details.
  *
  *****************************************************************************/
-#ifdef CONFIG_BT_COEXIST
 
 #ifndef __RTW_BTCOEX_H__
 #define __RTW_BTCOEX_H__
@@ -453,7 +452,6 @@ void rtw_btcoex_LPS_Enter(PADAPTER padapter);
 u8 rtw_btcoex_LPS_Leave(PADAPTER padapter);
 
 #endif /* __RTW_BTCOEX_H__ */
-#endif /* CONFIG_BT_COEXIST */
 
 void rtw_btcoex_set_ant_info(PADAPTER padapter);
 void rtw_btcoex_connect_notify(PADAPTER, u8 join_type);

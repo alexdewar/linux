@@ -46,12 +46,10 @@ static u8 recvbuf2recvframe_proccess_normal_rx
 	struct recv_priv *precvpriv = &padapter->recvpriv;
 	_queue *pfree_recv_queue = &precvpriv->free_recv_queue;
 
-#ifdef CONFIG_RX_PACKET_APPEND_FCS
 	if (check_fwstate(&padapter->mlmepriv, WIFI_MONITOR_STATE) == _FALSE) {
 		if (rtl8822b_rx_fcs_appended(padapter))
 			pattrib->pkt_len -= IEEE80211_FCS_LEN;
 	}
-#endif
 
 	if (rtw_os_alloc_recvframe(padapter, precvframe,
 		(pbuf + pattrib->shift_sz + pattrib->drvinfo_sz + RXDESC_SIZE), pskb) == _FAIL) {
@@ -94,9 +92,6 @@ int recvbuf2recvframe(PADAPTER padapter, void *ptr)
 #endif /* CONFIG_USE_USB_BUFFER_ALLOC_RX */
 
 
-#ifdef CONFIG_USB_RX_AGGREGATION
-	pkt_cnt = GET_RX_DESC_DMA_AGG_NUM_8822B(pbuf);
-#endif
 
 	do {
 		precvframe = rtw_alloc_recvframe(pfree_recv_queue);
@@ -153,12 +148,6 @@ int recvbuf2recvframe(PADAPTER padapter, void *ptr)
 			break;
 		}
 
-#ifdef CONFIG_USB_RX_AGGREGATION
-		/* jaguar 8-byte alignment */
-		pkt_offset = (u16)_RND8(pkt_offset);
-		pkt_cnt--;
-		pbuf += pkt_offset;
-#endif
 		transfer_len -= pkt_offset;
 		precvframe = NULL;
 

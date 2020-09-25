@@ -35,55 +35,8 @@
 #define RECV_ALIVE	BIT(1)
 #define CMD_ALIVE	BIT(2)
 #define EVT_ALIVE	BIT(3)
-#ifdef CONFIG_BT_COEXIST
 #define BTCOEX_ALIVE	BIT(4)
-#endif /* CONFIG_BT_COEXIST */
 
-#ifdef CONFIG_WOWLAN
-	#ifdef CONFIG_PLATFORM_ANDROID_INTEL_X86
-		/* TCP/ICMP/UDP multicast with specific IP addr */
-		#define DEFAULT_PATTERN_NUM 4
-	#else
-		/* TCP/ICMP */
-		#define DEFAULT_PATTERN_NUM 3
-	#endif
-
-#ifdef CONFIG_WOW_PATTERN_HW_CAM	/* Frame Mask Cam number for pattern match */
-#define MAX_WKFM_CAM_NUM	12
-#else
-#define MAX_WKFM_CAM_NUM	16
-#endif
-
-#define MAX_WKFM_SIZE	16 /* (16 bytes for WKFM bit mask, 16*8 = 128 bits) */
-#define MAX_WKFM_PATTERN_SIZE	128
-
-/*
- * MAX_WKFM_PATTERN_STR_LEN : the max. length of wow pattern string
- *	e.g. echo 00:01:02:...:7f > /proc/net/rtl88x2bu/wlan0/wow_pattern_info
- *	- each byte of pattern is represented as 2-bytes ascii : MAX_WKFM_PATTERN_SIZE * 2
- *	- the number of common ':' in pattern string : MAX_WKFM_PATTERN_SIZE - 1
- *	- 1 byte '\n'(0x0a) is generated at the end when we use echo command
- *	so total max. length is (MAX_WKFM_PATTERN_SIZE * 3)
- */
-#define MAX_WKFM_PATTERN_STR_LEN (MAX_WKFM_PATTERN_SIZE * 3)
-
-#define WKFMCAM_ADDR_NUM 6
-#define WKFMCAM_SIZE 24 /* each entry need 6*4 bytes */
-enum pattern_type {
-	PATTERN_BROADCAST = 0,
-	PATTERN_MULTICAST,
-	PATTERN_UNICAST,
-	PATTERN_VALID,
-	PATTERN_INVALID,
-};
-
-typedef struct rtl_priv_pattern {
-	int len;
-	char content[MAX_WKFM_PATTERN_SIZE];
-	char mask[MAX_WKFM_SIZE];
-} rtl_priv_pattern_t;
-
-#endif /* CONFIG_WOWLAN */
 
 enum Power_Mgnt {
 	PS_MODE_ACTIVE	= 0	,
@@ -107,11 +60,6 @@ enum lps_level {
 	LPS_LEVEL_MAX,
 };
 
-#ifdef CONFIG_PNO_SUPPORT
-#define MAX_PNO_LIST_COUNT 16
-#define MAX_SCAN_LIST_COUNT 14	/* 2.4G only */
-#define MAX_HIDDEN_AP 8		/* 8 hidden AP */
-#endif
 
 /*
 	BIT[2:0] = HW state
@@ -233,48 +181,6 @@ typedef enum _PS_DENY_REASON {
 	PS_DENY_OTHERS = 31
 } PS_DENY_REASON;
 
-#ifdef CONFIG_PNO_SUPPORT
-typedef struct pno_nlo_info {
-	u32 fast_scan_period;				/* Fast scan period */
-	u8	ssid_num;				/* number of entry */
-	u8	hidden_ssid_num;
-	u32	slow_scan_period;			/* slow scan period */
-	u32	fast_scan_iterations;			/* Fast scan iterations */
-	u8	ssid_length[MAX_PNO_LIST_COUNT];	/* SSID Length Array */
-	u8	ssid_cipher_info[MAX_PNO_LIST_COUNT];	/* Cipher information for security */
-	u8	ssid_channel_info[MAX_PNO_LIST_COUNT];	/* channel information */
-	u8	loc_probe_req[MAX_HIDDEN_AP];		/* loc_probeReq */
-} pno_nlo_info_t;
-
-typedef struct pno_ssid {
-	u32		SSID_len;
-	u8		SSID[32];
-} pno_ssid_t;
-
-typedef struct pno_ssid_list {
-	pno_ssid_t	node[MAX_PNO_LIST_COUNT];
-} pno_ssid_list_t;
-
-typedef struct pno_scan_channel_info {
-	u8	channel;
-	u8	tx_power;
-	u8	timeout;
-	u8	active;				/* set 1 means active scan, or pasivite scan. */
-} pno_scan_channel_info_t;
-
-typedef struct pno_scan_info {
-	u8	enableRFE;			/* Enable RFE */
-	u8	period_scan_time;		/* exclusive with fast_scan_period and slow_scan_period */
-	u8	periodScan;			/* exclusive with fast_scan_period and slow_scan_period */
-	u8	orig_80_offset;			/* original channel 80 offset */
-	u8	orig_40_offset;			/* original channel 40 offset */
-	u8	orig_bw;			/* original bandwidth */
-	u8	orig_ch;			/* original channel */
-	u8	channel_num;			/* number of channel */
-	u64	rfe_type;			/* rfe_type && 0x00000000000000ff */
-	pno_scan_channel_info_t ssid_channel_info[MAX_SCAN_LIST_COUNT];
-} pno_scan_info_t;
-#endif /* CONFIG_PNO_SUPPORT */
 
 #ifdef CONFIG_LPS_POFF
 /* Driver context for LPS 32K Close IO Power */
@@ -335,9 +241,7 @@ struct pwrctrl_priv {
 
 #endif
 
-#ifdef CONFIG_WMMPS_STA
 	u8 wmm_smart_ps;
-#endif /* CONFIG_WMMPS_STA */	
 
 	u32	alives;
 	_workitem cpwm_event;
@@ -389,10 +293,8 @@ struct pwrctrl_priv {
 	u8		bInternalAutoSuspend;
 	#endif
 	u8		bInSuspend;
-#ifdef CONFIG_BT_COEXIST
 	u8		bAutoResume;
 	u8		autopm_cnt;
-#endif
 	u8		bSupportRemoteWakeup;
 	u8		wowlan_wake_reason;
 	u8		wowlan_last_wake_reason;
@@ -402,36 +304,7 @@ struct pwrctrl_priv {
 	u8		wowlan_pno_enable;
 	u8		wowlan_in_resume;
 
-#ifdef CONFIG_GPIO_WAKEUP
-	u8		is_high_active;
-#endif /* CONFIG_GPIO_WAKEUP */
 	u8		hst2dev_high_active;
-#ifdef CONFIG_WOWLAN
-	bool		default_patterns_en;
-#ifdef CONFIG_IPV6
-	u8		wowlan_ns_offload_en;
-#endif /*CONFIG_IPV6*/
-	u8		wowlan_txpause_status;
-	u8		wowlan_pattern_idx;
-	u64		wowlan_fw_iv;
-	struct rtl_priv_pattern	patterns[MAX_WKFM_CAM_NUM];
-#ifdef CONFIG_PNO_SUPPORT
-	u8		pno_inited;
-	pno_nlo_info_t	*pnlo_info;
-	pno_scan_info_t	*pscan_info;
-	pno_ssid_list_t	*pno_ssid_list;
-#endif /* CONFIG_PNO_SUPPORT */
-#ifdef CONFIG_WOW_PATTERN_HW_CAM
-	_mutex	wowlan_pattern_cam_mutex;
-#endif
-	u8		wowlan_aoac_rpt_loc;
-	struct aoac_report wowlan_aoac_rpt;
-	u8		wowlan_power_mgmt;
-	u8		wowlan_lps_level;
-	#ifdef CONFIG_LPS_1T1R
-	u8		wowlan_lps_1t1r;
-	#endif
-#endif /* CONFIG_WOWLAN */
 	_timer	pwr_state_check_timer;
 	int		pwr_state_check_interval;
 	u8		pwr_state_check_cnts;
@@ -473,10 +346,6 @@ struct pwrctrl_priv {
 #endif
 #ifdef CONFIG_LPS_PG
 	struct rsvd_page_cache_t lpspg_info;
-#ifdef CONFIG_RTL8822C
-	struct rsvd_page_cache_t lpspg_dpk_info;
-	struct rsvd_page_cache_t lpspg_iqk_info;
-#endif
 #endif
 	u8 current_lps_hw_port_id;
 
@@ -516,7 +385,6 @@ struct pwrctrl_priv {
 extern void rtw_init_pwrctrl_priv(_adapter *adapter);
 extern void rtw_free_pwrctrl_priv(_adapter *adapter);
 
-#ifdef CONFIG_LPS_LCLK
 s32 rtw_register_task_alive(PADAPTER, u32 task);
 void rtw_unregister_task_alive(PADAPTER, u32 task);
 extern s32 rtw_register_tx_alive(PADAPTER padapter);
@@ -529,32 +397,22 @@ extern s32 rtw_register_evt_alive(PADAPTER padapter);
 extern void rtw_unregister_evt_alive(PADAPTER padapter);
 extern void cpwm_int_hdl(PADAPTER padapter, struct reportpwrstate_parm *preportpwrstate);
 extern void LPS_Leave_check(PADAPTER padapter);
-#endif
 
 extern void LeaveAllPowerSaveMode(PADAPTER Adapter);
 extern void LeaveAllPowerSaveModeDirect(PADAPTER Adapter);
-#ifdef CONFIG_IPS
 void _ips_enter(_adapter *padapter);
 void ips_enter(_adapter *padapter);
 int _ips_leave(_adapter *padapter);
 int ips_leave(_adapter *padapter);
-#endif
 
 void rtw_ps_processor(_adapter *padapter);
 
 #ifdef CONFIG_AUTOSUSPEND
 int autoresume_enter(_adapter *padapter);
 #endif
-#ifdef SUPPORT_HW_RFOFF_DETECTED
-rt_rf_power_state RfOnOffDetect(PADAPTER pAdapter);
-#endif
 
 
-#ifdef DBG_CHECK_FW_PS_STATE
-int rtw_fw_ps_state(PADAPTER padapter);
-#endif
 
-#ifdef CONFIG_LPS
 extern const char * const LPS_CTRL_PHYDM;
 void LPS_Enter(PADAPTER padapter, const char *msg);
 void LPS_Leave(PADAPTER padapter, const char *msg);
@@ -568,10 +426,6 @@ void traffic_check_for_leave_lps(PADAPTER padapter, u8 tx, u32 tx_packets);
 void rtw_set_ps_mode(PADAPTER padapter, u8 ps_mode, u8 smart_ps, u8 bcn_ant_mode, const char *msg);
 void rtw_set_fw_in_ips_mode(PADAPTER padapter, u8 enable);
 u8 rtw_set_rpwm(_adapter *padapter, u8 val8);
-#ifdef CONFIG_WOWLAN
-void rtw_wow_lps_level_decide(_adapter *adapter, u8 wow_en);
-#endif /* CONFIG_WOWLAN */
-#endif /* CONFIG_LPS */
 
 #ifdef CONFIG_RESUME_IN_WORKQUEUE
 void rtw_resume_in_workqueue(struct pwrctrl_priv *pwrpriv);
@@ -603,27 +457,11 @@ int rtw_pm_set_lps_level(_adapter *padapter, u8 level);
 int rtw_pm_set_lps_1t1r(_adapter *padapter, u8 en);
 #endif
 void rtw_set_lps_deny(_adapter *adapter, u32 ms);
-#ifdef CONFIG_WOWLAN
-int rtw_pm_set_wow_lps(_adapter *padapter, u8 mode);
-int rtw_pm_set_wow_lps_level(_adapter *padapter, u8 level);
-#ifdef CONFIG_LPS_1T1R
-int rtw_pm_set_wow_lps_1t1r(_adapter *padapter, u8 en);
-#endif
-#endif /* CONFIG_WOWLAN */
 
 void rtw_ps_deny(PADAPTER padapter, PS_DENY_REASON reason);
 void rtw_ps_deny_cancel(PADAPTER padapter, PS_DENY_REASON reason);
 u32 rtw_ps_deny_get(PADAPTER padapter);
 
-#if defined(CONFIG_WOWLAN)
-void rtw_get_current_ip_address(PADAPTER padapter, u8 *pcurrentip);
-void rtw_get_sec_iv(PADAPTER padapter, u8 *pcur_dot11txpn, u8 *StaAddr);
-bool rtw_wowlan_parser_pattern_cmd(u8 *input, char *pattern,
-				int *pattern_len, char *bit_mask);
-void rtw_wow_pattern_sw_reset(_adapter *adapter);
-u8 rtw_set_default_pattern(_adapter *adapter);
-void rtw_wow_pattern_sw_dump(_adapter *adapter);
-#endif /* CONFIG_WOWLAN */
 void rtw_ssmps_enter(_adapter *adapter, struct sta_info *sta);
 void rtw_ssmps_leave(_adapter *adapter, struct sta_info *sta);
 #endif /* __RTL871X_PWRCTRL_H_ */

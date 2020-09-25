@@ -405,10 +405,8 @@ void hal_com_config_channel_plan(
 );
 
 int hal_config_macaddr(_adapter *adapter, bool autoload_fail);
-#ifdef RTW_HALMAC
 void rtw_hal_hw_port_enable(_adapter *adapter);
 void rtw_hal_hw_port_disable(_adapter *adapter);
-#endif
 
 BOOLEAN
 HAL_IsLegalChannel(
@@ -571,10 +569,8 @@ void linked_info_dump(_adapter *padapter, u8 benable);
 void rtw_store_phy_info(_adapter *padapter, union recv_frame *prframe);
 #define		HWSET_MAX_SIZE			1024
 
-#ifdef CONFIG_EFUSE_CONFIG_FILE
 u32 Hal_readPGDataFromConfigFile(PADAPTER padapter);
 u32 Hal_ReadMACAddrFromFile(PADAPTER padapter, u8 *mac_addr);
-#endif /* CONFIG_EFUSE_CONFIG_FILE */
 
 int hal_efuse_macaddr_offset(_adapter *adapter);
 int Hal_GetPhyEfuseMACAddr(PADAPTER padapter, u8 *mac_addr);
@@ -589,9 +585,6 @@ u8 rtw_hal_busagg_qsel_check(_adapter *padapter, u8 pre_qsel, u8 next_qsel);
 
 u8 rtw_get_current_tx_rate(_adapter *padapter, struct sta_info *psta);
 u8 rtw_get_current_tx_sgi(_adapter *padapter, struct sta_info *psta);
-#ifdef CONFIG_CUSTOMER01_SMART_ANTENNA
-void rtw_hal_set_pathb_phase(_adapter *adapter, u8 phase_idx);
-#endif
 void rtw_hal_set_fw_rsvd_page(_adapter *adapter, bool finished);
 u8 rtw_hal_get_rsvd_page_num(struct _ADAPTER *adapter);
 
@@ -600,11 +593,6 @@ int rtw_hal_reset_tsf(_adapter *adapter, u8 reset_port);
 #endif
 u64 rtw_hal_get_tsftr_by_port(_adapter *adapter, u8 port);
 
-#ifdef CONFIG_TDLS
-	#ifdef CONFIG_TDLS_CH_SW
-		s32 rtw_hal_ch_sw_oper_offload(_adapter *padapter, u8 channel, u8 channel_offset, u16 bwmode);
-	#endif
-#endif
 #if defined(CONFIG_BT_COEXIST) && defined(CONFIG_FW_MULTI_PORT_SUPPORT)
 s32 rtw_hal_set_wifi_btc_port_id_cmd(_adapter *adapter);
 #endif
@@ -623,17 +611,10 @@ s8 rtw_hal_ch_sw_iqk_info_search(_adapter *padapter, u8 central_chnl, u8 bw_mode
 void rtw_hal_ch_sw_iqk_info_backup(_adapter *adapter);
 void rtw_hal_ch_sw_iqk_info_restore(_adapter *padapter, u8 ch_sw_use_case);
 
-#ifdef CONFIG_GPIO_WAKEUP
-	void rtw_hal_switch_gpio_wl_ctrl(_adapter *padapter, u8 index, u8 enable);
-	void rtw_hal_set_output_gpio(_adapter *padapter, u8 index, u8 outputval);
-	void rtw_hal_set_input_gpio(_adapter *padapter, u8 index);
-#endif
 
-#ifdef CONFIG_LOAD_PHY_PARA_FROM_FILE
 	extern char *rtw_phy_file_path;
 	extern char rtw_phy_para_file_path[PATH_LENGTH_MAX];
 	#define GetLineFromBuffer(buffer)   strsep(&buffer, "\r\n")
-#endif
 
 void update_IOT_info(_adapter *padapter);
 #ifdef CONFIG_RTS_FULL_BW
@@ -643,10 +624,6 @@ void rtw_set_rts_bw(_adapter *padapter);
 void ResumeTxBeacon(_adapter *padapter);
 void StopTxBeacon(_adapter *padapter);
 
-#ifdef CONFIG_ANTENNA_DIVERSITY
-	u8	rtw_hal_antdiv_before_linked(_adapter *padapter);
-	void	rtw_hal_antdiv_rssi_compared(_adapter *padapter, WLAN_BSSID_EX *dst, WLAN_BSSID_EX *src);
-#endif
 
 #ifdef DBG_SEC_CAM_MOVE
 	void rtw_hal_move_sta_gk_to_dk(_adapter *adapter);
@@ -683,37 +660,6 @@ void rtw_hal_construct_beacon(_adapter *padapter, u8 *pframe, u32 *pLength);
 void rtw_hal_construct_NullFunctionData(PADAPTER, u8 *pframe, u32 *pLength,
 				u8 bQoS, u8 AC, u8 bEosp, u8 bForcePowerSave);
 
-#ifdef CONFIG_WOWLAN
-struct rtl_wow_pattern {
-	u16	crc;
-	u8	type;
-	u32	mask[4];
-};
-void rtw_wow_pattern_cam_dump(_adapter *adapter);
-
-#ifdef CONFIG_WOW_PATTERN_HW_CAM
-void rtw_wow_pattern_read_cam_ent(_adapter *adapter, u8 id, struct  rtl_wow_pattern *context);
-void rtw_dump_wow_pattern(void *sel, struct rtl_wow_pattern *pwow_pattern, u8 idx);
-#endif
-
-struct rtw_ndp_info {
-	u8 enable:1;
-	u8 check_remote_ip:1; /* Need to Check Sender IP or not */
-	u8 rsvd:6;
-	u8 num_of_target_ip; /* Number of Check IP which NA query IP */
-	u8 target_link_addr[6]; /* DUT's MAC address */
-	u8 remote_ipv6_addr[16]; /* Just respond IP */
-	u8 target_ipv6_addr[16]; /* target IP */
-};
-#define REMOTE_INFO_CTRL_SET_VALD_EN(target, _value) \
-	SET_BITS_TO_LE_4BYTE(target + 0, 0, 8, _value)
-#define REMOTE_INFO_CTRL_SET_PTK_EN(target, _value) \
-	SET_BITS_TO_LE_4BYTE(target + 1, 0, 1, _value)
-#define REMOTE_INFO_CTRL_SET_GTK_EN(target, _value) \
-	SET_BITS_TO_LE_4BYTE(target + 1, 1, 1, _value)
-#define REMOTE_INFO_CTRL_SET_GTK_IDX(target, _value) \
-	SET_BITS_TO_LE_4BYTE(target + 2, 0, 8, _value)
-#endif /*CONFIG_WOWLAN*/
 
 void rtw_dump_phy_cap(void *sel, _adapter *adapter);
 void rtw_dump_rsvd_page(void *sel, _adapter *adapter, u8 page_offset, u8 page_num);
@@ -732,11 +678,7 @@ s32 rtw_set_ps_rsvd_page(_adapter *adapter);
 /*void rtw_search_default_port(_adapter *adapter);*/
 #endif
 
-#ifdef CONFIG_P2P_PS
-#ifdef RTW_HALMAC
 void rtw_set_p2p_ps_offload_cmd(_adapter *adapter, u8 p2p_ps_state);
-#endif
-#endif
 
 #ifdef RTW_CHANNEL_SWITCH_OFFLOAD
 void rtw_hal_switch_chnl_and_set_bw_offload(_adapter *adapter, u8 central_ch, u8 pri_ch_idx, u8 bw);
@@ -764,17 +706,12 @@ void rtw_ap_mbid_bcn_dis(_adapter *adapter, u8 mbcn_id);
 
 void rtw_hal_get_trx_path(struct dvobj_priv *d, enum rf_type *type,
 			 enum bb_path *tx, enum bb_path *rx);
-#ifdef CONFIG_BEAMFORMING
 #ifdef RTW_BEAMFORMING_VERSION_2
 void rtw_hal_beamforming_config_csirate(PADAPTER adapter);
-#endif
 #endif
 
 u8 phy_get_current_tx_num(PADAPTER pAdapter, u8 Rate);
 
-#ifdef CONFIG_RTL8812A
-u8 * rtw_hal_set_8812a_vendor_ie(_adapter *padapter , u8 *pframe ,uint *frlen );
-#endif
 
 #ifdef CONFIG_PROTSEL_PORT
 void rtw_enter_protsel_port(_adapter *padapter, u8 port_sel);

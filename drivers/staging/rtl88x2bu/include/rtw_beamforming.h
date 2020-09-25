@@ -15,7 +15,6 @@
 #ifndef __RTW_BEAMFORMING_H_
 #define __RTW_BEAMFORMING_H_
 
-#ifdef CONFIG_BEAMFORMING
 
 #ifdef RTW_BEAMFORMING_VERSION_2
 #define MAX_NUM_BEAMFORMEE_SU	2
@@ -292,6 +291,5 @@ void update_attrib_txbf_info(_adapter *padapter, struct pkt_attrib *pattrib, str
 
 #endif /* !RTW_BEAMFORMING_VERSION_2 */
 
-#endif /*#ifdef CONFIG_BEAMFORMING */
 
 #endif /*__RTW_BEAMFORMING_H_*/

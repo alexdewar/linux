@@ -51,19 +51,13 @@ enum _EFUSE_DEF_TYPE {
 #define		EFUSE_MAX_BANK_SIZE		512
 
 /*RTL8822B 8821C BT EFUSE Define 1 BANK 128 size logical map 1024*/
-#ifdef RTW_HALMAC
 #define BANK_NUM		1
 #define EFUSE_BT_REAL_BANK_CONTENT_LEN	128
 #define EFUSE_BT_REAL_CONTENT_LEN		(EFUSE_BT_REAL_BANK_CONTENT_LEN * BANK_NUM)
 #define EFUSE_BT_MAP_LEN				1024	/* 1k bytes */
 #define EFUSE_BT_MAX_SECTION			(EFUSE_BT_MAP_LEN / 8)
-#ifdef CONFIG_RTL8822C
-#define EFUSE_PROTECT_BYTES_BANK		54
-#else
 #define EFUSE_PROTECT_BYTES_BANK		16
-#endif
 #define AVAILABLE_EFUSE_ADDR(addr)	(addr < EFUSE_BT_REAL_CONTENT_LEN - EFUSE_PROTECT_BYTES_BANK)
-#endif
 
 #define EXT_HEADER(header) ((header & 0x1F) == 0x0F)
 #define ALL_WORDS_DISABLED(wde)	((wde & 0x0F) == 0x0F)
@@ -264,9 +258,7 @@ extern const u8 _mac_hidden_proto_to_hal_proto_cap[];
 u8 mac_hidden_wl_func_to_hal_wl_func(u8 func);
 
 u8 rtw_efuse_file_read(PADAPTER padapter, u8 *filepatch, u8 *buf, u32 len);
-#ifdef CONFIG_EFUSE_CONFIG_FILE
 u32 rtw_read_efuse_from_file(const char *path, u8 *buf, int map_size);
 u32 rtw_read_macaddr_from_file(const char *path, u8 *buf);
-#endif /* CONFIG_EFUSE_CONFIG_FILE */
 
 #endif

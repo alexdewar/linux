@@ -19,10 +19,6 @@
  */
 #include <drv_types.h>
 
-#ifdef CONFIG_PLATFORM_ACTIONS_ATM705X
-extern int acts_wifi_init(void);
-extern void acts_wifi_cleanup(void);
-#endif
 
 /*
  * Return:
@@ -33,13 +29,6 @@ int platform_wifi_power_on(void)
 {
 	int ret = 0;
 
-#ifdef CONFIG_PLATFORM_ACTIONS_ATM705X
-	ret = acts_wifi_init();
-	if (unlikely(ret < 0)) {
-		pr_err("%s Failed to register the power control driver.\n", __FUNCTION__);
-		goto exit;
-	}
-#endif
 
 exit:
 	return ret;
@@ -47,7 +36,4 @@ exit:
 
 void platform_wifi_power_off(void)
 {
-#ifdef CONFIG_PLATFORM_ACTIONS_ATM705X
-	acts_wifi_cleanup();
-#endif
 }

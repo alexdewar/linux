@@ -34,272 +34,6 @@
  * Driver API for HALMAC operations
  */
 
-#ifdef CONFIG_SDIO_HCI
-#include <rtw_sdio.h>
-
-static u8 _halmac_mac_reg_page0_chk(const char *func, struct dvobj_priv *dvobj, u32 offset)
-{
-#if defined(CONFIG_IO_CHECK_IN_ANA_LOW_CLK) && defined(CONFIG_LPS_LCLK)
-	struct pwrctrl_priv *pwrpriv = &dvobj->pwrctl_priv;
-	u32 mac_reg_offset = 0;
-
-	if (pwrpriv->pwr_mode == PS_MODE_ACTIVE)
-		return _TRUE;
-
-	if (pwrpriv->lps_level == LPS_NORMAL)
-		return _TRUE;
-
-	if (pwrpriv->rpwm >= PS_STATE_S2)
-		return _TRUE;
-
-	if (offset & (WLAN_IOREG_DEVICE_ID << 13))  { /*WLAN_IOREG_OFFSET*/
-		mac_reg_offset = offset & HALMAC_WLAN_MAC_REG_MSK;
-		if (mac_reg_offset < 0x100) {
-			RTW_ERR(FUNC_ADPT_FMT
-				"access MAC REG -0x%04x in PS-mode:0x%02x (rpwm:0x%02x, lps_level:0x%02x)\n",
-				FUNC_ADPT_ARG(dvobj_get_primary_adapter(dvobj)), mac_reg_offset,
-				pwrpriv->pwr_mode, pwrpriv->rpwm, pwrpriv->lps_level);
-			rtw_warn_on(1);
-			return _FALSE;
-		}
-	}
-#endif
-	return _TRUE;
-}
-
-static u8 _halmac_sdio_cmd52_read(void *p, u32 offset)
-{
-	struct dvobj_priv *d;
-	u8 val;
-	u8 ret;
-
-
-	d = (struct dvobj_priv *)p;
-	_halmac_mac_reg_page0_chk(__func__, d, offset);
-	ret = rtw_sdio_read_cmd52(d, offset, &val, 1);
-	if (_FAIL == ret) {
-		RTW_ERR("%s: I/O FAIL!\n", __FUNCTION__);
-		return SDIO_ERR_VAL8;
-	}
-
-	return val;
-}
-
-static void _halmac_sdio_cmd52_write(void *p, u32 offset, u8 val)
-{
-	struct dvobj_priv *d;
-	u8 ret;
-
-
-	d = (struct dvobj_priv *)p;
-	_halmac_mac_reg_page0_chk(__func__, d, offset);
-	ret = rtw_sdio_write_cmd52(d, offset, &val, 1);
-	if (_FAIL == ret)
-		RTW_ERR("%s: I/O FAIL!\n", __FUNCTION__);
-}
-
-static u8 _halmac_sdio_reg_read_8(void *p, u32 offset)
-{
-	struct dvobj_priv *d;
-	u8 *pbuf;
-	u8 val;
-	u8 ret;
-
-
-	d = (struct dvobj_priv *)p;
-	val = SDIO_ERR_VAL8;
-	_halmac_mac_reg_page0_chk(__func__, d, offset);
-	pbuf = rtw_zmalloc(1);
-	if (!pbuf)
-		return val;
-
-	ret = rtw_sdio_read_cmd53(d, offset, pbuf, 1);
-	if (ret == _FAIL) {
-		RTW_ERR("%s: I/O FAIL!\n", __FUNCTION__);
-		goto exit;
-	}
-
-	val = *pbuf;
-
-exit:
-	rtw_mfree(pbuf, 1);
-
-	return val;
-}
-
-static u16 _halmac_sdio_reg_read_16(void *p, u32 offset)
-{
-	struct dvobj_priv *d;
-	u8 *pbuf;
-	u16 val;
-	u8 ret;
-
-
-	d = (struct dvobj_priv *)p;
-	val = SDIO_ERR_VAL16;
-	_halmac_mac_reg_page0_chk(__func__, d, offset);
-	pbuf = rtw_zmalloc(2);
-	if (!pbuf)
-		return val;
-
-	ret = rtw_sdio_read_cmd53(d, offset, pbuf, 2);
-	if (ret == _FAIL) {
-		RTW_ERR("%s: I/O FAIL!\n", __FUNCTION__);
-		goto exit;
-	}
-
-	val = le16_to_cpu(*(u16 *)pbuf);
-
-exit:
-	rtw_mfree(pbuf, 2);
-
-	return val;
-}
-
-static u32 _halmac_sdio_reg_read_32(void *p, u32 offset)
-{
-	struct dvobj_priv *d;
-	u8 *pbuf;
-	u32 val;
-	u8 ret;
-
-
-	d = (struct dvobj_priv *)p;
-	val = SDIO_ERR_VAL32;
-	_halmac_mac_reg_page0_chk(__func__, d, offset);
-	pbuf = rtw_zmalloc(4);
-	if (!pbuf)
-		return val;
-
-	ret = rtw_sdio_read_cmd53(d, offset, pbuf, 4);
-	if (ret == _FAIL) {
-		RTW_ERR("%s: I/O FAIL!\n", __FUNCTION__);
-		goto exit;
-	}
-
-	val = le32_to_cpu(*(u32 *)pbuf);
-
-exit:
-	rtw_mfree(pbuf, 4);
-
-	return val;
-}
-
-static u8 _halmac_sdio_reg_read_n(void *p, u32 offset, u32 size, u8 *data)
-{
-	struct dvobj_priv *d = (struct dvobj_priv *)p;
-	u8 *pbuf;
-	u8 ret;
-	u8 rst = RTW_HALMAC_FAIL;
-	u32 sdio_read_size;
-
-
-	if (!data)
-		return rst;
-
-	sdio_read_size = RND4(size);
-	sdio_read_size = rtw_sdio_cmd53_align_size(d, sdio_read_size);
-
-	pbuf = rtw_zmalloc(sdio_read_size);
-	if (!pbuf)
-		return rst;
-
-	ret = rtw_sdio_read_cmd53(d, offset, pbuf, sdio_read_size);
-	if (ret == _FAIL) {
-		RTW_ERR("%s: I/O FAIL!\n", __FUNCTION__);
-		goto exit;
-	}
-
-	_rtw_memcpy(data, pbuf, size);
-	rst = RTW_HALMAC_SUCCESS;
-exit:
-	rtw_mfree(pbuf, sdio_read_size);
-
-	return rst;
-}
-
-static void _halmac_sdio_reg_write_8(void *p, u32 offset, u8 val)
-{
-	struct dvobj_priv *d;
-	u8 *pbuf;
-	u8 ret;
-
-
-	d = (struct dvobj_priv *)p;
-	_halmac_mac_reg_page0_chk(__func__, d, offset);
-	pbuf = rtw_zmalloc(1);
-	if (!pbuf)
-		return;
-	_rtw_memcpy(pbuf, &val, 1);
-
-	ret = rtw_sdio_write_cmd53(d, offset, pbuf, 1);
-	if (ret == _FAIL)
-		RTW_ERR("%s: I/O FAIL!\n", __FUNCTION__);
-
-	rtw_mfree(pbuf, 1);
-}
-
-static void _halmac_sdio_reg_write_16(void *p, u32 offset, u16 val)
-{
-	struct dvobj_priv *d;
-	u8 *pbuf;
-	u8 ret;
-
-
-	d = (struct dvobj_priv *)p;
-	_halmac_mac_reg_page0_chk(__func__, d, offset);
-	val = cpu_to_le16(val);
-	pbuf = rtw_zmalloc(2);
-	if (!pbuf)
-		return;
-	_rtw_memcpy(pbuf, &val, 2);
-
-	ret = rtw_sdio_write_cmd53(d, offset, pbuf, 2);
-	if (ret == _FAIL)
-		RTW_ERR("%s: I/O FAIL!\n", __FUNCTION__);
-
-	rtw_mfree(pbuf, 2);
-}
-
-static void _halmac_sdio_reg_write_32(void *p, u32 offset, u32 val)
-{
-	struct dvobj_priv *d;
-	u8 *pbuf;
-	u8 ret;
-
-
-	d = (struct dvobj_priv *)p;
-	_halmac_mac_reg_page0_chk(__func__, d, offset);
-	val = cpu_to_le32(val);
-	pbuf = rtw_zmalloc(4);
-	if (!pbuf)
-		return;
-	_rtw_memcpy(pbuf, &val, 4);
-
-	ret = rtw_sdio_write_cmd53(d, offset, pbuf, 4);
-	if (ret == _FAIL)
-		RTW_ERR("%s: I/O FAIL!\n", __FUNCTION__);
-
-	rtw_mfree(pbuf, 4);
-}
-
-static u8 _halmac_sdio_read_cia(void *p, u32 offset)
-{
-	struct dvobj_priv *d;
-	u8 data = 0;
-	u8 ret;
-
-
-	d = (struct dvobj_priv *)p;
-
-	ret = rtw_sdio_f0_read(d, offset, &data, 1);
-	if (ret == _FAIL)
-		RTW_ERR("%s: I/O FAIL!\n", __FUNCTION__);
-
-	return data;
-}
-
-#else /* !CONFIG_SDIO_HCI */
 
 static u8 _halmac_reg_read_8(void *p, u32 offset)
 {
@@ -381,27 +115,7 @@ static void _halmac_reg_write_32(void *p, u32 offset, u32 val)
 	if (err == _FAIL)
 		RTW_ERR("%s: I/O FAIL!\n", __FUNCTION__);
 }
-#endif /* !CONFIG_SDIO_HCI */
 
-#ifdef DBG_IO
-static void _halmac_reg_read_monitor(void *p, u32 addr, u32 len, u32 val
-	, const char *caller, const u32 line)
-{
-	struct dvobj_priv *d = (struct dvobj_priv *)p;
-	_adapter *adapter = dvobj_get_primary_adapter(d);
-
-	dbg_rtw_reg_read_monitor(adapter, addr, len, val, caller, line);
-}
-
-static void _halmac_reg_write_monitor(void *p, u32 addr, u32 len, u32 val
-	, const char *caller, const u32 line)
-{
-	struct dvobj_priv *d = (struct dvobj_priv *)p;
-	_adapter *adapter = dvobj_get_primary_adapter(d);
-
-	dbg_rtw_reg_write_monitor(adapter, addr, len, val, caller, line);
-}
-#endif
 
 static u8 _halmac_mfree(void *p, void *buffer, u32 size)
 {
@@ -466,9 +180,7 @@ static u8 _halmac_mutex_unlock(void *p, HALMAC_MUTEX *pMutex)
 	return RTW_HALMAC_SUCCESS;
 }
 
-#ifndef CONFIG_SDIO_HCI
 #define DBG_MSG_FILTER
-#endif
 
 #ifdef DBG_MSG_FILTER
 static u8 is_msg_allowed(uint drv_lv, u8 msg_lv)
@@ -512,9 +224,7 @@ static u8 _halmac_msg_print(void *p, u32 msg_type, u8 msg_level, s8 *fmt, ...)
 
 
 #ifdef DBG_MSG_FILTER
-#ifdef CONFIG_RTW_DEBUG
 	drv_level = rtw_drv_log_level;
-#endif
 	if (is_msg_allowed(drv_level, msg_level) == _FALSE)
 		return ret;
 #endif
@@ -762,31 +472,13 @@ exit:
 
 struct halmac_platform_api rtw_halmac_platform_api = {
 	/* R/W register */
-#ifdef CONFIG_SDIO_HCI
-	.SDIO_CMD52_READ = _halmac_sdio_cmd52_read,
-	.SDIO_CMD53_READ_8 = _halmac_sdio_reg_read_8,
-	.SDIO_CMD53_READ_16 = _halmac_sdio_reg_read_16,
-	.SDIO_CMD53_READ_32 = _halmac_sdio_reg_read_32,
-	.SDIO_CMD53_READ_N = _halmac_sdio_reg_read_n,
-	.SDIO_CMD52_WRITE = _halmac_sdio_cmd52_write,
-	.SDIO_CMD53_WRITE_8 = _halmac_sdio_reg_write_8,
-	.SDIO_CMD53_WRITE_16 = _halmac_sdio_reg_write_16,
-	.SDIO_CMD53_WRITE_32 = _halmac_sdio_reg_write_32,
-	.SDIO_CMD52_CIA_READ = _halmac_sdio_read_cia,
-#endif /* CONFIG_SDIO_HCI */
-#if defined(CONFIG_USB_HCI) || defined(CONFIG_PCI_HCI)
 	.REG_READ_8 = _halmac_reg_read_8,
 	.REG_READ_16 = _halmac_reg_read_16,
 	.REG_READ_32 = _halmac_reg_read_32,
 	.REG_WRITE_8 = _halmac_reg_write_8,
 	.REG_WRITE_16 = _halmac_reg_write_16,
 	.REG_WRITE_32 = _halmac_reg_write_32,
-#endif /* CONFIG_USB_HCI || CONFIG_PCI_HCI */
 
-#ifdef DBG_IO
-	.READ_MONITOR = _halmac_reg_read_monitor,
-	.WRITE_MONITOR = _halmac_reg_write_monitor,
-#endif
 
 	/* Write data */
 #if 0
@@ -911,30 +603,6 @@ static void _read_register(struct dvobj_priv *d, u32 addr, u32 cnt, u8 *buf)
 #endif
 }
 
-#ifdef CONFIG_SDIO_HCI
-static int _sdio_read_local(struct dvobj_priv *d, u32 addr, u32 cnt, u8 *buf)
-{
-	struct halmac_adapter *mac;
-	struct halmac_api *api;
-	enum halmac_ret_status status;
-
-
-	if (buf == NULL)
-		return -1;
-
-	mac = dvobj_to_halmac(d);
-	api = HALMAC_GET_API(mac);
-
-	status = api->halmac_reg_sdio_cmd53_read_n(mac, addr, cnt, buf);
-	if (status != HALMAC_RET_SUCCESS) {
-		RTW_ERR("%s: addr=0x%08x cnt=%d err=%d\n",
-			__FUNCTION__, addr, cnt, status);
-		return -1;
-	}
-
-	return 0;
-}
-#endif /* CONFIG_SDIO_HCI */
 
 void rtw_halmac_read_mem(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *pmem)
 {
@@ -948,15 +616,6 @@ void rtw_halmac_read_mem(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *pmem)
 
 	d = pintfhdl->pintf_dev;
 
-#ifdef CONFIG_SDIO_HCI
-	if (addr & 0xFFFF0000) {
-		int err = 0;
-
-		err = _sdio_read_local(d, addr, cnt, pmem);
-		if (!err)
-			return;
-	}
-#endif /* CONFIG_SDIO_HCI */
 
 	_read_register(d, addr, cnt, pmem);
 }
@@ -1070,17 +729,8 @@ static int init_write_rsvd_page_size(struct dvobj_priv *d)
 	int err = 0;
 
 
-#ifdef CONFIG_USB_HCI
 	/* for USB do not exceed MAX_CMDBUF_SZ */
 	size = 0x1000;
-#elif defined(CONFIG_PCI_HCI)
-	size = MAX_CMDBUF_SZ - TXDESC_OFFSET;
-#elif defined(CONFIG_SDIO_HCI)
-	size = 0x7000; /* 28KB */
-#else
-	/* Use HALMAC default setting and don't call any function */
-	return 0;
-#endif
 #if 0	/* Fail to pass coverity DEADCODE check */
 	/* If size==0, use HALMAC default setting and don't call any function */
 	if (!size)
@@ -1136,7 +786,6 @@ static void deinit_priv(struct halmacpriv *priv)
 		u32 count, size;
 
 		count = HALMAC_FEATURE_ALL + 1;
-#ifdef CONFIG_RTW_DEBUG
 		{
 			struct submit_ctx *sctx;
 			u32 i;
@@ -1152,28 +801,11 @@ static void deinit_priv(struct halmacpriv *priv)
 				rtw_mfree((u8 *)sctx, sizeof(*sctx));
 			}
 		}
-#endif /* !CONFIG_RTW_DEBUG */
 		size = sizeof(*indicator) * count;
 		rtw_mfree((u8 *)indicator, size);
 	}
 }
 
-#ifdef CONFIG_SDIO_HCI
-static enum halmac_sdio_spec_ver _sdio_ver_drv2halmac(struct dvobj_priv *d)
-{
-	bool v3;
-	enum halmac_sdio_spec_ver ver;
-
-
-	v3 = rtw_is_sdio30(dvobj_get_primary_adapter(d));
-	if (v3)
-		ver = HALMAC_SDIO_SPEC_VER_3_00;
-	else
-		ver = HALMAC_SDIO_SPEC_VER_2_00;
-
-	return ver;
-}
-#endif /* CONFIG_SDIO_HCI */
 
 void rtw_halmac_get_version(char *str, u32 len)
 {
@@ -1196,9 +828,6 @@ int rtw_halmac_init_adapter(struct dvobj_priv *d, struct halmac_platform_api *pf
 	enum halmac_interface intf;
 	enum halmac_ret_status status;
 	int err = 0;
-#ifdef CONFIG_SDIO_HCI
-	struct halmac_sdio_hw_info info;
-#endif /* CONFIG_SDIO_HCI */
 
 
 	halmac = dvobj_to_halmac(d);
@@ -1211,16 +840,7 @@ int rtw_halmac_init_adapter(struct dvobj_priv *d, struct halmac_platform_api *pf
 	if (err)
 		goto error;
 
-#ifdef CONFIG_SDIO_HCI
-	intf = HALMAC_INTERFACE_SDIO;
-#elif defined(CONFIG_USB_HCI)
 	intf = HALMAC_INTERFACE_USB;
-#elif defined(CONFIG_PCI_HCI)
-	intf = HALMAC_INTERFACE_PCIE;
-#else
-#warning "INTERFACE(CONFIG_XXX_HCI) not be defined!!"
-	intf = HALMAC_INTERFACE_UNDEFINE;
-#endif
 	status = halmac_init_adapter(d, pf_api, intf, &halmac, &api);
 	if (HALMAC_RET_SUCCESS != status) {
 		RTW_ERR("%s: halmac_init_adapter fail!(status=%d)\n", __FUNCTION__, status);
@@ -1248,23 +868,6 @@ int rtw_halmac_init_adapter(struct dvobj_priv *d, struct halmac_platform_api *pf
 
 	init_write_rsvd_page_size(d);
 
-#ifdef CONFIG_SDIO_HCI
-	_rtw_memset(&info, 0, sizeof(info));
-	info.spec_ver = _sdio_ver_drv2halmac(d);
-	/* Convert clock speed unit to MHz from Hz */
-	info.clock_speed = RTW_DIV_ROUND_UP(rtw_sdio_get_clock(d), 1000000);
-	info.block_size = rtw_sdio_get_block_size(d);
-	RTW_DBG("%s: SDIO ver=%u clock=%uMHz blk_size=%u bytes\n",
-		__FUNCTION__, info.spec_ver+2, info.clock_speed,
-		info.block_size);
-	status = api->halmac_sdio_hw_info(halmac, &info);
-	if (status != HALMAC_RET_SUCCESS) {
-		RTW_ERR("%s: halmac_sdio_hw_info fail!(status=%d)\n",
-			__FUNCTION__, status);
-		err = -1;
-		goto deinit;
-	}
-#endif /* CONFIG_SDIO_HCI */
 
 	return 0;
 
@@ -2552,46 +2155,6 @@ void dump_dbg_val(struct _ADAPTER *a, u32 reg)
 	RTW_PRINT("0x3A = %02x, 0xC0 = 0x%08x\n",reg, v32);
 }
 
-#ifdef CONFIG_PCI_HCI
-static void _dump_pcie_cfg_space(struct dvobj_priv *d)
-{
-	struct _ADAPTER *padapter = dvobj_get_primary_adapter(d);
-	struct dvobj_priv       *pdvobjpriv = adapter_to_dvobj(padapter);
-	struct pci_dev  *pdev = pdvobjpriv->ppcidev;
-	struct pci_dev  *bridge_pdev = pdev->bus->self;
-
-        u32 tmp[4] = { 0 };
-        u32 i, j;
-
-	RTW_PRINT("\n*****  PCI Device Configuration Space *****\n\n");
-
-        for(i = 0; i < 0x100; i += 0x10)
-        {
-                for (j = 0 ; j < 4 ; j++)
-                        pci_read_config_dword(pdev, i + j * 4, tmp+j);
-
-        	RTW_PRINT("%03x: %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
-                        i, tmp[0] & 0xFF, (tmp[0] >> 8) & 0xFF, (tmp[0] >> 16) & 0xFF, (tmp[0] >> 24) & 0xFF,
-                        tmp[1] & 0xFF, (tmp[1] >> 8) & 0xFF, (tmp[1] >> 16) & 0xFF, (tmp[1] >> 24) & 0xFF,
-                        tmp[2] & 0xFF, (tmp[2] >> 8) & 0xFF, (tmp[2] >> 16) & 0xFF, (tmp[2] >> 24) & 0xFF,
-                        tmp[3] & 0xFF, (tmp[3] >> 8) & 0xFF, (tmp[3] >> 16) & 0xFF, (tmp[3] >> 24) & 0xFF);
-        }
-
-	RTW_PRINT("\n*****  PCI Host Device Configuration Space*****\n\n");
-
-        for(i = 0; i < 0x100; i += 0x10)
-        {
-                for (j = 0 ; j < 4 ; j++)
-                        pci_read_config_dword(bridge_pdev, i + j * 4, tmp+j);
-
-        	RTW_PRINT("%03x: %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
-                        i, tmp[0] & 0xFF, (tmp[0] >> 8) & 0xFF, (tmp[0] >> 16) & 0xFF, (tmp[0] >> 24) & 0xFF,
-                        tmp[1] & 0xFF, (tmp[1] >> 8) & 0xFF, (tmp[1] >> 16) & 0xFF, (tmp[1] >> 24) & 0xFF,
-                        tmp[2] & 0xFF, (tmp[2] >> 8) & 0xFF, (tmp[2] >> 16) & 0xFF, (tmp[2] >> 24) & 0xFF,
-                        tmp[3] & 0xFF, (tmp[3] >> 8) & 0xFF, (tmp[3] >> 16) & 0xFF, (tmp[3] >> 24) & 0xFF);
-        }
-}
-#endif
 
 static void _dump_mac_reg_for_power_switch(struct dvobj_priv *d,
 					   const char* caller, char* desc)
@@ -2609,22 +2172,6 @@ static void _dump_mac_reg_for_power_switch(struct dvobj_priv *d,
 	/* dump debug register */
 	a = dvobj_get_primary_adapter(d);
 
-#ifdef CONFIG_PCI_HCI
-	_dump_pcie_cfg_space(d);
-
-	v8 = rtw_read8(a, 0xF6) | 0x01;
-	rtw_write8(a, 0xF6, v8);
-	RTW_PRINT("0xF6 = %02x\n", v8);
-
-	dump_dbg_val(a, 0x63);
-	dump_dbg_val(a, 0x64);
-	dump_dbg_val(a, 0x68);
-	dump_dbg_val(a, 0x69);
-	dump_dbg_val(a, 0x6a);
-	dump_dbg_val(a, 0x6b);
-	dump_dbg_val(a, 0x71);
-	dump_dbg_val(a, 0x72);
-#endif
 }
 
 static enum halmac_ret_status _power_switch(struct halmac_adapter *halmac,
@@ -2671,13 +2218,6 @@ int rtw_halmac_poweron(struct dvobj_priv *d)
 	struct halmac_api *api;
 	enum halmac_ret_status status;
 	int err = -1;
-#if defined(CONFIG_PCI_HCI) && defined(CONFIG_RTL8822B)
-	struct _ADAPTER *a;
-	u8 v8;
-	u32 addr;
-
-	a = dvobj_get_primary_adapter(d);
-#endif
 
 	halmac = dvobj_to_halmac(d);
 	if (!halmac)
@@ -2689,48 +2229,11 @@ int rtw_halmac_poweron(struct dvobj_priv *d)
 	if (status != HALMAC_RET_SUCCESS)
 		goto out;
 
-#ifdef CONFIG_SDIO_HCI
-	status = api->halmac_sdio_cmd53_4byte(halmac, HALMAC_SDIO_CMD53_4BYTE_MODE_RW);
-	if (status != HALMAC_RET_SUCCESS)
-		goto out;
-#endif /* CONFIG_SDIO_HCI */
 
-#if defined(CONFIG_PCI_HCI) && defined(CONFIG_RTL8822B)
-	addr = 0x3F3;
-	v8 = rtw_read8(a, addr);
-	RTW_PRINT("%s: 0x%X = 0x%02x\n", __FUNCTION__, addr, v8);
-	/* are we in pcie debug mode? */
-	if (!(v8 & BIT(2))) {
-		RTW_PRINT("%s: Enable pcie debug mode\n", __FUNCTION__);
-		v8 |= BIT(2);
-		v8 = rtw_write8(a, addr, v8);
-	}
-#endif
 
 	status = _power_switch(halmac, api, HALMAC_MAC_POWER_ON);
 	if (HALMAC_RET_PWR_UNCHANGE == status) {
 
-#if defined(CONFIG_PCI_HCI) && defined(CONFIG_RTL8822B)
-		addr = 0x3F3;
-		v8 = rtw_read8(a, addr);
-		RTW_PRINT("%s: 0x%X = 0x%02x\n", __FUNCTION__, addr, v8);
-		
-		/* are we in pcie debug mode? */
-		if (!(v8 & BIT(2))) {
-			RTW_PRINT("%s: Enable pcie debug mode\n", __FUNCTION__);
-			v8 |= BIT(2);
-			v8 = rtw_write8(a, addr, v8);
-		} else if (v8 & BIT(0)) {
-			/* DMA stuck */
-			addr = 0x1350;
-			v8 = rtw_read8(a, addr);
-			RTW_PRINT("%s: 0x%X = 0x%02x\n", __FUNCTION__, addr, v8);
-			RTW_PRINT("%s: recover DMA stuck\n", __FUNCTION__);
-			v8 |= BIT(6);
-			v8 = rtw_write8(a, addr, v8);
-			RTW_PRINT("%s: 0x%X = 0x%02x\n", __FUNCTION__, addr, v8);
-		}
-#endif
 		/*
 		 * Work around for warm reboot but device not power off,
 		 * but it would also fall into this case when auto power on is enabled.
@@ -3179,12 +2682,6 @@ static void _debug_dlfw_fail(struct dvobj_priv *d)
 	}
 
 	mac_reg_dump(NULL, a);
-#ifdef CONFIG_SDIO_HCI
-	RTW_PRINT("======= SDIO Local REG =======\n");
-	sdio_local_reg_dump(NULL, a);
-	RTW_PRINT("======= SDIO CCCR REG =======\n");
-	sd_f0_reg_dump(NULL, a);
-#endif /* CONFIG_SDIO_HCI */
 
 	/* read 0x80 after 10 secs */
 	rtw_msleep_os(10000);
@@ -3205,19 +2702,9 @@ static enum halmac_ret_status _enter_cpu_sleep_mode(struct dvobj_priv *d)
 	mac = dvobj_to_halmac(d);
 	api = HALMAC_GET_API(mac);
 
-#ifdef CONFIG_RTL8822B
 	/* Support after firmware version 21 */
 	if (hal->firmware_version < 21)
 		return HALMAC_RET_NOT_SUPPORT;
-#elif defined(CONFIG_RTL8821C)
-	/* Support after firmware version 13.6 or 16 */
-	if (hal->firmware_version == 13) {
-		if (hal->firmware_sub_version < 6)
-			return HALMAC_RET_NOT_SUPPORT;
-	} else if (hal->firmware_version < 16) {
-		return HALMAC_RET_NOT_SUPPORT;
-	}
-#endif
 
 	return api->halmac_enter_cpu_sleep_mode(mac);
 }
@@ -3293,9 +2780,6 @@ exit:
 
 static void _init_trx_cfg_drv(struct dvobj_priv *d)
 {
-#ifdef CONFIG_PCI_HCI
-	rtw_hal_irp_reset(dvobj_get_primary_adapter(d));
-#endif
 }
 
 /*
@@ -3458,11 +2942,9 @@ static int init_mac_flow(struct dvobj_priv *d)
 	if (err)
 		goto out;
 
-#ifdef CONFIG_USB_HCI
 	status = api->halmac_set_bulkout_num(halmac, d->RtNumOutPipes);
 	if (status != HALMAC_RET_SUCCESS)
 		goto out;
-#endif /* CONFIG_USB_HCI */
 
 	trx_mode = _choose_trx_mode(d);
 	status = api->halmac_init_mac_cfg(halmac, trx_mode);
@@ -3788,7 +3270,6 @@ int rtw_halmac_txfifo_wait_empty(struct dvobj_priv *d, u32 timeout)
 	} while (1);
 
 	if (empty == _FALSE) {
-#ifdef CONFIG_RTW_DEBUG
 		u16 dbg_reg[] = {0x210, 0x230, 0x234, 0x238, 0x23C, 0x240,
 				 0x418, 0x10FC, 0x10F8, 0x11F4, 0x11F8};
 		u8 i;
@@ -3800,7 +3281,6 @@ int rtw_halmac_txfifo_wait_empty(struct dvobj_priv *d, u32 timeout)
 				RTW_ERR("REG_%X:0x%08x\n", dbg_reg[i], val);
 			}
 		}
-#endif /* CONFIG_RTW_DEBUG */
 
 		RTW_ERR("%s: Fail to wait txfifo empty!(cnt=%d)\n",
 			__FUNCTION__, cnt);
@@ -4086,10 +3566,8 @@ int rtw_halmac_send_h2c(struct dvobj_priv *d, u8 *h2c)
 
 	if (!_is_fw_read_cmd_down(adapter, h2c_box_num)) {
 		RTW_WARN(" fw read cmd failed...\n");
-#ifdef DBG_CONFIG_ERROR_DETECT
 		hal->srestpriv.self_dect_fw = _TRUE;
 		hal->srestpriv.self_dect_fw_cnt++;
-#endif /* DBG_CONFIG_ERROR_DETECT */
 		goto exit;
 	}
 
@@ -4581,20 +4059,6 @@ int rtw_halmac_rx_agg_switch(struct dvobj_priv *d, u8 enable)
 
 #ifdef RTW_RX_AGGREGATION
 	if (_TRUE == enable) {
-#ifdef CONFIG_SDIO_HCI
-		rxaggcfg.mode = HALMAC_RX_AGG_MODE_DMA;
-		rxaggcfg.threshold.drv_define = 0;
-		if (hal->rxagg_dma_size || hal->rxagg_dma_timeout) {
-			rxaggcfg.threshold.drv_define = 1;
-			rxaggcfg.threshold.timeout = hal->rxagg_dma_timeout;
-			rxaggcfg.threshold.size = hal->rxagg_dma_size;
-			RTW_INFO("%s: RX aggregation threshold: "
-				 "timeout=%u size=%u\n",
-				 __FUNCTION__,
-				 hal->rxagg_dma_timeout,
-				 hal->rxagg_dma_size);
-		}
-#elif defined(CONFIG_USB_HCI)
 		switch (hal->rxagg_mode) {
 		case RX_AGG_DISABLE:
 			rxaggcfg.mode = HALMAC_RX_AGG_MODE_NONE;
@@ -4619,7 +4083,6 @@ int rtw_halmac_rx_agg_switch(struct dvobj_priv *d, u8 enable)
 			}
 			break;
 		}
-#endif /* CONFIG_USB_HCI */
 	}
 #endif /* RTW_RX_AGGREGATION */
 
@@ -5076,389 +4539,8 @@ int rtw_halmac_bt_wake_cfg(struct dvobj_priv *d, u8 enable)
 	return 0;
 }
 
-#ifdef CONFIG_PNO_SUPPORT
-/**
- * _halmac_scanoffload() - Switch channel by firmware during scanning
- * @d:		struct dvobj_priv*
- * @enable:	1: enable, 0: disable
- * @nlo:	1: nlo mode (no c2h event), 0: normal mode
- * @ssid:	ssid of probe request
- * @ssid_len:	ssid length
- *
- * Switch Channel and Send Porbe Request Offloaded by FW
- *
- * Return 0 for OK, otherwise fail.
- */
-static int _halmac_scanoffload(struct dvobj_priv *d, u32 enable, u8 nlo,
-			       u8 *ssid, u8 ssid_len)
-{
-	struct _ADAPTER *adapter;
-	struct halmac_adapter *mac;
-	struct halmac_api *api;
-	enum halmac_ret_status status;
-	struct halmac_ch_info ch_info;
-	struct halmac_ch_switch_option cs_option;
-	struct mlme_ext_priv *pmlmeext;
-	enum halmac_feature_id id_update, id_ch_sw;
-	struct halmac_indicator *indicator, *tbl;
-
-	int err = 0;
-	u8 probereq[64];
-	u32 len = 0;
-	int i = 0;
-	struct pno_ssid pnossid;
-	struct rf_ctl_t *rfctl = NULL;
-	struct _RT_CHANNEL_INFO *ch_set;
 
 
-	tbl = d->hmpriv.indicator;
-	adapter = dvobj_get_primary_adapter(d);
-	mac = dvobj_to_halmac(d);
-	if (!mac)
-		return -1;
-	api = HALMAC_GET_API(mac);
-	id_update = HALMAC_FEATURE_UPDATE_PACKET;
-	id_ch_sw = HALMAC_FEATURE_CHANNEL_SWITCH;
-	pmlmeext = &(adapter->mlmeextpriv);
-	rfctl = adapter_to_rfctl(adapter);
-	ch_set = rfctl->channel_set;
-
-	RTW_INFO("%s: %s scanoffload, mode: %s\n",
-		 __FUNCTION__, enable?"Enable":"Disable",
-		 nlo?"PNO/NLO":"Normal");
-
-	if (enable) {
-		_rtw_memset(probereq, 0, sizeof(probereq));
-
-		_rtw_memset(&pnossid, 0, sizeof(pnossid));
-		if (ssid) {
-			if (ssid_len > sizeof(pnossid.SSID)) {
-				RTW_ERR("%s: SSID length(%d) is too long(>%d)!!\n",
-					__FUNCTION__, ssid_len, sizeof(pnossid.SSID));
-				return -1;
-			}
-
-			pnossid.SSID_len = ssid_len;
-			_rtw_memcpy(pnossid.SSID, ssid, ssid_len);
-		}
-
-		rtw_hal_construct_ProbeReq(adapter, probereq, &len, &pnossid);
-
-		if (!nlo) {
-			err = init_halmac_event(d, id_update, NULL, 0);
-			if (err)
-				return -1;
-		}
-
-		status = api->halmac_update_packet(mac, HALMAC_PACKET_PROBE_REQ,
-						   probereq, len);
-		if (status != HALMAC_RET_SUCCESS) {
-			if (!nlo)
-				free_halmac_event(d, id_update);
-			RTW_ERR("%s: halmac_update_packet FAIL(%d)!!\n",
-				__FUNCTION__, status);
-			return -1;
-		}
-
-		if (!nlo) {
-			err = wait_halmac_event(d, id_update);
-			if (err)
-				RTW_ERR("%s: wait update packet FAIL(%d)!!\n",
-					__FUNCTION__, err);
-		}
-
-		api->halmac_clear_ch_info(mac);
-
-		for (i = 0; i < rfctl->max_chan_nums && ch_set[i].ChannelNum != 0; i++) {
-			_rtw_memset(&ch_info, 0, sizeof(ch_info));
-			ch_info.extra_info = 0;
-			ch_info.channel = ch_set[i].ChannelNum;
-			ch_info.bw = HALMAC_BW_20;
-			ch_info.pri_ch_idx = HALMAC_CH_IDX_1;
-			ch_info.action_id = HALMAC_CS_ACTIVE_SCAN;
-			ch_info.timeout = 1;
-			status = api->halmac_add_ch_info(mac, &ch_info);
-			if (status != HALMAC_RET_SUCCESS) {
-				RTW_ERR("%s: add_ch_info FAIL(%d)!!\n",
-					__FUNCTION__, status);
-				return -1;
-			}
-		}
-
-		/* set channel switch option */
-		_rtw_memset(&cs_option, 0, sizeof(cs_option));
-		cs_option.dest_bw = HALMAC_BW_20;
-		cs_option.periodic_option = HALMAC_CS_PERIODIC_2_PHASE;
-		cs_option.dest_pri_ch_idx = HALMAC_CH_IDX_UNDEFINE;
-		cs_option.tsf_low = 0;
-		cs_option.switch_en = 1;
-		cs_option.dest_ch_en = 1;
-		cs_option.absolute_time_en = 0;
-		cs_option.dest_ch = 1;
-
-		cs_option.normal_period = 5;
-		cs_option.normal_period_sel = 0;
-		cs_option.normal_cycle = 10;
-
-		cs_option.phase_2_period = 1;
-		cs_option.phase_2_period_sel = 1;
-
-		/* nlo is for wow fw,  1: no c2h response */
-		cs_option.nlo_en = nlo;
-
-		if (!nlo) {
-			err = init_halmac_event(d, id_ch_sw, NULL, 0);
-			if (err)
-				return -1;
-		}
-
-		status = api->halmac_ctrl_ch_switch(mac, &cs_option);
-		if (status != HALMAC_RET_SUCCESS) {
-			if (!nlo)
-				free_halmac_event(d, id_ch_sw);
-			RTW_ERR("%s: halmac_ctrl_ch_switch FAIL(%d)!!\n",
-				__FUNCTION__, status);
-			return -1;
-		}
-
-		if (!nlo) {
-			err = wait_halmac_event(d, id_ch_sw);
-			if (err)
-				RTW_ERR("%s: wait ctrl_ch_switch FAIL(%d)!!\n",
-					__FUNCTION__, err);
-		}
-	} else {
-		api->halmac_clear_ch_info(mac);
-
-		_rtw_memset(&cs_option, 0, sizeof(cs_option));
-		cs_option.switch_en = 0;
-
-		if (!nlo) {
-			err = init_halmac_event(d, id_ch_sw, NULL, 0);
-			if (err)
-				return -1;
-		}
-
-		status = api->halmac_ctrl_ch_switch(mac, &cs_option);
-		if (status != HALMAC_RET_SUCCESS) {
-			if (!nlo)
-				free_halmac_event(d, id_ch_sw);
-			RTW_ERR("%s: halmac_ctrl_ch_switch FAIL(%d)!!\n",
-				__FUNCTION__, status);
-			return -1;
-		}
-
-		if (!nlo) {
-			err = wait_halmac_event(d, id_ch_sw);
-			if (err)
-				RTW_ERR("%s: wait ctrl_ch_switch FAIL(%d)!!\n",
-					__FUNCTION__, err);
-		}
-	}
-
-	return 0;
-}
-
-/**
- * rtw_halmac_pno_scanoffload() - Control firmware scan AP function for PNO
- * @d:		struct dvobj_priv*
- * @enable:	1: enable, 0: disable
- *
- * Switch firmware scan AP function for PNO(prefer network offload) or
- * NLO(network list offload).
- *
- * Return 0 for OK, otherwise fail.
- */
-int rtw_halmac_pno_scanoffload(struct dvobj_priv *d, u32 enable)
-{
-	return _halmac_scanoffload(d, enable, 1, NULL, 0);
-}
-#endif /* CONFIG_PNO_SUPPORT */
-
-#ifdef CONFIG_SDIO_HCI
-
-/*
- * Description:
- *	Update queue allocated page number to driver
- *
- * Parameter:
- *	d	pointer to struct dvobj_priv of driver
- *
- * Return:
- *	0	Success, "page" is valid.
- *	others	Fail, "page" is invalid.
- */
-int rtw_halmac_query_tx_page_num(struct dvobj_priv *d)
-{
-	PADAPTER adapter;
-	struct halmacpriv *hmpriv;
-	struct halmac_adapter *halmac;
-	struct halmac_api *api;
-	struct halmac_rqpn_map rqpn;
-	enum halmac_dma_mapping dmaqueue;
-	struct halmac_txff_allocation fifosize;
-	enum halmac_ret_status status;
-	u8 i;
-
-
-	adapter = dvobj_get_primary_adapter(d);
-	hmpriv = &d->hmpriv;
-	halmac = dvobj_to_halmac(d);
-	api = HALMAC_GET_API(halmac);
-	_rtw_memset((void *)&rqpn, 0, sizeof(rqpn));
-	_rtw_memset((void *)&fifosize, 0, sizeof(fifosize));
-
-	status = api->halmac_get_hw_value(halmac, HALMAC_HW_RQPN_MAPPING, &rqpn);
-	if (status != HALMAC_RET_SUCCESS)
-		return -1;
-	status = api->halmac_get_hw_value(halmac, HALMAC_HW_TXFF_ALLOCATION, &fifosize);
-	if (status != HALMAC_RET_SUCCESS)
-		return -1;
-
-	for (i = 0; i < HW_QUEUE_ENTRY; i++) {
-		hmpriv->txpage[i] = 0;
-
-		/* Driver index mapping to HALMAC DMA queue */
-		dmaqueue = HALMAC_DMA_MAPPING_UNDEFINE;
-		switch (i) {
-		case VO_QUEUE_INX:
-			dmaqueue = rqpn.dma_map_vo;
-			break;
-		case VI_QUEUE_INX:
-			dmaqueue = rqpn.dma_map_vi;
-			break;
-		case BE_QUEUE_INX:
-			dmaqueue = rqpn.dma_map_be;
-			break;
-		case BK_QUEUE_INX:
-			dmaqueue = rqpn.dma_map_bk;
-			break;
-		case MGT_QUEUE_INX:
-			dmaqueue = rqpn.dma_map_mg;
-			break;
-		case HIGH_QUEUE_INX:
-			dmaqueue = rqpn.dma_map_hi;
-			break;
-		case BCN_QUEUE_INX:
-		case TXCMD_QUEUE_INX:
-			/* Unlimited */
-			hmpriv->txpage[i] = 0xFFFF;
-			continue;
-		}
-
-		switch (dmaqueue) {
-		case HALMAC_DMA_MAPPING_EXTRA:
-			hmpriv->txpage[i] = fifosize.extra_queue_pg_num;
-			break;
-		case HALMAC_DMA_MAPPING_LOW:
-			hmpriv->txpage[i] = fifosize.low_queue_pg_num;
-			break;
-		case HALMAC_DMA_MAPPING_NORMAL:
-			hmpriv->txpage[i] = fifosize.normal_queue_pg_num;
-			break;
-		case HALMAC_DMA_MAPPING_HIGH:
-			hmpriv->txpage[i] = fifosize.high_queue_pg_num;
-			break;
-		case HALMAC_DMA_MAPPING_UNDEFINE:
-			break;
-		}
-		hmpriv->txpage[i] += fifosize.pub_queue_pg_num;
-	}
-
-	return 0;
-}
-
-/*
- * Description:
- *	Get specific queue allocated page number
- *
- * Parameter:
- *	d	pointer to struct dvobj_priv of driver
- *	queue	target queue to query, VO/VI/BE/BK/.../TXCMD_QUEUE_INX
- *	page	return allocated page number
- *
- * Return:
- *	0	Success, "page" is valid.
- *	others	Fail, "page" is invalid.
- */
-int rtw_halmac_get_tx_queue_page_num(struct dvobj_priv *d, u8 queue, u32 *page)
-{
-	*page = 0;
-	if (queue < HW_QUEUE_ENTRY)
-		*page = d->hmpriv.txpage[queue];
-
-	return 0;
-}
-
-/*
- * Return:
- *	address for SDIO command
- */
-u32 rtw_halmac_sdio_get_tx_addr(struct dvobj_priv *d, u8 *desc, u32 size)
-{
-	struct halmac_adapter *mac;
-	struct halmac_api *api;
-	enum halmac_ret_status status;
-	u32 addr;
-
-
-	mac = dvobj_to_halmac(d);
-	api = HALMAC_GET_API(mac);
-
-	status = api->halmac_get_sdio_tx_addr(mac, desc, size, &addr);
-	if (HALMAC_RET_SUCCESS != status)
-		return 0;
-
-	return addr;
-}
-
-int rtw_halmac_sdio_tx_allowed(struct dvobj_priv *d, u8 *buf, u32 size)
-{
-	struct halmac_adapter *mac;
-	struct halmac_api *api;
-	enum halmac_ret_status status;
-
-
-	mac = dvobj_to_halmac(d);
-	api = HALMAC_GET_API(mac);
-
-	status = api->halmac_tx_allowed_sdio(mac, buf, size);
-	if (HALMAC_RET_SUCCESS != status)
-		return -1;
-
-	return 0;
-}
-
-u32 rtw_halmac_sdio_get_rx_addr(struct dvobj_priv *d, u8 *seq)
-{
-	u8 id;
-
-#define RTW_SDIO_ADDR_RX_RX0FF_PRFIX	0x0E000
-#define RTW_SDIO_ADDR_RX_RX0FF_GEN(a)	(RTW_SDIO_ADDR_RX_RX0FF_PRFIX|(a&0x3))
-
-	id = *seq;
-	(*seq)++;
-	return RTW_SDIO_ADDR_RX_RX0FF_GEN(id);
-}
-
-int rtw_halmac_sdio_set_tx_format(struct dvobj_priv *d, enum halmac_sdio_tx_format format)
-{
-	struct halmac_adapter *mac;
-	struct halmac_api *api;
-	enum halmac_ret_status status;
-
-	mac = dvobj_to_halmac(d);
-	api = HALMAC_GET_API(mac);
-
-	status = api->halmac_set_hw_value(mac, HALMAC_HW_SDIO_TX_FORMAT, &format);
-	if (HALMAC_RET_SUCCESS != status)
-		return -1;
-
-	return 0;
-}
-#endif /* CONFIG_SDIO_HCI */
-
-#ifdef CONFIG_USB_HCI
 u8 rtw_halmac_usb_get_bulkout_id(struct dvobj_priv *d, u8 *buf, u32 size)
 {
 	struct halmac_adapter *mac;
@@ -5544,9 +4626,7 @@ u8 rtw_halmac_switch_usb_mode(struct dvobj_priv *d, enum RTW_USB_SPEED usb_mode)
 
 	return _SUCCESS;
 }
-#endif /* CONFIG_USB_HCI */
 
-#ifdef CONFIG_BEAMFORMING
 #ifdef RTW_BEAMFORMING_VERSION_2
 int rtw_halmac_bf_add_mu_bfer(struct dvobj_priv *d, u16 paid, u16 csi_para,
 		u16 my_aid, enum halmac_csi_seg_len sel, u8 *addr)
@@ -5709,4 +4789,3 @@ int rtw_halmac_bf_cfg_mu_mimo(struct dvobj_priv *d, enum halmac_snd_role role,
 }
 
 #endif /* RTW_BEAMFORMING_VERSION_2 */
-#endif /* CONFIG_BEAMFORMING */

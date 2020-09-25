@@ -15,10 +15,8 @@
 #ifndef __RTL8812A_RECV_H__
 #define __RTL8812A_RECV_H__
 
-#if defined(CONFIG_USB_HCI)
 
 	#ifndef MAX_RECVBUF_SZ
-		#ifndef CONFIG_MINIMAL_MEMORY_USAGE
 			#ifdef CONFIG_PREALLOC_RX_SKB_BUFFER
 				#define MAX_RECVBUF_SZ (rtw_rtkm_get_buff_size()) /*depend rtkm*/
 			#else
@@ -29,28 +27,8 @@
 			/* #define MAX_RECVBUF_SZ (10240) */ /* 10K */
 			/* #define MAX_RECVBUF_SZ (15360) */ /* 15k < 16k */
 			/* #define MAX_RECVBUF_SZ (8192+1024) */ /* 8K+1k */
-			#ifdef CONFIG_PLATFORM_NOVATEK_NT72668
-				#undef MAX_RECVBUF_SZ
-				#define MAX_RECVBUF_SZ (15360) /* 15k < 16k */
-			#endif /* CONFIG_PLATFORM_NOVATEK_NT72668 */
-		#else
-			#define MAX_RECVBUF_SZ (4000) /* about 4K */
-		#endif
 	#endif /* !MAX_RECVBUF_SZ */
 
-#elif defined(CONFIG_PCI_HCI)
-	/* #ifndef CONFIG_MINIMAL_MEMORY_USAGE */
-	/*	#define MAX_RECVBUF_SZ (9100) */
-	/* #else */
-	#define MAX_RECVBUF_SZ (4000) /* about 4K
-	* #endif */
-
-
-#elif defined(CONFIG_SDIO_HCI)
-
-	#define MAX_RECVBUF_SZ (RX_DMA_BOUNDARY_8821 + 1)
-
-#endif
 
 
 /* Rx smooth factor */
@@ -106,9 +84,6 @@
 #define GET_RX_STATUS_DESC_HTC_8812(__pRxStatusDesc)					LE_BITS_TO_4BYTE(__pRxStatusDesc+12, 10, 1)
 #define GET_RX_STATUS_DESC_EOSP_8812(__pRxStatusDesc)					LE_BITS_TO_4BYTE(__pRxStatusDesc+12, 11, 1)
 #define GET_RX_STATUS_DESC_BSSID_FIT_8812(__pRxStatusDesc)			LE_BITS_TO_4BYTE(__pRxStatusDesc+12, 12, 2)
-#ifdef CONFIG_USB_RX_AGGREGATION
-#define GET_RX_STATUS_DESC_USB_AGG_PKTNUM_8812(__pRxStatusDesc)	LE_BITS_TO_4BYTE(__pRxStatusDesc+12, 16, 8)
-#endif
 #define GET_RX_STATUS_DESC_PATTERN_MATCH_8812(__pRxDesc)			LE_BITS_TO_4BYTE(__pRxDesc+12, 29, 1)
 #define GET_RX_STATUS_DESC_UNICAST_MATCH_8812(__pRxDesc)			LE_BITS_TO_4BYTE(__pRxDesc+12, 30, 1)
 #define GET_RX_STATUS_DESC_MAGIC_MATCH_8812(__pRxDesc)			LE_BITS_TO_4BYTE(__pRxDesc+12, 31, 1)
@@ -128,21 +103,11 @@
 #define SET_RX_STATUS_DESC_BUFF_ADDR_8812(__pRxDesc, __Value)	SET_BITS_TO_LE_4BYTE(__pRxDesc+24, 0, 32, __Value)
 
 
-#ifdef CONFIG_SDIO_HCI
-s32 InitRecvPriv8821AS(PADAPTER padapter);
-void FreeRecvPriv8821AS(PADAPTER padapter);
-#endif /* CONFIG_SDIO_HCI */
 
-#ifdef CONFIG_USB_HCI
 void rtl8812au_init_recvbuf(_adapter *padapter, struct recv_buf *precvbuf);
 s32 rtl8812au_init_recv_priv(PADAPTER padapter);
 void rtl8812au_free_recv_priv(PADAPTER padapter);
-#endif
 
-#ifdef CONFIG_PCI_HCI
-s32 rtl8812ae_init_recv_priv(PADAPTER padapter);
-void rtl8812ae_free_recv_priv(PADAPTER padapter);
-#endif
 
 void rtl8812_query_rx_desc_status(union recv_frame *precvframe, u8 *pdesc);
 

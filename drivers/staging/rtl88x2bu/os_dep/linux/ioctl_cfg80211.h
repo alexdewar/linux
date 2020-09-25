@@ -22,9 +22,6 @@
 #define RTW_CFG80211_BLOCK_STA_DISCON_EVENT (RTW_CFG80211_BLOCK_DISCON_WHEN_CONNECT)
 #endif
 
-#if defined(RTW_USE_CFG80211_STA_EVENT)
-	#undef CONFIG_CFG80211_FORCE_COMPATIBLE_2_6_37_UNDER
-#endif
 
 #ifndef RTW_P2P_GROUP_INTERFACE
 	#define RTW_P2P_GROUP_INTERFACE 0
@@ -297,10 +294,8 @@ u8 rtw_cfg80211_scan_via_buddy(_adapter *padapter, struct cfg80211_scan_request 
 void rtw_cfg80211_indicate_scan_done_for_buddy(_adapter *padapter, bool bscan_aborted);
 #endif
 
-#ifdef CONFIG_AP_MODE
 void rtw_cfg80211_indicate_sta_assoc(_adapter *padapter, u8 *pmgmt_frame, uint frame_len);
 void rtw_cfg80211_indicate_sta_disassoc(_adapter *padapter, const u8 *da, unsigned short reason);
-#endif /* CONFIG_AP_MODE */
 
 #ifdef CONFIG_P2P
 void rtw_cfg80211_set_is_roch(_adapter *adapter, bool val);

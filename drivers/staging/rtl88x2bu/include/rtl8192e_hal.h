@@ -32,9 +32,7 @@
 #include "Hal8192EPhyCfg.h"
 
 
-#ifdef DBG_CONFIG_ERROR_DETECT
 	#include "rtl8192e_sreset.h"
-#endif
 
 /* ---------------------------------------------------------------------
  *		RTL8192E Power Configuration CMDs for PCIe interface
@@ -62,11 +60,7 @@
 
 typedef struct _RT_FIRMWARE_8192E {
 	FIRMWARE_SOURCE	eFWSource;
-#ifdef CONFIG_EMBEDDED_FWIMG
 	u8			*szFwBuffer;
-#else
-	u8			szFwBuffer[FW_SIZE_8192E];
-#endif
 	u32			ulFwLength;
 } RT_FIRMWARE_8192E, *PRT_FIRMWARE_8192E;
 
@@ -108,11 +102,7 @@ typedef struct _RT_FIRMWARE_8192E {
 #define BCN_DMA_ATIME_INT_TIME_8192E		0x02
 #define RX_DMA_SIZE_8192E					0x4000	/* 16K*/
 
-#ifdef CONFIG_WOWLAN
-	#define RESV_FMWF	(WKFMCAM_SIZE * MAX_WKFM_CAM_NUM) /* 16 entries, for each is 24 bytes*/
-#else
 	#define RESV_FMWF	0
-#endif
 
 #ifdef CONFIG_FW_C2H_DEBUG
 	#define RX_DMA_RESERVED_SIZE_8192E	0x100	/* 256B, reserved for c2h debug message*/
@@ -134,16 +124,8 @@ typedef struct _RT_FIRMWARE_8192E {
  * ARP Rsp:1, RWC:1, GTK Info:1,GTK RSP:2,GTK EXT MEM:2, AOAC rpt: 1,PNO: 6
  * NS offload: 2 NDP info: 1
  */
-#ifdef CONFIG_WOWLAN
-	#define WOWLAN_PAGE_NUM_8192E	0x0b
-#else
 	#define WOWLAN_PAGE_NUM_8192E	0x00
-#endif
 
-#ifdef CONFIG_PNO_SUPPORT
-	#undef WOWLAN_PAGE_NUM_8192E
-	#define WOWLAN_PAGE_NUM_8192E	0x0d
-#endif
 
 /* Note:
 Tx FIFO Size : 64KB
@@ -260,9 +242,6 @@ u8 Hal_CrystalAFEAdjust(_adapter *Adapter);
 
 BOOLEAN HalDetectPwrDownMode8192E(PADAPTER Adapter);
 
-#if defined(CONFIG_WOWLAN) || defined(CONFIG_AP_WOWLAN)
-	void Hal_DetectWoWMode(PADAPTER pAdapter);
-#endif /* CONFIG_WOWLAN */
 
 /***********************************************************/
 /* RTL8192E-MAC Setting */
@@ -312,19 +291,8 @@ void rtl8192e_init_default_value(_adapter *padapter);
 void rtl8192e_start_thread(_adapter *padapter);
 void rtl8192e_stop_thread(_adapter *padapter);
 
-#ifdef CONFIG_PCI_HCI
-	BOOLEAN	InterruptRecognized8192EE(PADAPTER Adapter);
-	u16	get_txbd_rw_reg(u16 ff_hwaddr);
-#endif
 
-#ifdef CONFIG_SDIO_HCI
-	#ifdef CONFIG_SDIO_TX_ENABLE_AVAL_INT
-		void _init_available_page_threshold(PADAPTER padapter, u8 numHQ, u8 numNQ, u8 numLQ, u8 numPubQ);
-	#endif
-#endif
 
-#ifdef CONFIG_BT_COEXIST
 	void rtl8192e_combo_card_WifiOnlyHwInit(PADAPTER Adapter);
-#endif
 
 #endif /* __RTL8192E_HAL_H__ */

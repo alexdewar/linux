@@ -113,17 +113,6 @@ struct _io_ops {
 	void (*_read_port_cancel)(struct intf_hdl *pintfhdl);
 	void (*_write_port_cancel)(struct intf_hdl *pintfhdl);
 
-#ifdef CONFIG_SDIO_HCI
-	u8(*_sd_f0_read8)(struct intf_hdl *pintfhdl, u32 addr);
-#ifdef CONFIG_SDIO_INDIRECT_ACCESS
-	u8(*_sd_iread8)(struct intf_hdl *pintfhdl, u32 addr);
-	u16(*_sd_iread16)(struct intf_hdl *pintfhdl, u32 addr);
-	u32(*_sd_iread32)(struct intf_hdl *pintfhdl, u32 addr);
-	int (*_sd_iwrite8)(struct intf_hdl *pintfhdl, u32 addr, u8 val);
-	int (*_sd_iwrite16)(struct intf_hdl *pintfhdl, u32 addr, u16 val);
-	int (*_sd_iwrite32)(struct intf_hdl *pintfhdl, u32 addr, u32 val);
-#endif /* CONFIG_SDIO_INDIRECT_ACCESS */
-#endif
 
 };
 
@@ -147,7 +136,6 @@ struct	intf_hdl {
 
 struct reg_protocol_rd {
 
-#ifdef CONFIG_LITTLE_ENDIAN
 
 	/* DW1 */
 	u32		NumOfTrans:4;
@@ -167,37 +155,6 @@ struct reg_protocol_rd {
 	u32		BusAddress;
 	/* DW4 */
 	/* u32		Value; */
-#else
-
-
-	/* DW1 */
-	u32 Reserved1:4;
-	u32 NumOfTrans:4;
-
-	u32 Reserved2:24;
-
-	/* DW2 */
-	u32 WriteEnable:1;
-	u32 ByteCount:7;
-
-
-	u32 Reserved3:3;
-	u32 Byte4Access:1;
-
-	u32 Byte2Access:1;
-	u32 Byte1Access:1;
-	u32 BurstMode:1;
-	u32 FixOrContinuous:1;
-
-	u32 Reserved4:16;
-
-	/* DW3 */
-	u32		BusAddress;
-
-	/* DW4 */
-	/* u32		Value; */
-
-#endif
 
 };
 
@@ -205,7 +162,6 @@ struct reg_protocol_rd {
 struct reg_protocol_wt {
 
 
-#ifdef CONFIG_LITTLE_ENDIAN
 
 	/* DW1 */
 	u32		NumOfTrans:4;
@@ -226,53 +182,12 @@ struct reg_protocol_wt {
 	/* DW4 */
 	u32		Value;
 
-#else
-	/* DW1 */
-	u32 Reserved1:4;
-	u32 NumOfTrans:4;
-
-	u32 Reserved2:24;
-
-	/* DW2 */
-	u32 WriteEnable:1;
-	u32 ByteCount:7;
-
-	u32 Reserved3:3;
-	u32 Byte4Access:1;
-
-	u32 Byte2Access:1;
-	u32 Byte1Access:1;
-	u32 BurstMode:1;
-	u32 FixOrContinuous:1;
-
-	u32 Reserved4:16;
-
-	/* DW3 */
-	u32		BusAddress;
-
-	/* DW4 */
-	u32		Value;
-
-#endif
 
 };
-#ifdef CONFIG_PCI_HCI
+
 #define MAX_CONTINUAL_IO_ERR 4
-#endif
 
-#ifdef CONFIG_USB_HCI
-#define MAX_CONTINUAL_IO_ERR 4
-#endif
 
-#ifdef CONFIG_SDIO_HCI
-#define SD_IO_TRY_CNT (8)
-#define MAX_CONTINUAL_IO_ERR SD_IO_TRY_CNT
-#endif
-
-#ifdef CONFIG_GSPI_HCI
-#define SD_IO_TRY_CNT (8)
-#define MAX_CONTINUAL_IO_ERR SD_IO_TRY_CNT
-#endif
 
 
 int rtw_inc_and_chk_continual_io_error(struct dvobj_priv *dvobj);
@@ -328,17 +243,6 @@ extern int _rtw_write16(_adapter *adapter, u32 addr, u16 val);
 extern int _rtw_write32(_adapter *adapter, u32 addr, u32 val);
 extern int _rtw_writeN(_adapter *adapter, u32 addr, u32 length, u8 *pdata);
 
-#ifdef CONFIG_SDIO_HCI
-u8 _rtw_sd_f0_read8(_adapter *adapter, u32 addr);
-#ifdef CONFIG_SDIO_INDIRECT_ACCESS
-u8 _rtw_sd_iread8(_adapter *adapter, u32 addr);
-u16 _rtw_sd_iread16(_adapter *adapter, u32 addr);
-u32 _rtw_sd_iread32(_adapter *adapter, u32 addr);
-int _rtw_sd_iwrite8(_adapter *adapter, u32 addr, u8 val);
-int _rtw_sd_iwrite16(_adapter *adapter, u32 addr, u16 val);
-int _rtw_sd_iwrite32(_adapter *adapter, u32 addr, u32 val);
-#endif /* CONFIG_SDIO_INDIRECT_ACCESS */
-#endif /* CONFIG_SDIO_HCI */
 
 extern int _rtw_write8_async(_adapter *adapter, u32 addr, u8 val);
 extern int _rtw_write16_async(_adapter *adapter, u32 addr, u16 val);
@@ -349,70 +253,6 @@ extern u32 _rtw_write_port(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
 u32 _rtw_write_port_and_wait(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem, int timeout_ms);
 extern void _rtw_write_port_cancel(_adapter *adapter);
 
-#ifdef DBG_IO
-u32 match_read_sniff(_adapter *adapter, u32 addr, u16 len, u32 val);
-u32 match_write_sniff(_adapter *adapter, u32 addr, u16 len, u32 val);
-bool match_rf_read_sniff_ranges(_adapter *adapter, u8 path, u32 addr, u32 mask);
-bool match_rf_write_sniff_ranges(_adapter *adapter, u8 path, u32 addr, u32 mask);
-
-void dbg_rtw_reg_read_monitor(_adapter *adapter, u32 addr, u32 len, u32 val, const char *caller, const int line);
-void dbg_rtw_reg_write_monitor(_adapter *adapter, u32 addr, u32 len, u32 val, const char *caller, const int line);
-
-extern u8 dbg_rtw_read8(_adapter *adapter, u32 addr, const char *caller, const int line);
-extern u16 dbg_rtw_read16(_adapter *adapter, u32 addr, const char *caller, const int line);
-extern u32 dbg_rtw_read32(_adapter *adapter, u32 addr, const char *caller, const int line);
-
-extern int dbg_rtw_write8(_adapter *adapter, u32 addr, u8 val, const char *caller, const int line);
-extern int dbg_rtw_write16(_adapter *adapter, u32 addr, u16 val, const char *caller, const int line);
-extern int dbg_rtw_write32(_adapter *adapter, u32 addr, u32 val, const char *caller, const int line);
-extern int dbg_rtw_writeN(_adapter *adapter, u32 addr , u32 length , u8 *data, const char *caller, const int line);
-
-#ifdef CONFIG_SDIO_HCI
-u8 dbg_rtw_sd_f0_read8(_adapter *adapter, u32 addr, const char *caller, const int line);
-#ifdef CONFIG_SDIO_INDIRECT_ACCESS
-u8 dbg_rtw_sd_iread8(_adapter *adapter, u32 addr, const char *caller, const int line);
-u16 dbg_rtw_sd_iread16(_adapter *adapter, u32 addr, const char *caller, const int line);
-u32 dbg_rtw_sd_iread32(_adapter *adapter, u32 addr, const char *caller, const int line);
-int dbg_rtw_sd_iwrite8(_adapter *adapter, u32 addr, u8 val, const char *caller, const int line);
-int dbg_rtw_sd_iwrite16(_adapter *adapter, u32 addr, u16 val, const char *caller, const int line);
-int dbg_rtw_sd_iwrite32(_adapter *adapter, u32 addr, u32 val, const char *caller, const int line);
-#endif /* CONFIG_SDIO_INDIRECT_ACCESS */
-#endif /* CONFIG_SDIO_HCI */
-
-#define rtw_read8(adapter, addr) dbg_rtw_read8((adapter), (addr), __FUNCTION__, __LINE__)
-#define rtw_read16(adapter, addr) dbg_rtw_read16((adapter), (addr), __FUNCTION__, __LINE__)
-#define rtw_read32(adapter, addr) dbg_rtw_read32((adapter), (addr), __FUNCTION__, __LINE__)
-#define rtw_read_mem(adapter, addr, cnt, mem) _rtw_read_mem((adapter), (addr), (cnt), (mem))
-#define rtw_read_port(adapter, addr, cnt, mem) _rtw_read_port((adapter), (addr), (cnt), (mem))
-#define rtw_read_port_cancel(adapter) _rtw_read_port_cancel((adapter))
-
-#define  rtw_write8(adapter, addr, val) dbg_rtw_write8((adapter), (addr), (val), __FUNCTION__, __LINE__)
-#define  rtw_write16(adapter, addr, val) dbg_rtw_write16((adapter), (addr), (val), __FUNCTION__, __LINE__)
-#define  rtw_write32(adapter, addr, val) dbg_rtw_write32((adapter), (addr), (val), __FUNCTION__, __LINE__)
-#define  rtw_writeN(adapter, addr, length, data) dbg_rtw_writeN((adapter), (addr), (length), (data), __FUNCTION__, __LINE__)
-
-#define rtw_write8_async(adapter, addr, val) _rtw_write8_async((adapter), (addr), (val))
-#define rtw_write16_async(adapter, addr, val) _rtw_write16_async((adapter), (addr), (val))
-#define rtw_write32_async(adapter, addr, val) _rtw_write32_async((adapter), (addr), (val))
-
-#define rtw_write_mem(adapter, addr, cnt, mem) _rtw_write_mem((adapter), addr, cnt, mem)
-#define rtw_write_port(adapter, addr, cnt, mem) _rtw_write_port(adapter, addr, cnt, mem)
-#define rtw_write_port_and_wait(adapter, addr, cnt, mem, timeout_ms) _rtw_write_port_and_wait((adapter), (addr), (cnt), (mem), (timeout_ms))
-#define rtw_write_port_cancel(adapter) _rtw_write_port_cancel(adapter)
-
-#ifdef CONFIG_SDIO_HCI
-#define rtw_sd_f0_read8(adapter, addr) dbg_rtw_sd_f0_read8((adapter), (addr), __func__, __LINE__)
-#ifdef CONFIG_SDIO_INDIRECT_ACCESS
-#define rtw_sd_iread8(adapter, addr) dbg_rtw_sd_iread8((adapter), (addr), __func__, __LINE__)
-#define rtw_sd_iread16(adapter, addr) dbg_rtw_sd_iread16((adapter), (addr), __func__, __LINE__)
-#define rtw_sd_iread32(adapter, addr) dbg_rtw_sd_iread32((adapter), (addr), __func__, __LINE__)
-#define rtw_sd_iwrite8(adapter, addr, val) dbg_rtw_sd_iwrite8((adapter), (addr), (val), __func__, __LINE__)
-#define rtw_sd_iwrite16(adapter, addr, val) dbg_rtw_sd_iwrite16((adapter), (addr), (val), __func__, __LINE__)
-#define rtw_sd_iwrite32(adapter, addr, val) dbg_rtw_sd_iwrite32((adapter), (addr), (val), __func__, __LINE__)
-#endif /* CONFIG_SDIO_INDIRECT_ACCESS */
-#endif /* CONFIG_SDIO_HCI */
-
-#else /* DBG_IO */
 #define rtw_read8(adapter, addr) _rtw_read8((adapter), (addr))
 #define rtw_read16(adapter, addr) _rtw_read16((adapter), (addr))
 #define rtw_read32(adapter, addr) _rtw_read32((adapter), (addr))
@@ -434,19 +274,7 @@ int dbg_rtw_sd_iwrite32(_adapter *adapter, u32 addr, u32 val, const char *caller
 #define rtw_write_port_and_wait(adapter, addr, cnt, mem, timeout_ms) _rtw_write_port_and_wait((adapter), (addr), (cnt), (mem), (timeout_ms))
 #define rtw_write_port_cancel(adapter) _rtw_write_port_cancel((adapter))
 
-#ifdef CONFIG_SDIO_HCI
-#define rtw_sd_f0_read8(adapter, addr) _rtw_sd_f0_read8((adapter), (addr))
-#ifdef CONFIG_SDIO_INDIRECT_ACCESS
-#define rtw_sd_iread8(adapter, addr) _rtw_sd_iread8((adapter), (addr))
-#define rtw_sd_iread16(adapter, addr) _rtw_sd_iread16((adapter), (addr))
-#define rtw_sd_iread32(adapter, addr) _rtw_sd_iread32((adapter), (addr))
-#define rtw_sd_iwrite8(adapter, addr, val) _rtw_sd_iwrite8((adapter), (addr), (val))
-#define rtw_sd_iwrite16(adapter, addr, val) _rtw_sd_iwrite16((adapter), (addr), (val))
-#define rtw_sd_iwrite32(adapter, addr, val) _rtw_sd_iwrite32((adapter), (addr), (val))
-#endif /* CONFIG_SDIO_INDIRECT_ACCESS */
-#endif /* CONFIG_SDIO_HCI */
 
-#endif /* DBG_IO */
 
 extern void rtw_write_scsi(_adapter *adapter, u32 cnt, u8 *pmem);
 

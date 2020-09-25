@@ -23,11 +23,7 @@
 #ifdef CONFIG_SUPPORT_TRX_SHARED
 #define MAX_RECVBUF_SZ		46080	/* 45KB, TX: (256-64)KB */
 #else /* !CONFIG_SUPPORT_TRX_SHARED */
-#ifdef CONFIG_PCI_HCI
-#define MAX_RECVBUF_SZ		12288	/* 12KB */
-#else
 #define MAX_RECVBUF_SZ		24576	/* 24KB, TX: 256KB */
-#endif /* !CONFIG_PCI_HCI */
 #endif /* !CONFIG_SUPPORT_TRX_SHARED */
 
 /*
@@ -215,20 +211,12 @@
 /* General Functions */
 void rtl8822b_init_hal_spec(PADAPTER);				/* hal/hal_com.c */
 
-#ifdef CONFIG_MP_INCLUDED
 /* MP Functions */
 #include <rtw_mp.h>		/* struct mp_priv */
 void rtl8822b_prepare_mp_txdesc(PADAPTER, struct mp_priv *);	/* rtw_mp.c */
 void rtl8822b_mp_config_rfpath(PADAPTER);			/* hal_mp.c */
-#endif
 void hw_var_set_dl_rsvd_page(PADAPTER adapter, u8 mstatus);
 
-#ifdef CONFIG_USB_HCI
 #include <rtl8822bu_hal.h>
-#elif defined(CONFIG_SDIO_HCI)
-#include <rtl8822bs_hal.h>
-#elif defined(CONFIG_PCI_HCI)
-#include <rtl8822be_hal.h>
-#endif
 
 #endif /* _RTL8822B_HAL_H_ */

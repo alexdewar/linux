@@ -322,10 +322,8 @@ u8 rtw_set_802_11_ssid(_adapter *padapter, NDIS_802_11_SSID *ssid)
 					goto release_mlme_lock;/* it means driver is in WIFI_ADHOC_MASTER_STATE, we needn't create bss again. */
 				}
 			}
-#ifdef CONFIG_LPS
 			else
 				rtw_lps_ctrl_wk_cmd(padapter, LPS_CTRL_JOINBSS, 0);
-#endif
 		} else {
 
 			rtw_disassoc_cmd(padapter, 0, 0);
@@ -704,10 +702,6 @@ u8 rtw_set_802_11_authentication_mode(_adapter *padapter, NDIS_802_11_AUTHENTICA
 	if (psecuritypriv->ndisauthtype > 3)
 		psecuritypriv->dot11AuthAlgrthm = dot11AuthAlgrthm_8021X;
 
-#ifdef CONFIG_WAPI_SUPPORT
-	if (psecuritypriv->ndisauthtype == 6)
-		psecuritypriv->dot11AuthAlgrthm = dot11AuthAlgrthm_WAPI;
-#endif
 
 	res = rtw_set_auth(padapter, psecuritypriv);
 
@@ -788,12 +782,10 @@ u16 rtw_get_cur_max_rate(_adapter *adapter)
 	struct sta_info *psta = NULL;
 	u8	short_GI = 0;
 
-#ifdef CONFIG_MP_INCLUDED
 	if (adapter->registrypriv.mp_mode == 1) {
 		if (check_fwstate(pmlmepriv, WIFI_MP_STATE) == _TRUE)
 			return 0;
 	}
-#endif
 
 	if ((check_fwstate(pmlmepriv, _FW_LINKED) != _TRUE)
 	    && (check_fwstate(pmlmepriv, WIFI_ADHOC_MASTER_STATE) != _TRUE))
@@ -805,19 +797,15 @@ u16 rtw_get_cur_max_rate(_adapter *adapter)
 
 	short_GI = query_ra_short_GI(psta, rtw_get_tx_bw_mode(adapter, psta));
 
-#ifdef CONFIG_80211N_HT
 	if (is_supported_ht(psta->wireless_mode)) {
 		max_rate = rtw_ht_mcs_rate((psta->cmn.bw_mode == CHANNEL_WIDTH_40) ? 1 : 0
 			, short_GI
 			, psta->htpriv.ht_cap.supp_mcs_set
 		);
 	}
-#ifdef CONFIG_80211AC_VHT
 	else if (is_supported_vht(psta->wireless_mode))
 		max_rate = ((rtw_vht_mcs_to_data_rate(psta->cmn.bw_mode, short_GI, pmlmepriv->vhtpriv.vht_highest_rate) + 1) >> 1) * 10;
-#endif /* CONFIG_80211AC_VHT */
 	else
-#endif /* CONFIG_80211N_HT */
 	{
 		/*station mode show :station && ap support rate; softap :show ap support rate*/	
 		if (check_fwstate(pmlmepriv, WIFI_STATION_STATE) == _TRUE)

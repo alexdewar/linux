@@ -17,7 +17,6 @@
 #include <drv_types.h>
 #include <hal_data.h>
 
-#ifdef CONFIG_80211AC_VHT
 const u16 _vht_max_mpdu_len[] = {
 	3895,
 	7991,
@@ -221,10 +220,8 @@ void	rtw_vht_use_default_setting(_adapter *padapter)
 	struct vht_priv		*pvhtpriv = &pmlmepriv->vhtpriv;
 	struct registry_priv	*pregistrypriv = &padapter->registrypriv;
 	BOOLEAN		bHwLDPCSupport = _FALSE, bHwSTBCSupport = _FALSE;
-#ifdef CONFIG_BEAMFORMING
 	BOOLEAN		bHwSupportBeamformer = _FALSE, bHwSupportBeamformee = _FALSE;
 	u8	mu_bfer, mu_bfee;
-#endif /* CONFIG_BEAMFORMING */
 	u8 tx_nss, rx_nss;
 	struct mlme_ext_priv	*pmlmeext = &(padapter->mlmeextpriv);
 	struct mlme_ext_info	*pmlmeinfo = &(pmlmeext->mlmext_info);
@@ -262,7 +259,6 @@ void	rtw_vht_use_default_setting(_adapter *padapter)
 
 	/* Beamforming setting */
 	CLEAR_FLAGS(pvhtpriv->beamform_cap);
-#ifdef CONFIG_BEAMFORMING
 #ifdef RTW_BEAMFORMING_VERSION_2
 	/* only enable beamforming in STA client mode */
 	if (MLME_IS_STA(padapter) && !MLME_IS_GC(padapter)
@@ -312,7 +308,6 @@ void	rtw_vht_use_default_setting(_adapter *padapter)
 			}
 		}
 	}
-#endif /* CONFIG_BEAMFORMING */
 
 	pvhtpriv->ampdu_len = pregistrypriv->ampdu_factor;
 
@@ -355,7 +350,6 @@ u64	rtw_vht_mcs_map_to_bitmap(u8 *mcs_map, u8 nss)
 	return bitmap;
 }
 
-#ifdef CONFIG_BEAMFORMING
 void update_sta_vht_info_apmode_bf_cap(_adapter *padapter, struct sta_info *psta)
 {
 	struct mlme_priv	*pmlmepriv = &(padapter->mlmepriv);
@@ -385,7 +379,6 @@ void update_sta_vht_info_apmode_bf_cap(_adapter *padapter, struct sta_info *psta
 	pvhtpriv_sta->beamform_cap = cur_beamform_cap;
 	psta->cmn.bf_info.vht_beamform_cap = cur_beamform_cap;
 }
-#endif
 
 void	update_sta_vht_info_apmode(_adapter *padapter, void *sta)
 {
@@ -453,9 +446,7 @@ void	update_sta_vht_info_apmode(_adapter *padapter, void *sta)
 	}
 	pvhtpriv_sta->stbc_cap = cur_stbc_cap;
 
-#ifdef CONFIG_BEAMFORMING
 	update_sta_vht_info_apmode_bf_cap(padapter, psta);
-#endif
 
 	/* B23 B24 B25 Maximum A-MPDU Length Exponent */
 	pvhtpriv_sta->ampdu_len = GET_VHT_CAPABILITY_ELE_MAX_RXAMPDU_FACTOR(pvhtpriv_sta->vht_cap);
@@ -593,7 +584,6 @@ void VHT_caps_handler(_adapter *padapter, PNDIS_802_11_VARIABLE_IEs pIE)
 		RTW_INFO("Current VHT STBC Setting = %02X\n", cur_stbc_cap);
 	}
 	pvhtpriv->stbc_cap = cur_stbc_cap;
-#ifdef CONFIG_BEAMFORMING
 #ifdef RTW_BEAMFORMING_VERSION_2
 	/*
 	 * B11 SU Beamformer Capable,
@@ -658,7 +648,6 @@ void VHT_caps_handler(_adapter *padapter, PNDIS_802_11_VARIABLE_IEs pIE)
 	if (cur_beamform_cap)
 		RTW_INFO("Current VHT Beamforming Setting = %02X\n", cur_beamform_cap);
 #endif /* !RTW_BEAMFORMING_VERSION_2 */
-#endif /* CONFIG_BEAMFORMING */
 	/* B23 B24 B25 Maximum A-MPDU Length Exponent */
 	pvhtpriv->ampdu_len = GET_VHT_CAPABILITY_ELE_MAX_RXAMPDU_FACTOR(pIE->data);
 
@@ -853,7 +842,6 @@ u32	rtw_build_vht_cap_ie(_adapter *padapter, u8 *pbuf)
 		SET_VHT_CAPABILITY_ELE_RX_STBC(pcap, rx_stbc_nss);
 		RTW_INFO("[VHT] Declare supporting RX STBC = %d\n", rx_stbc_nss);
 	}
-	#ifdef CONFIG_BEAMFORMING
 	/* B11 SU Beamformer Capable */
 	if (TEST_FLAG(pvhtpriv->beamform_cap, BEAMFORMING_VHT_BEAMFORMER_ENABLE)) {
 		SET_VHT_CAPABILITY_ELE_SU_BFER(pcap, 1);
@@ -876,12 +864,10 @@ u32	rtw_build_vht_cap_ie(_adapter *padapter, u8 *pbuf)
 		rtw_hal_get_def_var(padapter, HAL_DEF_BEAMFORMEE_CAP, (u8 *)&rf_num);
 
 		/* IOT action suggested by Yu Chen 2017/3/3 */
-#ifdef CONFIG_80211AC_VHT
 		if ((pmlmeinfo->assoc_AP_vendor == HT_IOT_PEER_BROADCOM) &&
 			!pvhtpriv->ap_bf_cap.is_mu_bfer &&
 			pvhtpriv->ap_bf_cap.su_sound_dim == 2)
 			rf_num = (rf_num >= 2 ? 2 : rf_num);
-#endif
 		/* B13 14 15 Compressed Steering Number of Beamformer Antennas Supported */
 		SET_VHT_CAPABILITY_ELE_BFER_ANT_SUPP(pcap, rf_num);
 		/* B20 SU Beamformee Capable */
@@ -890,7 +876,6 @@ u32	rtw_build_vht_cap_ie(_adapter *padapter, u8 *pbuf)
 			RTW_INFO("[VHT] Declare supporting MU Bfee\n");
 		}
 	}
-	#endif/*CONFIG_BEAMFORMING*/
 
 	/* B21 VHT TXOP PS */
 	SET_VHT_CAPABILITY_ELE_TXOP_PS(pcap, 0);
@@ -1125,4 +1110,3 @@ void rtw_check_for_vht20(_adapter *adapter, u8 *ies, int ies_len)
 		}
 	}
 }
-#endif /* CONFIG_80211AC_VHT */

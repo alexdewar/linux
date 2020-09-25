@@ -21,11 +21,6 @@
 #include "../rtl8822b.h"		/* 8822b hal common define. rtl8822bu_init_default_value ...*/
 #include "rtl8822bu.h"			/* 8822bu functions */
 
-#ifdef CONFIG_SUPPORT_USB_INT
-static void rtl8822bu_interrupt_handler(PADAPTER padapter, u16 pkt_len, u8 *pbuf)
-{	
-	}
-#endif /* CONFIG_SUPPORT_USB_INT */
 
 void rtl8822bu_set_hw_type(struct dvobj_priv *pdvobj)
 {
@@ -44,43 +39,8 @@ static u8 sethwreg(PADAPTER padapter, u8 variable, u8 *val)
 
 	switch (variable) {
 	case HW_VAR_RXDMA_AGG_PG_TH:
-#ifdef CONFIG_USB_RX_AGGREGATION
-		if (pdvobjpriv->traffic_stat.cur_tx_tp < 1 && pdvobjpriv->traffic_stat.cur_rx_tp < 1) {
-			/* for low traffic, do not usb AGGREGATION */
-			pHalData->rxagg_usb_timeout = 0x01;
-			pHalData->rxagg_usb_size = 0x01;
-
-		} else {
-#ifdef CONFIG_PLATFORM_NOVATEK_NT72668
-			pHalData->rxagg_usb_timeout = 0x20;
-			pHalData->rxagg_usb_size = 0x03;
-#elif defined(CONFIG_PLATFORM_HISILICON)
-			/* use 16k to workaround for HISILICON platform */
-			pHalData->rxagg_usb_timeout = 8;
-			pHalData->rxagg_usb_size = 3;
-#else
-			/* default setting */
-			pHalData->rxagg_usb_timeout = 0x20;
-			pHalData->rxagg_usb_size = 0x05;
-#endif
-		}
-		rtw_halmac_rx_agg_switch(pdvobjpriv, _TRUE);
-#if 0
-		RTW_INFO("\n==========RAFFIC_STATISTIC==============\n");
-		RTW_INFO("cur_tx_bytes:%lld\n", pdvobjpriv->traffic_stat.cur_tx_bytes);
-		RTW_INFO("cur_rx_bytes:%lld\n", pdvobjpriv->traffic_stat.cur_rx_bytes);
-
-		RTW_INFO("last_tx_bytes:%lld\n", pdvobjpriv->traffic_stat.last_tx_bytes);
-		RTW_INFO("last_rx_bytes:%lld\n", pdvobjpriv->traffic_stat.last_rx_bytes);
-
-		RTW_INFO("cur_tx_tp:%d\n", pdvobjpriv->traffic_stat.cur_tx_tp);
-		RTW_INFO("cur_rx_tp:%d\n", pdvobjpriv->traffic_stat.cur_rx_tp);
-		RTW_INFO("\n========================\n");
-#endif
-#endif
 		break;
 	case HW_VAR_SET_RPWM:
-#ifdef CONFIG_LPS_LCLK
 		{
 			u8	ps_state = *((u8 *)val);
 
@@ -93,7 +53,6 @@ static u8 sethwreg(PADAPTER padapter, u8 variable, u8 *val)
 			/* RTW_INFO("##### Change RPWM value to = %x for switch clk #####\n", ps_state); */
 			rtw_write8(padapter, REG_USB_HRPWM_8822B, ps_state);
 		}
-#endif
 		break;
 	case HW_VAR_AMPDU_MAX_TIME:
 		rtw_write8(padapter, REG_AMPDU_MAX_TIME_V1_8822B, 0x70);
@@ -129,16 +88,12 @@ static void gethwreg(PADAPTER padapter, u8 variable, u8 *val)
 
 	switch (variable) {
 	case HW_VAR_CPWM:
-#ifdef CONFIG_LPS_LCLK
 		*val = rtw_read8(padapter, REG_USB_HCPWM_8822B);
 		/* RTW_INFO("##### REG_USB_HCPWM(0x%02x) = 0x%02x #####\n", REG_USB_HCPWM_8822B, *val); */
-#endif /* CONFIG_LPS_LCLK */
 		break;
 	case HW_VAR_RPWM_TOG:
-#ifdef CONFIG_LPS_LCLK
 		*val = rtw_read8(padapter, REG_USB_HRPWM_8822B);
 		*val &= BIT_TOGGLE_8822B;
-#endif /* CONFIG_LPS_LCLK */
 		break;
 
 	default:
@@ -198,10 +153,6 @@ static u8 rtl8822bu_ps_func(PADAPTER padapter, HAL_INTF_PS_FUNC efunc_id, u8 *va
 
 	switch (efunc_id) {
 
-#if defined(CONFIG_AUTOSUSPEND) && defined(SUPPORT_HW_RFOFF_DETECTED)
-	case HAL_USB_SELECT_SUSPEND:
-		break;
-#endif /* CONFIG_AUTOSUSPEND && SUPPORT_HW_RFOFF_DETECTED */
 
 	default:
 		break;
@@ -209,12 +160,10 @@ static u8 rtl8822bu_ps_func(PADAPTER padapter, HAL_INTF_PS_FUNC efunc_id, u8 *va
 	return bResult;
 }
 
-#ifdef CONFIG_RTW_LED
 static void read_ledsetting(PADAPTER adapter)
 {
 	struct led_priv *ledpriv = adapter_to_led(adapter);
 
-#ifdef CONFIG_RTW_SW_LED
 	PHAL_DATA_TYPE hal;
 	
 	hal = GET_HAL_DATA(adapter);
@@ -232,11 +181,7 @@ static void read_ledsetting(PADAPTER adapter)
 		ledpriv->LedStrategy = SW_LED_MODE9;
 		break;
 	}
-#else /* HW LED */
-	ledpriv->LedStrategy = HW_LED;
-#endif /* CONFIG_RTW_SW_LED */
 }
-#endif /* CONFIG_RTW_LED */
  
 
 /*
@@ -266,9 +211,7 @@ static u8 read_adapter_info(PADAPTER padapter)
 	 * 3. Other Initialization
 	 */
 
-#ifdef CONFIG_RTW_LED
 	read_ledsetting(padapter);
-#endif /* CONFIG_RTW_LED */
 
 	ret = _SUCCESS;
 
@@ -304,10 +247,8 @@ void rtl8822bu_set_hal_ops(PADAPTER padapter)
 
 	ops->init_recv_priv = rtl8822bu_init_recv_priv;
 	ops->free_recv_priv = rtl8822bu_free_recv_priv;
-#ifdef CONFIG_RTW_SW_LED
 	ops->InitSwLeds = rtl8822bu_initswleds;
 	ops->DeInitSwLeds = rtl8822bu_deinitswleds;
-#endif
 
 	ops->init_default_value = rtl8822bu_init_default_value;
 	ops->intf_chip_configure = rtl8822bu_interface_configure;
@@ -327,12 +268,6 @@ void rtl8822bu_set_hal_ops(PADAPTER padapter)
 	ops->hostap_mgnt_xmit_entry = rtl8822bu_hostap_mgnt_xmit_entry;
 #endif
 	ops->interface_ps_func = rtl8822bu_ps_func;
-#ifdef CONFIG_XMIT_THREAD_MODE
-	ops->xmit_thread_handler = rtl8822bu_xmit_buf_handler;
-#endif
-#ifdef CONFIG_SUPPORT_USB_INT
-	ops->interrupt_handler = rtl8822bu_interrupt_handler;
-#endif
 
 
 }

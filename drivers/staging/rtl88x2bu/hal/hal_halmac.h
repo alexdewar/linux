@@ -199,30 +199,16 @@ int rtw_halmac_cfg_phy_para(struct dvobj_priv *d, struct rtw_phy_parameter *para
 int rtw_halmac_led_cfg(struct dvobj_priv *d, u8 enable, u8 mode);
 void rtw_halmac_led_switch(struct dvobj_priv *d, u8 on);
 int rtw_halmac_bt_wake_cfg(struct dvobj_priv *d, u8 enable);
-#ifdef CONFIG_PNO_SUPPORT
-int rtw_halmac_pno_scanoffload(struct dvobj_priv *d, u32 enable);
-#endif
 
-#ifdef CONFIG_SDIO_HCI
-int rtw_halmac_query_tx_page_num(struct dvobj_priv *);
-int rtw_halmac_get_tx_queue_page_num(struct dvobj_priv *, u8 queue, u32 *page);
-u32 rtw_halmac_sdio_get_tx_addr(struct dvobj_priv *, u8 *desc, u32 size);
-int rtw_halmac_sdio_tx_allowed(struct dvobj_priv *, u8 *buf, u32 size);
-u32 rtw_halmac_sdio_get_rx_addr(struct dvobj_priv *, u8 *seq);
-int rtw_halmac_sdio_set_tx_format(struct dvobj_priv *d, enum halmac_sdio_tx_format format);
-#endif /* CONFIG_SDIO_HCI */
 
-#ifdef CONFIG_USB_HCI
 u8 rtw_halmac_usb_get_bulkout_id(struct dvobj_priv *, u8 *buf, u32 size);
 int rtw_halmac_usb_get_txagg_desc_num(struct dvobj_priv *d, u8 *num);
 u8 rtw_halmac_switch_usb_mode(struct dvobj_priv *d, enum RTW_USB_SPEED usb_mode);
-#endif /* CONFIG_USB_HCI */
 
 #ifdef CONFIG_SUPPORT_TRX_SHARED
 void dump_trx_share_mode(void *sel, _adapter *adapter);
 #endif
 
-#ifdef CONFIG_BEAMFORMING
 #ifdef RTW_BEAMFORMING_VERSION_2
 int rtw_halmac_bf_add_mu_bfer(struct dvobj_priv *d, u16 paid, u16 csi_para,
 		u16 my_aid, enum halmac_csi_seg_len sel, u8 *addr);
@@ -242,6 +228,5 @@ int rtw_halmac_bf_cfg_mu_mimo(struct dvobj_priv *d, enum halmac_snd_role role,
 	rtw_halmac_bf_cfg_mu_mimo(d, HAL_BFEE, NULL, 0, 0, gid_tab, user_pos)
 
 #endif /* RTW_BEAMFORMING_VERSION_2 */
-#endif /* CONFIG_BEAMFORMING */
 
 #endif /* _HAL_HALMAC_H_ */

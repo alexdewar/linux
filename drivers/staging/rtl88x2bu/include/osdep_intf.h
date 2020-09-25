@@ -43,7 +43,6 @@ struct intf_priv {
 	_mutex ioctl_mutex;
 
 
-#ifdef CONFIG_USB_HCI
 	/* when in USB, IO is through interrupt in/out endpoints */
 	struct usb_device	*udev;
 	PURB	piorw_urb;
@@ -53,7 +52,6 @@ struct intf_priv {
 	_timer	io_timer;
 	u8 bio_irp_timeout;
 	u8 bio_timer_cancel;
-#endif
 
 };
 
@@ -67,9 +65,6 @@ void rtw_dev_unload(PADAPTER padapter);
 
 u32 rtw_start_drv_threads(_adapter *padapter);
 void rtw_stop_drv_threads(_adapter *padapter);
-#if defined(CONFIG_WOWLAN) || defined(CONFIG_AP_WOWLAN)
-void rtw_cancel_dynamic_chk_timer(_adapter *padapter);
-#endif
 void rtw_cancel_all_timer(_adapter *padapter);
 
 uint loadparam(_adapter *adapter);
@@ -96,9 +91,7 @@ void rtw_inetaddr_notifier_unregister(void);
 
 #include "../os_dep/linux/rtw_proc.h"
 
-#ifdef CONFIG_IOCTL_CFG80211
 	#include "../os_dep/linux/ioctl_cfg80211.h"
-#endif /* CONFIG_IOCTL_CFG80211 */
 
 u8 rtw_rtnl_lock_needed(struct dvobj_priv *dvobj);
 void rtw_set_rtnl_lock_holder(struct dvobj_priv *dvobj, _thread_hdl_ thd_hdl);
@@ -108,10 +101,8 @@ void rtw_set_rtnl_lock_holder(struct dvobj_priv *dvobj, _thread_hdl_ thd_hdl);
 
 void rtw_ips_dev_unload(_adapter *padapter);
 
-#ifdef CONFIG_IPS
 int rtw_ips_pwr_up(_adapter *padapter);
 void rtw_ips_pwr_down(_adapter *padapter);
-#endif
 
 #ifdef CONFIG_CONCURRENT_MODE
 struct _io_ops;

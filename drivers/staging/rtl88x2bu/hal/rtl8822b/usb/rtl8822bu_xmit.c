@@ -49,7 +49,6 @@ static s32 update_txdesc(struct xmit_frame *pxmitframe, u8 *pmem, s32 sz, u8 bag
 	u8	DriverFixedRate = 0x0;
 	u8 hw_port = rtw_hal_get_port(padapter);
 
-#ifndef CONFIG_USE_USB_BUFFER_ALLOC_TX
 	if (padapter->registrypriv.mp_mode == 0) {
 		if ((PACKET_OFFSET_SZ != 0) && (!bagg_pkt)
 		    && (rtw_usb_bulk_size_boundary(padapter, (TXDESC_SIZE + sz)) == _FALSE)) {
@@ -58,7 +57,6 @@ static s32 update_txdesc(struct xmit_frame *pxmitframe, u8 *pmem, s32 sz, u8 bag
 			pull = 1;
 		}
 	}
-#endif	/* !CONFIG_USE_USB_BUFFER_ALLOC_TX */
 
 	_rtw_memset(ptxdesc, 0, TXDESC_SIZE);
 
@@ -80,14 +78,12 @@ static s32 update_txdesc(struct xmit_frame *pxmitframe, u8 *pmem, s32 sz, u8 bag
 	if (bmcst)
 		SET_TX_DESC_BMC_8822B(ptxdesc, 1);
 
-#ifndef CONFIG_USE_USB_BUFFER_ALLOC_TX
 	if (padapter->registrypriv.mp_mode == 0) {
 		if ((PACKET_OFFSET_SZ != 0) && (!bagg_pkt)) {
 			if ((pull) && (pxmitframe->pkt_offset > 0))
 				pxmitframe->pkt_offset = pxmitframe->pkt_offset - 1;
 		}
 	}
-#endif /* !CONFIG_USE_USB_BUFFER_ALLOC_TX */
 
 	/* RTW_INFO("%s, pkt_offset=0x%02x\n",__FUNCTION__,pxmitframe->pkt_offset); */
 	/* pkt_offset, unit:8 bytes padding */
@@ -123,12 +119,6 @@ static s32 update_txdesc(struct xmit_frame *pxmitframe, u8 *pmem, s32 sz, u8 bag
 #endif
 
 		/* offset 20 */
-#ifdef CONFIG_USB_TX_AGGREGATION
-		if (pxmitframe->agg_num > 1) {
-			/* RTW_INFO("%s agg_num:%d\n",__FUNCTION__,pxmitframe->agg_num); */
-			SET_TX_DESC_DMA_TXAGG_NUM_8822B(ptxdesc, pxmitframe->agg_num);
-		}
-#endif /* CONFIG_USB_TX_AGGREGATION */
 
 		rtl8822b_fill_txdesc_vcs(padapter, pattrib, ptxdesc);
 
@@ -203,10 +193,8 @@ static s32 update_txdesc(struct xmit_frame *pxmitframe, u8 *pmem, s32 sz, u8 bag
 			if (pattrib->stbc)
 				SET_TX_DESC_DATA_STBC_8822B(ptxdesc, 1);
 
-#ifdef CONFIG_WMMPS_STA
 			if (pattrib->trigger_frame)
 				SET_TX_DESC_TRI_FRAME_8822B (ptxdesc, 1);
-#endif /* CONFIG_WMMPS_STA */			
 
 		} else {
 			/*
@@ -235,17 +223,6 @@ static s32 update_txdesc(struct xmit_frame *pxmitframe, u8 *pmem, s32 sz, u8 bag
 				SET_TX_DESC_DATARATE_8822B(ptxdesc, MRateToHwRate(pmlmeext->tx_rate));
 		}
 
-#ifdef CONFIG_TDLS
-#ifdef CONFIG_XMIT_ACK
-		/* CCX-TXRPT ack for xmit data frames */
-		if (pxmitframe->ack_report) {
-			SET_TX_DESC_SPE_RPT_8822B(ptxdesc, 1);
-#ifdef DBG_CCX
-			RTW_INFO("%s set tx report\n", __func__);
-#endif
-		}
-#endif /* CONFIG_XMIT_ACK */
-#endif
 	} else if ((pxmitframe->frame_tag & 0x0f) == MGNT_FRAMETAG) {
 		/* RTW_INFO("pxmitframe->frame_tag == MGNT_FRAMETAG\n");	*/
 		SET_TX_DESC_MBSSID_8822B(ptxdesc, pattrib->mbssid & 0xF);
@@ -264,7 +241,6 @@ static s32 update_txdesc(struct xmit_frame *pxmitframe, u8 *pmem, s32 sz, u8 bag
 		/* VHT NDPA or HT NDPA Packet for Beamformer. */
 		rtl8822b_fill_txdesc_mgnt_bf(pxmitframe, ptxdesc);
 
-#ifdef CONFIG_XMIT_ACK
 		/* CCX-TXRPT ack for xmit mgmt frames */
 		if (pxmitframe->ack_report) {
 			SET_TX_DESC_SPE_RPT_8822B(ptxdesc, 1);
@@ -272,16 +248,13 @@ static s32 update_txdesc(struct xmit_frame *pxmitframe, u8 *pmem, s32 sz, u8 bag
 			RTW_INFO("%s set tx report\n", __func__);
 #endif
 		}
-#endif /* CONFIG_XMIT_ACK */
 	} else if ((pxmitframe->frame_tag & 0x0f) == TXAGG_FRAMETAG)
 		RTW_INFO("pxmitframe->frame_tag == TXAGG_FRAMETAG\n");
 
-#ifdef CONFIG_MP_INCLUDED
 	else if (((pxmitframe->frame_tag & 0x0f) == MP_FRAMETAG) &&
 		 (padapter->registrypriv.mp_mode == 1))
 
 		fill_txdesc_for_mp(padapter, ptxdesc);
-#endif
 
 	else {
 		RTW_INFO("pxmitframe->frame_tag = %d\n", pxmitframe->frame_tag);
@@ -308,67 +281,6 @@ static s32 update_txdesc(struct xmit_frame *pxmitframe, u8 *pmem, s32 sz, u8 bag
 
 
 
-#ifdef CONFIG_XMIT_THREAD_MODE
-/*
- * Description
- *	Transmit xmitbuf to hardware tx fifo
- *
- * Return
- *	_SUCCESS	ok
- *	_FAIL		something error
- */
-s32 rtl8822bu_xmit_buf_handler(PADAPTER padapter)
-{
-	PHAL_DATA_TYPE phal;
-	struct xmit_priv *pxmitpriv;
-	struct xmit_buf *pxmitbuf;
-	struct xmit_frame *pxmitframe;
-	s32 ret;
-
-
-	phal = GET_HAL_DATA(padapter);
-	pxmitpriv = &padapter->xmitpriv;
-
-	ret = _rtw_down_sema(&pxmitpriv->xmit_sema);
-	if (_FAIL == ret)
-		return _FAIL;
-
-	if (RTW_CANNOT_RUN(padapter)) {
-		RTW_DBG(FUNC_ADPT_FMT "- bDriverStopped(%s) bSurpriseRemoved(%s)\n",
-			FUNC_ADPT_ARG(padapter),
-			rtw_is_drv_stopped(padapter) ? "True" : "False",
-			rtw_is_surprise_removed(padapter) ? "True" : "False");
-		return _FAIL;
-	}
-
-	if (check_pending_xmitbuf(pxmitpriv) == _FALSE)
-		return _SUCCESS;
-
-#ifdef CONFIG_LPS_LCLK
-	ret = rtw_register_tx_alive(padapter);
-	if (ret != _SUCCESS) {
-		return _SUCCESS;
-	}
-#endif /* CONFIG_LPS_LCLK */
-
-	do {
-		pxmitbuf = dequeue_pending_xmitbuf(pxmitpriv);
-		if (pxmitbuf == NULL)
-			break;
-
-		pxmitframe = (struct xmit_frame *) pxmitbuf->priv_data;
-		/* only XMITBUF_DATA & XMITBUF_MGNT */
-		rtw_write_port_and_wait(padapter, pxmitbuf->ff_hwaddr, pxmitbuf->len, (unsigned char *)pxmitbuf, 500);
-		rtw_free_xmitframe(pxmitpriv, pxmitframe);
-	} while (1);
-
-#ifdef CONFIG_LPS_LCLK
-	rtw_unregister_tx_alive(padapter);
-#endif /*CONFIG_LPS_LCLK */
-
-	return _SUCCESS;
-}
-#endif /* CONFIG_XMIT_THREAD_MODE */
 
 
 /* for non-agg data frame or  management frame */
@@ -386,14 +298,12 @@ static s32 rtw_dump_xframe(PADAPTER padapter, struct xmit_frame *pxmitframe)
 	struct dvobj_priv *pdvobj = adapter_to_dvobj(padapter);
 
 
-#ifdef CONFIG_80211N_HT
 	if ((pxmitframe->frame_tag == DATA_FRAMETAG) &&
 	    (pxmitframe->attrib.ether_type != 0x0806) &&
 	    (pxmitframe->attrib.ether_type != 0x888e) &&
 	    (pxmitframe->attrib.ether_type != 0x88b4) &&
 	    (pxmitframe->attrib.dhcp_pkt != 1))
 		rtw_issue_addbareq_cmd(padapter, pxmitframe);
-#endif /* CONFIG_80211N_HT */
 
 	mem_addr = pxmitframe->buf_addr;
 
@@ -426,23 +336,10 @@ static s32 rtw_dump_xframe(PADAPTER padapter, struct xmit_frame *pxmitframe)
 				w_sz = sz + TXDESC_SIZE + PACKET_OFFSET_SZ;
 		}
 
-#ifdef RTW_HALMAC
 		pxmitbuf->bulkout_id = rtw_halmac_usb_get_bulkout_id(pdvobj, mem_addr, w_sz);
-#endif
 		ff_hwaddr = rtw_get_ff_hwaddr(pxmitframe);
 
-#ifdef CONFIG_XMIT_THREAD_MODE
-		pxmitbuf->len = w_sz;
-		pxmitbuf->ff_hwaddr = ff_hwaddr;
-
-		if ((pattrib->qsel == QSLT_BEACON) || (pattrib->qsel == QSLT_CMD))
-			/* download rsvd page or fw */
-			inner_ret = rtw_write_port(padapter, ff_hwaddr, w_sz, (unsigned char *)pxmitbuf);
-		else
-			enqueue_pending_xmitbuf(pxmitpriv, pxmitbuf);		
-#else
 		inner_ret = rtw_write_port(padapter, ff_hwaddr, w_sz, (unsigned char *)pxmitbuf);
-#endif
 		rtw_count_tx_stats(padapter, pxmitframe, sz);
 
 		/* RTW_INFO("rtw_write_port, w_sz=%d, sz=%d, txdesc_sz=%d, tid=%d\n", w_sz, sz, w_sz-sz, pattrib->priority);*/
@@ -453,9 +350,6 @@ static s32 rtw_dump_xframe(PADAPTER padapter, struct xmit_frame *pxmitframe)
 
 	}
 
-#ifdef CONFIG_XMIT_THREAD_MODE
-	if ((pattrib->qsel == QSLT_BEACON) || (pattrib->qsel == QSLT_CMD))
-#endif
 	rtw_free_xmitframe(pxmitpriv, pxmitframe);
 
 	if (ret != _SUCCESS)
@@ -464,312 +358,6 @@ static s32 rtw_dump_xframe(PADAPTER padapter, struct xmit_frame *pxmitframe)
 	return ret;
 }
 
-#ifdef CONFIG_USB_TX_AGGREGATION
-#define IDEA_CONDITION 1	/* check all packets before enqueue */
-static s32 rtl8822bu_xmitframe_complete(PADAPTER padapter, struct xmit_priv *pxmitpriv, struct xmit_buf *pxmitbuf)
-{
-	HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(padapter);
-	struct dvobj_priv *pdvobj = adapter_to_dvobj(padapter);
-	struct xmit_frame *pxmitframe = NULL;
-	struct xmit_frame *pfirstframe = NULL;
-
-	/* aggregate variable */
-	struct hw_xmit *phwxmit;
-	struct sta_info *psta = NULL;
-	struct tx_servq *ptxservq = NULL;
-
-	_irqL irqL;
-	_list *xmitframe_plist = NULL, *xmitframe_phead = NULL;
-
-	u32	pbuf;	/* next pkt address */
-	u32	pbuf_tail;	/* last pkt tail */
-	u32	len;	/* packet length, except TXDESC_SIZE and PKT_OFFSET */
-
-	u32	bulkSize = pHalData->UsbBulkOutSize;
-	u8	descCount;
-	u32	bulkPtr;
-
-	/* dump frame variable */
-	u8 ff_hwaddr;
-
-	_list *sta_plist, *sta_phead;
-	u8 single_sta_in_queue = _FALSE;
-
-#ifndef IDEA_CONDITION
-	int res = _SUCCESS;
-#endif
-
-
-
-	/* check xmitbuffer is ok */
-	if (pxmitbuf == NULL) {
-		pxmitbuf = rtw_alloc_xmitbuf(pxmitpriv);
-		if (pxmitbuf == NULL)
-			return _FALSE;
-	}
-
-	/* 1. pick up first frame */
-	do {
-		rtw_free_xmitframe(pxmitpriv, pxmitframe);
-
-		pxmitframe = rtw_dequeue_xframe(pxmitpriv, pxmitpriv->hwxmits, pxmitpriv->hwxmit_entry);
-		if (pxmitframe == NULL) {
-			/* no more xmit frame, release xmit buffer */
-			/* RTW_INFO("%s: no more xmit frame\n", __func__); */
-			rtw_free_xmitbuf(pxmitpriv, pxmitbuf);
-			return _FALSE;
-		}
-
-#ifndef IDEA_CONDITION
-		if (pxmitframe->frame_tag != DATA_FRAMETAG) {
-			continue;
-		}
-
-		/* TID 0~15 */
-		if ((pxmitframe->attrib.priority < 0) ||
-		    (pxmitframe->attrib.priority > 15)) {
-			continue;
-		}
-#endif
-
-		pxmitframe->pxmitbuf = pxmitbuf;
-		pxmitframe->buf_addr = pxmitbuf->pbuf;
-		pxmitbuf->priv_data = pxmitframe;
-
-		pxmitframe->agg_num = 1; /* alloc xmitframe should assign to 1. */
-#ifdef CONFIG_TX_EARLY_MODE
-		/* first frame of aggregation, reserve one offset for EM info ,another for usb bulk-out block check */
-		pxmitframe->pkt_offset = (PACKET_OFFSET_SZ / 8) + 1;
-#else
-		/* first frame of aggregation, reserve offset */
-		pxmitframe->pkt_offset = (PACKET_OFFSET_SZ / 8);
-#endif
-
-		if (rtw_xmitframe_coalesce(padapter, pxmitframe->pkt, pxmitframe) == _FALSE) {
-			RTW_INFO("%s: coalesce 1st xmitframe failed\n", __func__);
-			continue;
-		}
-
-
-		/* always return ndis_packet after rtw_xmitframe_coalesce */
-		rtw_os_xmit_complete(padapter, pxmitframe);
-
-		break;
-	} while (1);
-
-	/* 2. aggregate same priority and same DA(AP or STA) frames */
-	pfirstframe = pxmitframe;
-	len = rtw_wlan_pkt_size(pfirstframe) + TXDESC_SIZE + (pfirstframe->pkt_offset * PACKET_OFFSET_SZ);
-	pbuf_tail = len;
-	pbuf = _RND8(pbuf_tail);
-
-	/* check pkt amount in one bulk */
-	descCount = 0;
-	bulkPtr = bulkSize;
-	if (pbuf < bulkPtr) {
-		descCount++;
-		if (descCount == pHalData->UsbTxAggDescNum)
-			goto agg_end;
-	} else {
-		descCount = 0;
-		bulkPtr = ((pbuf / bulkSize) + 1) * bulkSize; /* round to next bulkSize */
-	}
-
-	/* dequeue same priority packet from station tx queue */
-	psta = pfirstframe->attrib.psta;
-	switch (pfirstframe->attrib.priority) {
-	case 1:
-	case 2:
-		ptxservq = &(psta->sta_xmitpriv.bk_q);
-		phwxmit = pxmitpriv->hwxmits + 3;
-		break;
-
-	case 4:
-	case 5:
-		ptxservq = &(psta->sta_xmitpriv.vi_q);
-		phwxmit = pxmitpriv->hwxmits + 1;
-		break;
-
-	case 6:
-	case 7:
-		ptxservq = &(psta->sta_xmitpriv.vo_q);
-		phwxmit = pxmitpriv->hwxmits;
-		break;
-
-	case 0:
-	case 3:
-	default:
-		ptxservq = &(psta->sta_xmitpriv.be_q);
-		phwxmit = pxmitpriv->hwxmits + 2;
-		break;
-	}
-
-	/* RTW_INFO("==> pkt_no=%d,pkt_len=%d,len=%d,RND8_LEN=%d,pkt_offset=0x%02x\n",
-		pxmitframe->agg_num,pxmitframe->attrib.last_txcmdsz,len,pbuf,pxmitframe->pkt_offset ); */
-
-
-	_enter_critical_bh(&pxmitpriv->lock, &irqL);
-
-	sta_phead = get_list_head(phwxmit->sta_queue);
-	sta_plist = get_next(sta_phead);
-	single_sta_in_queue = rtw_end_of_queue_search(sta_phead, get_next(sta_plist));
-
-	xmitframe_phead = get_list_head(&ptxservq->sta_pending);
-	xmitframe_plist = get_next(xmitframe_phead);
-
-	while (rtw_end_of_queue_search(xmitframe_phead, xmitframe_plist) == _FALSE) {
-		pxmitframe = LIST_CONTAINOR(xmitframe_plist, struct xmit_frame, list);
-		xmitframe_plist = get_next(xmitframe_plist);
-
-		if (_FAIL == rtw_hal_busagg_qsel_check(padapter, pfirstframe->attrib.qsel, pxmitframe->attrib.qsel))
-			break;
-
-		pxmitframe->agg_num = 0; /* not first frame of aggregation */
-#ifdef CONFIG_TX_EARLY_MODE
-		pxmitframe->pkt_offset = 1;/* not first frame of aggregation,reserve offset for EM Info */
-#else
-		pxmitframe->pkt_offset = 0; /* not first frame of aggregation, no need to reserve offset */
-#endif
-
-		len = rtw_wlan_pkt_size(pxmitframe) + TXDESC_SIZE + (pxmitframe->pkt_offset * PACKET_OFFSET_SZ);
-
-		if (_RND8(pbuf + len) > MAX_XMITBUF_SZ) {
-			/* RTW_INFO("%s: len> MAX_XMITBUF_SZ\n", __func__); */
-			pxmitframe->agg_num = 1;
-			pxmitframe->pkt_offset = 1;
-			break;
-		}
-		rtw_list_delete(&pxmitframe->list);
-		ptxservq->qcnt--;
-		phwxmit->accnt--;
-
-#ifndef IDEA_CONDITION
-		/* suppose only data frames would be in queue */
-		if (pxmitframe->frame_tag != DATA_FRAMETAG) {
-			rtw_free_xmitframe(pxmitpriv, pxmitframe);
-			continue;
-		}
-
-		/* TID 0~15 */
-		if ((pxmitframe->attrib.priority < 0) ||
-		    (pxmitframe->attrib.priority > 15)) {
-			rtw_free_xmitframe(pxmitpriv, pxmitframe);
-			continue;
-		}
-#endif
-
-		pxmitframe->buf_addr = pxmitbuf->pbuf + pbuf;
-
-		if (rtw_xmitframe_coalesce(padapter, pxmitframe->pkt, pxmitframe) == _FALSE) {
-			RTW_INFO("%s coalesce failed\n", __func__);
-			rtw_free_xmitframe(pxmitpriv, pxmitframe);
-			continue;
-		}
-
-		/* always return ndis_packet after rtw_xmitframe_coalesce */
-		rtw_os_xmit_complete(padapter, pxmitframe);
-
-		update_txdesc(pxmitframe, pxmitframe->buf_addr, pxmitframe->attrib.last_txcmdsz, _TRUE);
-
-		/* don't need xmitframe any more */
-		rtw_free_xmitframe(pxmitpriv, pxmitframe);
-
-		/* handle pointer and stop condition */
-		pbuf_tail = pbuf + len;
-		pbuf = _RND8(pbuf_tail);
-
-
-		pfirstframe->agg_num++;
-#ifdef CONFIG_TX_EARLY_MODE
-		pxmitpriv->agg_pkt[pfirstframe->agg_num - 1].offset = _RND8(len);
-		pxmitpriv->agg_pkt[pfirstframe->agg_num - 1].pkt_len = pxmitframe->attrib.last_txcmdsz;
-#endif
-		if (MAX_TX_AGG_PACKET_NUMBER_8822B == pfirstframe->agg_num)
-			break;
-
-		if (pbuf < bulkPtr) {
-			descCount++;
-			if (descCount == pHalData->UsbTxAggDescNum)
-				break;
-		} else {
-			descCount = 0;
-			bulkPtr = ((pbuf / bulkSize) + 1) * bulkSize;
-		}
-	} /* end while( aggregate same priority and same DA(AP or STA) frames) */
-	if (_rtw_queue_empty(&ptxservq->sta_pending) == _TRUE)
-		rtw_list_delete(&ptxservq->tx_pending);
-	else if (single_sta_in_queue == _FALSE) {
-		/* Re-arrange the order of stations in this ac queue to balance the service for these stations */
-		rtw_list_delete(&ptxservq->tx_pending);
-		rtw_list_insert_tail(&ptxservq->tx_pending, get_list_head(phwxmit->sta_queue));
-	}
-
-	_exit_critical_bh(&pxmitpriv->lock, &irqL);
-agg_end:
-#ifdef CONFIG_80211N_HT
-	if ((pfirstframe->attrib.ether_type != 0x0806) &&
-	    (pfirstframe->attrib.ether_type != 0x888e) &&
-	    (pfirstframe->attrib.ether_type != 0x88b4) &&
-	    (pfirstframe->attrib.dhcp_pkt != 1))
-		rtw_issue_addbareq_cmd(padapter, pfirstframe);
-#endif /* CONFIG_80211N_HT */
-#ifndef CONFIG_USE_USB_BUFFER_ALLOC_TX
-	/* 3. update first frame txdesc */
-	if ((PACKET_OFFSET_SZ != 0) && ((pbuf_tail % bulkSize) == 0)) {
-		/* remove pkt_offset */
-		pbuf_tail -= PACKET_OFFSET_SZ;
-		pfirstframe->buf_addr += PACKET_OFFSET_SZ;
-		pfirstframe->pkt_offset--;
-	}
-#endif	/* CONFIG_USE_USB_BUFFER_ALLOC_TX */
-
-	update_txdesc(pfirstframe, pfirstframe->buf_addr, pfirstframe->attrib.last_txcmdsz, _TRUE);
-
-#ifdef CONFIG_TX_EARLY_MODE
-	/* prepare EM info for first frame, agg_num value start from 1 */
-	pxmitpriv->agg_pkt[0].offset = _RND8(pfirstframe->attrib.last_txcmdsz + TXDESC_SIZE + (pfirstframe->pkt_offset * PACKET_OFFSET_SZ));
-	/* get from rtw_xmitframe_coalesce */
-	pxmitpriv->agg_pkt[0].pkt_len = pfirstframe->attrib.last_txcmdsz;
-
-	UpdateEarlyModeInfo8812(pxmitpriv, pxmitbuf);
-#endif /*CONFIG_TX_EARLY_MODE*/
-
-	/* 4. write xmit buffer to USB FIFO */
-#ifdef RTW_HALMAC
-	pxmitbuf->bulkout_id = rtw_halmac_usb_get_bulkout_id(pdvobj, pfirstframe->buf_addr, pfirstframe->attrib.last_txcmdsz);
-#endif
-	ff_hwaddr = rtw_get_ff_hwaddr(pfirstframe);
-
-#ifdef CONFIG_XMIT_THREAD_MODE
-	pxmitbuf->len = pbuf_tail;
-	pxmitbuf->ff_hwaddr = ff_hwaddr;
-
-	if (pfirstframe->attrib.qsel == QSLT_BEACON)
-		/* download rsvd page or fw */
-		rtw_write_port(padapter, ff_hwaddr, pbuf_tail, (u8 *)pxmitbuf);
-	else
-		enqueue_pending_xmitbuf(pxmitpriv, pxmitbuf);		
-#else
-	rtw_write_port(padapter, ff_hwaddr, pbuf_tail, (u8 *)pxmitbuf);
-#endif
-
-
-	/* 5. update statisitc */
-	pbuf_tail -= (pfirstframe->agg_num * TXDESC_SIZE);
-	pbuf_tail -= (pfirstframe->pkt_offset * PACKET_OFFSET_SZ);
-
-
-	rtw_count_tx_stats(padapter, pfirstframe, pbuf_tail);
-
-#ifdef CONFIG_XMIT_THREAD_MODE
-	if (pfirstframe->attrib.qsel == QSLT_BEACON)
-#endif
-	rtw_free_xmitframe(pxmitpriv, pfirstframe);
-
-	return _TRUE;
-}
-
-#else /* CONFIG_USB_TX_AGGREGATION */
 
 static s32 rtl8822bu_xmitframe_complete(PADAPTER padapter, struct xmit_priv *pxmitpriv, struct xmit_buf *pxmitbuf)
 {
@@ -832,7 +420,6 @@ static s32 rtl8822bu_xmitframe_complete(PADAPTER padapter, struct xmit_priv *pxm
 	return _TRUE;
 
 }
-#endif
 
 static void rtl8822bu_xmit_tasklet(void *priv)
 {

@@ -26,12 +26,8 @@
 
 #define INTERRUPT_MSG_FORMAT_LEN 60
 
-#if defined(CONFIG_VENDOR_REQ_RETRY) && defined(CONFIG_USB_VENDOR_REQ_MUTEX)
 	/* vendor req retry should be in the situation when each vendor req is atomically submitted from others */
 	#define MAX_USBCTRL_VENDORREQ_TIMES	10
-#else
-	#define MAX_USBCTRL_VENDORREQ_TIMES	1
-#endif
 
 #define RTW_USB_BULKOUT_TIMEOUT	5000/* ms */
 
@@ -48,11 +44,6 @@
 	usb_bulk_msg((usb_dev), (pipe), (data), (len), (actual_length), (timeout_ms))
 
 
-#ifdef CONFIG_USB_SUPPORT_ASYNC_VDN_REQ
-int usb_async_write8(struct intf_hdl *pintfhdl, u32 addr, u8 val);
-int usb_async_write16(struct intf_hdl *pintfhdl, u32 addr, u16 val);
-int usb_async_write32(struct intf_hdl *pintfhdl, u32 addr, u32 val);
-#endif /* CONFIG_USB_SUPPORT_ASYNC_VDN_REQ */
 
 unsigned int ffaddr2pipehdl(struct dvobj_priv *pdvobj, u32 addr);
 
@@ -65,10 +56,6 @@ u32 usb_write_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *wmem);
 void usb_write_port_cancel(struct intf_hdl *pintfhdl);
 
 int usbctrl_vendorreq(struct intf_hdl *pintfhdl, u8 request, u16 value, u16 index, void *pdata, u16 len, u8 requesttype);
-#ifdef CONFIG_USB_SUPPORT_ASYNC_VDN_REQ
-int _usbctrl_vendorreq_async_write(struct usb_device *udev, u8 request,
-		u16 value, u16 index, void *pdata, u16 len, u8 requesttype);
-#endif /* CONFIG_USB_SUPPORT_ASYNC_VDN_REQ */
 
 u8 usb_read8(struct intf_hdl *pintfhdl, u32 addr);
 u16 usb_read16(struct intf_hdl *pintfhdl, u32 addr);

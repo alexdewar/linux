@@ -280,39 +280,9 @@ const struct map_t pg_txpwr_def_info =
 			0xEE, 0xEE, 0xEE, 0xEE, 0xEE, 0xEE, 0xEE, 0xEE)
 	);
 
-#ifdef CONFIG_RTL8188E
-static const struct map_t rtl8188e_pg_txpwr_def_info =
-	MAP_ENT(0xB8, 1, 0xFF
-		, MAPSEG_ARRAY_ENT(0x10, 12,
-			0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x24)
-	);
-#endif
 
-#ifdef CONFIG_RTL8188F
-static const struct map_t rtl8188f_pg_txpwr_def_info =
-	MAP_ENT(0xB8, 1, 0xFF
-		, MAPSEG_ARRAY_ENT(0x10, 12,
-			0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x27, 0x27, 0x27, 0x27, 0x27, 0x24)
-	);
-#endif
 
-#ifdef CONFIG_RTL8188GTV
-static const struct map_t rtl8188gtv_pg_txpwr_def_info =
-	MAP_ENT(0xB8, 1, 0xFF
-		, MAPSEG_ARRAY_ENT(0x10, 12,
-			0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x27, 0x27, 0x27, 0x27, 0x27, 0x24)
-	);
-#endif
 
-#ifdef CONFIG_RTL8723B
-static const struct map_t rtl8723b_pg_txpwr_def_info =
-	MAP_ENT(0xB8, 2, 0xFF
-		, MAPSEG_ARRAY_ENT(0x10, 12,
-			0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0xE0)
-		, MAPSEG_ARRAY_ENT(0x3A, 12,
-			0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0xE0)
-	);
-#endif
 
 #ifdef CONFIG_RTL8703B
 static const struct map_t rtl8703b_pg_txpwr_def_info =
@@ -322,69 +292,12 @@ static const struct map_t rtl8703b_pg_txpwr_def_info =
 	);
 #endif
 
-#ifdef CONFIG_RTL8723D
-static const struct map_t rtl8723d_pg_txpwr_def_info =
-	MAP_ENT(0xB8, 2, 0xFF
-		, MAPSEG_ARRAY_ENT(0x10, 12,
-			0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x02)
-		, MAPSEG_ARRAY_ENT(0x3A, 12,
-			0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x21, 0x21, 0x21, 0x21, 0x21, 0x02)
-	);
-#endif
 
-#ifdef CONFIG_RTL8192E
-static const struct map_t rtl8192e_pg_txpwr_def_info =
-	MAP_ENT(0xB8, 2, 0xFF
-		, MAPSEG_ARRAY_ENT(0x10, 14,
-			0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x24, 0xEE, 0xEE)
-		, MAPSEG_ARRAY_ENT(0x3A, 14,
-			0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x24, 0xEE, 0xEE)
-	);
-#endif
 
-#ifdef CONFIG_RTL8821A
-static const struct map_t rtl8821a_pg_txpwr_def_info =
-	MAP_ENT(0xB8, 1, 0xFF
-		, MAPSEG_ARRAY_ENT(0x10, 39,
-			0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x24, 0xFF, 0xFF, 0xFF, 0xFF,
-			0xFF, 0xFF, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A,
-			0x04, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00)
-	);
-#endif
 
-#ifdef CONFIG_RTL8821C
-static const struct map_t rtl8821c_pg_txpwr_def_info =
-	MAP_ENT(0xB8, 1, 0xFF
-		, MAPSEG_ARRAY_ENT(0x10, 54,
-			0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x02, 0xFF, 0xFF, 0xFF, 0xFF,
-			0xFF, 0xFF, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28,
-			0x02, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xEC, 0xFF, 0xFF, 0xFF, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,
-			0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x02)
-	);
-#endif
 
-#ifdef CONFIG_RTL8710B
-static const struct map_t rtl8710b_pg_txpwr_def_info =
-	MAP_ENT(0xC8, 1, 0xFF
-		, MAPSEG_ARRAY_ENT(0x20, 12,
-			0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x20)
-	);
-#endif
 
-#ifdef CONFIG_RTL8812A
-static const struct map_t rtl8812a_pg_txpwr_def_info =
-	MAP_ENT(0xB8, 1, 0xFF
-		, MAPSEG_ARRAY_ENT(0x10, 82,
-			0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x02, 0xEE, 0xEE, 0xFF, 0xFF,
-			0xFF, 0xFF, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A,
-			0x02, 0xEE, 0xFF, 0xFF, 0xEE, 0xFF, 0x00, 0xEE, 0xFF, 0xFF, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,
-			0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x02, 0xEE, 0xEE, 0xFF, 0xFF, 0xFF, 0xFF, 0x2A, 0x2A, 0x2A, 0x2A,
-			0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x02, 0xEE, 0xFF, 0xFF, 0xEE, 0xFF,
-			0x00, 0xEE)
-	);
-#endif
 
-#ifdef CONFIG_RTL8822B
 static const struct map_t rtl8822b_pg_txpwr_def_info =
 	MAP_ENT(0xB8, 1, 0xFF
 		, MAPSEG_ARRAY_ENT(0x10, 82,
@@ -395,66 +308,10 @@ static const struct map_t rtl8822b_pg_txpwr_def_info =
 			0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x02, 0xEE, 0xFF, 0xFF, 0xEE, 0xFF,
 			0xEC, 0xEC)
 	);
-#endif
 
-#ifdef CONFIG_RTL8822C
-static const struct map_t rtl8822c_pg_txpwr_def_info =
-	MAP_ENT(0xB8, 1, 0xFF
-		, MAPSEG_ARRAY_ENT(0x10, 82,
-			0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x02, 0x00, 0x00, 0xFF, 0xFF,
-			0xFF, 0xFF, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33,
-			0x02, 0x00, 0xFF, 0xFF, 0x00, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33,
-			0x33, 0x33, 0x33, 0x33, 0x33, 0x02, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x33, 0x33, 0x33, 0x33,
-			0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x02, 0x00, 0xFF, 0xFF, 0x00, 0xFF,
-			0x00, 0x00)
-	);
-#endif
 
-#ifdef CONFIG_RTL8814A
-static const struct map_t rtl8814a_pg_txpwr_def_info =
-	MAP_ENT(0xB8, 1, 0xFF
-		, MAPSEG_ARRAY_ENT(0x10, 168,
-			0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x02, 0xEE, 0xEE, 0xEE, 0xEE,
-			0xEE, 0xEE, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A,
-			0x02, 0xEE, 0xEE, 0xEE, 0xEE, 0xEE, 0x00, 0xEE, 0xEE, 0xEE, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,
-			0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x02, 0xEE, 0xEE, 0xEE, 0xEE, 0xEE, 0xEE, 0x2A, 0x2A, 0x2A, 0x2A,
-			0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x02, 0xEE, 0xEE, 0xEE, 0xEE, 0xEE,
-			0x00, 0xEE, 0xEE, 0xEE, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x02,
-			0xEE, 0xEE, 0xEE, 0xEE, 0xEE, 0xEE, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A,
-			0x2A, 0x2A, 0x2A, 0x2A, 0x02, 0xEE, 0xEE, 0xEE, 0xEE, 0xEE, 0x00, 0xEE, 0xEE, 0xEE, 0x2D, 0x2D,
-			0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x02, 0xEE, 0xEE, 0xEE, 0xEE, 0xEE, 0xEE,
-			0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x02, 0xEE,
-			0xEE, 0xEE, 0xEE, 0xEE, 0x00, 0xEE, 0xEE, 0xEE)
-	);
-#endif
 
-#ifdef CONFIG_RTL8192F/*use 8192F default,no document*/
-static const struct map_t rtl8192f_pg_txpwr_def_info =
-	MAP_ENT(0xB8, 2, 0xFF
-		, MAPSEG_ARRAY_ENT(0x10, 14,
-			0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x24, 0xEE, 0xEE)
-		, MAPSEG_ARRAY_ENT(0x3A, 14,
-			0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x24, 0xEE, 0xEE)
-	);
-#endif
 
-#ifdef CONFIG_RTL8814B
-static const struct map_t rtl8814b_pg_txpwr_def_info =
-	MAP_ENT(0xB8, 1, 0xFF
-		, MAPSEG_ARRAY_ENT(0x10, 168,
-			0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x02, 0xFF, 0xFF, 0xFF, 0xFF,
-			0xFF, 0xFF, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28,
-			0x02, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xEC, 0xFF, 0xFF, 0xFF, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28,
-			0x28, 0x28, 0x28, 0x28, 0x28, 0x02, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-			0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-			0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-			0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-			0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-			0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-			0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-			0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF)
-	);
-#endif
 
 const struct map_t *hal_pg_txpwr_def_info(_adapter *adapter)
 {
@@ -464,86 +321,14 @@ const struct map_t *hal_pg_txpwr_def_info(_adapter *adapter)
 	interface_type = rtw_get_intf_type(adapter);
 
 	switch (rtw_get_chip_type(adapter)) {
-#ifdef CONFIG_RTL8723B
-	case RTL8723B:
-		map = &rtl8723b_pg_txpwr_def_info;
-		break;
-#endif
 #ifdef CONFIG_RTL8703B
 	case RTL8703B:
 		map = &rtl8703b_pg_txpwr_def_info;
 		break;
 #endif
-#ifdef CONFIG_RTL8723D
-	case RTL8723D:
-		map = &rtl8723d_pg_txpwr_def_info;
-		break;
-#endif
-#ifdef CONFIG_RTL8188E
-	case RTL8188E:
-		map = &rtl8188e_pg_txpwr_def_info;
-		break;
-#endif
-#ifdef CONFIG_RTL8188F
-	case RTL8188F:
-		map = &rtl8188f_pg_txpwr_def_info;
-		break;
-#endif
-#ifdef CONFIG_RTL8188GTV
-	case RTL8188GTV:
-		map = &rtl8188gtv_pg_txpwr_def_info;
-		break;
-#endif
-#ifdef CONFIG_RTL8812A
-	case RTL8812:
-		map = &rtl8812a_pg_txpwr_def_info;
-		break;
-#endif
-#ifdef CONFIG_RTL8821A
-	case RTL8821:
-		map = &rtl8821a_pg_txpwr_def_info;
-		break;
-#endif
-#ifdef CONFIG_RTL8192E
-	case RTL8192E:
-		map = &rtl8192e_pg_txpwr_def_info;
-		break;
-#endif
-#ifdef CONFIG_RTL8814A
-	case RTL8814A:
-		map = &rtl8814a_pg_txpwr_def_info;
-		break;
-#endif
-#ifdef CONFIG_RTL8822B
 	case RTL8822B:
 		map = &rtl8822b_pg_txpwr_def_info;
 		break;
-#endif
-#ifdef CONFIG_RTL8821C
-	case RTL8821C:
-		map = &rtl8821c_pg_txpwr_def_info;
-		break;
-#endif
-#ifdef CONFIG_RTL8710B
-	case RTL8710B:
-		map = &rtl8710b_pg_txpwr_def_info;
-		break;
-#endif
-#ifdef CONFIG_RTL8192F
-	case RTL8192F:
-		map = &rtl8192f_pg_txpwr_def_info;
-		break;
-#endif
-#ifdef CONFIG_RTL8822C
-	case RTL8822C:
-		map = &rtl8822c_pg_txpwr_def_info;
-		break;
-#endif
-#ifdef CONFIG_RTL8814B
-	case RTL8814B:
-		map = &rtl8814b_pg_txpwr_def_info;
-		break;
-#endif
 	}
 
 	if (map == NULL) {
@@ -1052,7 +837,6 @@ exit:
 }
 #endif /* CONFIG_TXPWR_PG_WITH_PWR_IDX */
 
-#ifdef CONFIG_EFUSE_CONFIG_FILE
 
 #define EFUSE_POWER_INDEX_INVALID 0xFF
 
@@ -1124,7 +908,6 @@ int check_phy_efuse_tx_power_info_valid(_adapter *adapter)
 
 	return _FALSE;
 }
-#endif /* CONFIG_EFUSE_CONFIG_FILE */
 
 #ifdef CONFIG_TXPWR_PG_WITH_PWR_IDX
 void hal_load_txpwr_info(_adapter *adapter)
@@ -2410,9 +2193,7 @@ u8 phy_get_pg_txpwr_idx(_adapter *pAdapter
 				}
 			}
 			if (i >= CENTER_CH_5G_80M_NUM) {
-			#ifdef CONFIG_MP_INCLUDED
 				if (rtw_mp_mode_check(pAdapter) == _FALSE)
-			#endif
 					rtw_warn_on(1);
 				txPower = 0;
 				goto exit;
@@ -3085,11 +2866,9 @@ s8 phy_get_txpwr_lmt_sub_chs(_adapter *adapter
 	u8 final_bw = bw, final_cch = cch;
 	_irqL irqL;
 
-#ifdef CONFIG_MP_INCLUDED
 	/* MP mode channel don't use secondary channel */
 	if (rtw_mp_mode_check(adapter) == _TRUE)
 		no_sc = _TRUE;
-#endif
 	if (IS_CCK_RATE(rate))
 		tlrs = TXPWR_LMT_RS_CCK;
 	else if (IS_OFDM_RATE(rate))
@@ -4019,22 +3798,18 @@ int phy_load_tx_power_by_rate(_adapter *adapter, u8 chk_file)
 	/* tx power limit is based on tx power by rate */
 	hal_data->txpwr_limit_loaded = 0;
 
-#ifdef CONFIG_LOAD_PHY_PARA_FROM_FILE
 	if (chk_file
 		&& phy_ConfigBBWithPgParaFile(adapter, PHY_FILE_PHY_REG_PG) == _SUCCESS
 	) {
 		hal_data->txpwr_by_rate_from_file = 1;
 		goto post_hdl;
 	}
-#endif
 
-#ifdef CONFIG_EMBEDDED_FWIMG
 	if (HAL_STATUS_SUCCESS == odm_config_bb_with_header_file(&hal_data->odmpriv, CONFIG_BB_PHY_REG_PG)) {
 		RTW_INFO("default power by rate loaded\n");
 		hal_data->txpwr_by_rate_from_file = 0;
 		goto post_hdl;
 	}
-#endif
 
 	RTW_ERR("%s():Read Tx power by rate fail\n", __func__);
 	goto exit;
@@ -4071,22 +3846,18 @@ int phy_load_tx_power_limit(_adapter *adapter, u8 chk_file)
 		goto exit;
 	}
 
-#ifdef CONFIG_LOAD_PHY_PARA_FROM_FILE
 	if (chk_file
 		&& PHY_ConfigRFWithPowerLimitTableParaFile(adapter, PHY_FILE_TXPWR_LMT) == _SUCCESS
 	) {
 		hal_data->txpwr_limit_from_file = 1;
 		goto post_hdl;
 	}
-#endif
 
-#ifdef CONFIG_EMBEDDED_FWIMG
 	if (odm_config_rf_with_header_file(&hal_data->odmpriv, CONFIG_RF_TXPWR_LMT, RF_PATH_A) == HAL_STATUS_SUCCESS) {
 		RTW_INFO("default power limit loaded\n");
 		hal_data->txpwr_limit_from_file = 0;
 		goto post_hdl;
 	}
-#endif
 
 	RTW_ERR("%s():Read Tx power limit fail\n", __func__);
 	goto exit;
@@ -4276,7 +4047,6 @@ void dump_tx_power_by_rate(void *sel, _adapter *adapter)
  */
 int rtw_get_phy_file_path(_adapter *adapter, const char *file_name)
 {
-#ifdef CONFIG_LOAD_PHY_PARA_FROM_FILE
 	struct hal_spec_t *hal_spec = GET_HAL_SPEC(adapter);
 	int len = 0;
 
@@ -4289,11 +4059,9 @@ int rtw_get_phy_file_path(_adapter *adapter, const char *file_name)
 
 		return _TRUE;
 	}
-#endif
 	return _FALSE;
 }
 
-#ifdef CONFIG_LOAD_PHY_PARA_FROM_FILE
 int
 phy_ConfigMACWithParaFile(
 		PADAPTER	Adapter,
@@ -4432,11 +4200,7 @@ phy_ConfigBBWithParaFile(
 						/* Ending. */
 						break;
 					} else if (u4bRegOffset == 0xfe || u4bRegOffset == 0xffe) {
-#ifdef CONFIG_LONG_DELAY_ISSUE
 						rtw_msleep_os(50);
-#else
-						rtw_mdelay_os(50);
-#endif
 					} else if (u4bRegOffset == 0xfd)
 						rtw_mdelay_os(5);
 					else if (u4bRegOffset == 0xfc)
@@ -4729,7 +4493,6 @@ phy_ConfigBBWithPgParaFile(
 	return rtStatus;
 }
 
-#if (MP_DRIVER == 1)
 
 int
 phy_ConfigBBWithMpParaFile(
@@ -4782,11 +4545,7 @@ phy_ConfigBBWithMpParaFile(
 						/* Ending. */
 						break;
 					} else if (u4bRegOffset == 0xfe || u4bRegOffset == 0xffe) {
-#ifdef CONFIG_LONG_DELAY_ISSUE
 						rtw_msleep_os(50);
-#else
-						rtw_mdelay_os(50);
-#endif
 					} else if (u4bRegOffset == 0xfd)
 						rtw_mdelay_os(5);
 					else if (u4bRegOffset == 0xfc)
@@ -4816,7 +4575,6 @@ phy_ConfigBBWithMpParaFile(
 	return rtStatus;
 }
 
-#endif
 
 int
 PHY_ConfigRFWithParaFile(
@@ -4897,11 +4655,7 @@ PHY_ConfigRFWithParaFile(
 				if (GetHexValueFromString(szLine, &u4bRegOffset, &u4bMove)) {
 					if (u4bRegOffset == 0xfe || u4bRegOffset == 0xffe) {
 						/* Deay specific ms. Only RF configuration require delay.												 */
-#ifdef CONFIG_LONG_DELAY_ISSUE
 						rtw_msleep_os(50);
-#else
-						rtw_mdelay_os(50);
-#endif
 					} else if (u4bRegOffset == 0xfd) {
 						/* delay_ms(5); */
 						for (i = 0; i < 100; i++)
@@ -5634,7 +5388,6 @@ inline void phy_free_filebuf(_adapter *padapter)
 	phy_free_filebuf_mask(padapter, 0xFF);
 }
 
-#endif
 
 /*
 * check if user specified mbm is valid
@@ -5654,9 +5407,7 @@ bool phy_is_txpwr_user_target_specified(_adapter *adapter)
 {
 	s16 total_mbm = UNSPECIFIED_MBM;
 
-#ifdef CONFIG_IOCTL_CFG80211
 	total_mbm = rtw_cfg80211_dev_get_total_txpwr_target_mbm(adapter_to_dvobj(adapter));
-#endif
 
 	return total_mbm != UNSPECIFIED_MBM;
 }
@@ -5670,9 +5421,7 @@ s8 phy_get_txpwr_user_target(_adapter *adapter, struct hal_spec_t *hal_spec, u8 
 	s16 total_mbm = UNSPECIFIED_MBM;
 	s8 target;
 
-#ifdef CONFIG_IOCTL_CFG80211
 	total_mbm = rtw_cfg80211_dev_get_total_txpwr_target_mbm(adapter_to_dvobj(adapter));
-#endif
 	if (total_mbm != UNSPECIFIED_MBM)
 		target = (total_mbm - mb_of_ntx(ntx_idx + 1)) * hal_spec->txgi_pdbm / MBM_PDBM;
 	else
@@ -5690,9 +5439,7 @@ s8 phy_get_txpwr_user_lmt(_adapter *adapter, struct hal_spec_t *hal_spec, u8 ntx
 	s16 total_mbm = UNSPECIFIED_MBM;
 	s8 lmt;
 
-#ifdef CONFIG_IOCTL_CFG80211
 	total_mbm = rtw_cfg80211_dev_get_total_txpwr_lmt_mbm(adapter_to_dvobj(adapter));
-#endif
 	if (total_mbm != UNSPECIFIED_MBM)
 		lmt = (total_mbm - mb_of_ntx(ntx_idx + 1)) * hal_spec->txgi_pdbm / MBM_PDBM;
 	else
@@ -5721,20 +5468,12 @@ s8 phy_get_txpwr_target(_adapter *adapter, u8 rfpath, RATE_SECTION rs, u8 rate, 
 	if (utgt != hal_spec->txgi_max)
 		goto get_lmt;
 
-#ifdef CONFIG_RTL8812A
-	if (IS_HARDWARE_TYPE_8812(adapter)
-		&& phy_get_txpwr_target_skip_by_rate_8812a(adapter, rate))
-		by_rate = phy_get_target_txpwr(adapter, band, rfpath, rs);
-	else
-#endif
-		by_rate = PHY_GetTxPowerByRate(adapter, band, rfpath, rs, rate);
+	by_rate = PHY_GetTxPowerByRate(adapter, band, rfpath, rs, rate);
 	if (by_rate == hal_spec->txgi_max)
 		by_rate = 0;
 
-#ifdef CONFIG_BT_COEXIST
 	if (hal_data->EEPROMBluetoothCoexist == _TRUE)
 		btc_diff = -(rtw_btcoex_query_reduced_wl_pwr_lvl(adapter) * hal_spec->txgi_pdbm);
-#endif
 
 	extra = rtw_hal_get_txpwr_target_extra_bias(adapter, rfpath, rs, rate, bw, band, cch);
 
@@ -5770,9 +5509,6 @@ exit:
 }
 
 /* TODO: common dpd_diff getting API from phydm */
-#ifdef CONFIG_RTL8822C
-#include "./rtl8822c/rtl8822c.h"
-#endif
 
 /*
 * Return in unit of TX Gain Index
@@ -5794,10 +5530,6 @@ s8 phy_get_txpwr_amends(_adapter *adapter, u8 rfpath, RATE_SECTION rs, u8 rate, 
 	)
 		tpt_diff = PHY_GetTxPowerTrackingOffset(adapter, rfpath, rate);
 
-#ifdef CONFIG_RTL8822C
-	if (IS_HARDWARE_TYPE_8822C(adapter))
-		dpd_diff = -(rtl8822c_get_dis_dpd_by_rate_diff(adapter, rate) * hal_spec->txgi_pdbm);
-#endif
 
 exit:
 	if (tic) {
@@ -5903,11 +5635,6 @@ u8 hal_com_get_txpwr_idx(_adapter *adapter, enum rf_path rfpath
 	else if (power_idx > hal_spec->txgi_max)
 		power_idx = hal_spec->txgi_max;
 
-#if defined(CONFIG_RTL8821A) || defined(CONFIG_RTL8812A)
-	if ((IS_HARDWARE_TYPE_8821(adapter) || IS_HARDWARE_TYPE_8812(adapter))
-		&& power_idx % 2 == 1 && !IS_NORMAL_CHIP(hal->version_id))
-		--power_idx;
-#endif
 
 	return power_idx;
 }

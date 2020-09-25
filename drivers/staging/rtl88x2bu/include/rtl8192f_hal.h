@@ -27,9 +27,7 @@
 #include "Hal8192FPwrSeq.h"
 #include "Hal8192FPhyReg.h"
 #include "Hal8192FPhyCfg.h"
-#ifdef DBG_CONFIG_ERROR_DETECT
 #include "rtl8192f_sreset.h"
-#endif
 #ifdef CONFIG_LPS_POFF
 	#include "rtl8192f_lps_poff.h"
 #endif
@@ -43,11 +41,7 @@
 
 typedef struct _RT_FIRMWARE {
 	FIRMWARE_SOURCE	eFWSource;
-#ifdef CONFIG_EMBEDDED_FWIMG
 	u8			*szFwBuffer;
-#else
-	u8			szFwBuffer[FW_8192F_SIZE];
-#endif
 	u32			ulFwLength;
 } RT_FIRMWARE_8192F, *PRT_FIRMWARE_8192F;
 
@@ -89,11 +83,7 @@ typedef struct _RT_8192F_FIRMWARE_HDR {
 #define PAGE_SIZE_RX_8192F			8
 #define TX_DMA_SIZE_8192F			0x10000/* 64K(TX) */
 #define RX_DMA_SIZE_8192F			0x4000/* 16K(RX) */
-#ifdef CONFIG_WOWLAN
-	#define RESV_FMWF	(WKFMCAM_SIZE * MAX_WKFM_CAM_NUM) /* 16 entries, for each is 24 bytes*/
-#else
 	#define RESV_FMWF	0
-#endif
 
 #ifdef CONFIG_FW_C2H_DEBUG
 	#define RX_DMA_RESERVED_SIZE_8192F	0x100	/* 256B, reserved for c2h debug message */
@@ -116,21 +106,9 @@ typedef struct _RT_8192F_FIRMWARE_HDR {
  * ARP Rsp:1, RWC:1, GTK Info:1,GTK RSP:2,GTK EXT MEM:2, AOAC rpt 1, PNO: 6
  * NS offload: 2 NDP info: 1
  */
-#ifdef CONFIG_WOWLAN
-	/* 7 pages for wow rsvd page + 2 pages for pattern */
-	#define WOWLAN_PAGE_NUM_8192F	0x09
-#else
 	#define WOWLAN_PAGE_NUM_8192F	0x00
-#endif
 
-#ifdef CONFIG_PNO_SUPPORT
-	#undef WOWLAN_PAGE_NUM_8192F
-	#define WOWLAN_PAGE_NUM_8192F	0x15
-#endif
 
-#ifdef CONFIG_AP_WOWLAN
-	#define AP_WOWLAN_PAGE_NUM_8192F	0x02
-#endif
 
 #ifdef DBG_LA_MODE
 	#define LA_MODE_PAGE_NUM 0xE0
@@ -206,13 +184,6 @@ typedef enum tag_Package_Definition {
 #define INCLUDE_MULTI_FUNC_GPS(_Adapter) \
 	(GET_HAL_DATA(_Adapter)->MultiFunc & RT_MULTI_FUNC_GPS)
 
-#ifdef CONFIG_FILE_FWIMG
-	extern char *rtw_fw_file_path;
-	extern char *rtw_fw_wow_file_path;
-	#ifdef CONFIG_MP_INCLUDED
-		extern char *rtw_fw_mp_bt_file_path;
-	#endif /* CONFIG_MP_INCLUDED */
-#endif /* CONFIG_FILE_FWIMG */
 
 /* rtl8192f_hal_init.c */
 s32 rtl8192f_FirmwareDownload(PADAPTER padapter, BOOLEAN  bUsedWoWLANFw);
@@ -235,10 +206,8 @@ void Hal_InitPGData(PADAPTER padapter, u8 *PROMContent);
 void Hal_EfuseParseIDCode(PADAPTER padapter, u8 *hwinfo);
 void Hal_EfuseParseTxPowerInfo_8192F(PADAPTER padapter,
 					u8 *PROMContent, BOOLEAN AutoLoadFail);
-#ifdef CONFIG_BT_COEXIST
 void Hal_EfuseParseBTCoexistInfo_8192F(PADAPTER padapter,
 				       u8 *hwinfo, BOOLEAN AutoLoadFail);
-#endif /* CONFIG_BT_COEXIST */
 void Hal_EfuseParseEEPROMVer_8192F(PADAPTER padapter,
 				   u8 *hwinfo, BOOLEAN AutoLoadFail);
 void Hal_EfuseParseChnlPlan_8192F(PADAPTER padapter,
@@ -269,9 +238,6 @@ void rtl8192f_InitBeaconMaxError(PADAPTER padapter, u8 InfraMode);
 
 void _InitMacAPLLSetting_8192F(PADAPTER Adapter);
 void _8051Reset8192F(PADAPTER padapter);
-#ifdef CONFIG_WOWLAN
-	void Hal_DetectWoWMode(PADAPTER pAdapter);
-#endif /* CONFIG_WOWLAN */
 
 void rtl8192f_start_thread(_adapter *padapter);
 void rtl8192f_stop_thread(_adapter *padapter);
@@ -283,12 +249,7 @@ void rtl8192f_stop_thread(_adapter *padapter);
 	void rtl8192fs_hal_check_bt_hang(_adapter *adapter);
 #endif
 
-#ifdef CONFIG_GPIO_WAKEUP
-	void HalSetOutPutGPIO(PADAPTER padapter, u8 index, u8 OutPutValue);
-#endif
-#ifdef CONFIG_MP_INCLUDED
 int FirmwareDownloadBT(PADAPTER Adapter, PRT_MP_FIRMWARE pFirmware);
-#endif
 void CCX_FwC2HTxRpt_8192f(PADAPTER padapter, u8 *pdata, u8 len);
 
 u8 MRateToHwRate8192F(u8 rate);
@@ -305,12 +266,5 @@ void rtl8192f_cal_txdesc_chksum(struct tx_desc *ptxdesc);
 void rtl8192f_pretx_cd_config(_adapter *adapter);
 #endif
 
-#ifdef CONFIG_PCI_HCI
-	BOOLEAN	InterruptRecognized8192FE(PADAPTER Adapter);
-	void	UpdateInterruptMask8192FE(PADAPTER Adapter, u32 AddMSR, u32 AddMSR1, u32 RemoveMSR, u32 RemoveMSR1);
-	void InitMAC_TRXBD_8192FE(PADAPTER Adapter);
-
-	u16 get_txbd_rw_reg(u16 ff_hwaddr);
-#endif
 
 #endif

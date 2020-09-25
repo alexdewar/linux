@@ -15,9 +15,6 @@
 #ifndef __RTW_MESH_H_
 #define __RTW_MESH_H_
 
-#ifndef CONFIG_AP_MODE
-	#error "CONFIG_RTW_MESH can't be enabled when CONFIG_AP_MODE is not defined\n"
-#endif
 
 #define RTW_MESH_TTL				31
 #define RTW_MESH_PERR_MIN_INT			100
@@ -522,12 +519,8 @@ int rtw_mesh_rx_msdu_act_check(union recv_frame *rframe
 
 void dump_mesh_stats(void *sel, _adapter *adapter);
 
-#if defined(PLATFORM_LINUX) && (KERNEL_NEW)
 #define rtw_lockdep_assert_held(l) lockdep_assert_held(l)
 #define rtw_lockdep_is_held(l) lockdep_is_held(l)
-#else
-#error "TBD\n"
-#endif
 
 #include "rtw_mesh_pathtbl.h"
 #include "rtw_mesh_hwmp.h"

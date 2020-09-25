@@ -15,17 +15,14 @@
 #ifndef _RTL8814BU_HAL_H_
 #define _RTL8814BU_HAL_H_
 
-#ifdef CONFIG_USB_HCI
 	#include <drv_types.h>		/* PADAPTER */
 
-	#ifdef CONFIG_USB_HCI
 		#ifdef USB_PACKET_OFFSET_SZ
 			#define PACKET_OFFSET_SZ (USB_PACKET_OFFSET_SZ)
 		#else
 			#define PACKET_OFFSET_SZ (8)
 		#endif
 		#define TXDESC_OFFSET (TXDESC_SIZE + PACKET_OFFSET_SZ)
-	#endif
 
 	/* undefine MAX_RECVBUF_SZ from rtl8822c_hal.h  */
 	#ifdef MAX_RECVBUF_SZ
@@ -34,18 +31,7 @@
 
 	/* recv_buffer must be large than usb agg size */
 	#ifndef MAX_RECVBUF_SZ
-		#ifndef CONFIG_MINIMAL_MEMORY_USAGE
-			#ifdef CONFIG_PLATFORM_NOVATEK_NT72668
-				#define MAX_RECVBUF_SZ (15360) /* 15k */
-				#elif defined(CONFIG_PLATFORM_HISILICON)
-				/* use 16k to workaround for HISILICON platform */
-				#define MAX_RECVBUF_SZ (16384)
-			#else
 				#define MAX_RECVBUF_SZ (32768)
-			#endif
-		#else
-			#define MAX_RECVBUF_SZ (4000)
-		#endif
 	#endif /* !MAX_RECVBUF_SZ */
 
 	/* rtl8814bu_ops.c */
@@ -55,7 +41,6 @@
 	/* rtl8814bu_io.c */
 	void rtl8814bu_set_intf_ops(struct _io_ops *pops);
 
-#endif /* CONFIG_USB_HCI */
 
 
 #endif /* _RTL8814BU_HAL_H_ */

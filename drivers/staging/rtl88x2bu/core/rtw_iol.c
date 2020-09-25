@@ -96,10 +96,8 @@ bool rtw_IOL_applied(ADAPTER *adapter)
 	if (1 == adapter->registrypriv.fw_iol)
 		return _TRUE;
 
-#ifdef CONFIG_USB_HCI
 	if ((2 == adapter->registrypriv.fw_iol) && (IS_FULL_SPEED_USB(adapter)))
 		return _TRUE;
-#endif
 
 	return _FALSE;
 }
@@ -298,37 +296,6 @@ int _rtw_IOL_append_WD_cmd(struct xmit_frame *xmit_frame, u16 addr, u32 value)
 	return rtw_IOL_append_cmds(xmit_frame, (u8 *)&cmd, 8);
 }
 
-#ifdef DBG_IO
-int dbg_rtw_IOL_append_WB_cmd(struct xmit_frame *xmit_frame, u16 addr, u8 value, const char *caller, const int line)
-{
-	if (match_write_sniff(xmit_frame->padapter, addr, 1, value)) {
-		RTW_INFO("DBG_IO %s:%d IOL_WB(0x%04x, 0x%02x)\n"
-			, caller, line, addr, value);
-	}
-
-	return _rtw_IOL_append_WB_cmd(xmit_frame, addr, value);
-}
-
-int dbg_rtw_IOL_append_WW_cmd(struct xmit_frame *xmit_frame, u16 addr, u16 value, const char *caller, const int line)
-{
-	if (match_write_sniff(xmit_frame->padapter, addr, 2, value)) {
-		RTW_INFO("DBG_IO %s:%d IOL_WW(0x%04x, 0x%04x)\n"
-			, caller, line, addr, value);
-	}
-
-	return _rtw_IOL_append_WW_cmd(xmit_frame, addr, value);
-}
-
-int dbg_rtw_IOL_append_WD_cmd(struct xmit_frame *xmit_frame, u16 addr, u32 value, const char *caller, const int line)
-{
-	if (match_write_sniff(xmit_frame->padapter, addr, 4, value)) {
-		RTW_INFO("DBG_IO %s:%d IOL_WD(0x%04x, 0x%08x)\n"
-			, caller, line, addr, value);
-	}
-
-	return _rtw_IOL_append_WD_cmd(xmit_frame, addr, value);
-}
-#endif
 
 int rtw_IOL_append_DELAY_US_cmd(struct xmit_frame *xmit_frame, u16 us)
 {

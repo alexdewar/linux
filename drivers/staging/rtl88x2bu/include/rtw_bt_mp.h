@@ -17,7 +17,6 @@
 #define __RTW_BT_MP_H
 
 
-#if (MP_DRIVER == 1)
 
 #pragma pack(1)
 
@@ -283,6 +282,5 @@ typedef enum _BT_CTRL_OPCODE_LOWER {
 
 
 
-#endif  /* #if(MP_DRIVER == 1) */
 
 #endif /*  #ifndef __INC_MPT_BT_H */

@@ -54,7 +54,6 @@ typedef struct _MP_REG_ENTRY {
 	u32			Max;		/* maximum value allowed */
 } MP_REG_ENTRY, *PMP_REG_ENTRY;
 
-#ifdef CONFIG_USB_HCI
 typedef struct _USB_EXTENSION {
 	LPCUSB_FUNCS    _lpUsbFuncs;
 	USB_HANDLE	    _hDevice;
@@ -71,7 +70,6 @@ typedef struct _USB_EXTENSION {
 #endif
 
 } USB_EXTENSION, *PUSB_EXTENSION;
-#endif
 
 
 typedef struct _OCTET_STRING {

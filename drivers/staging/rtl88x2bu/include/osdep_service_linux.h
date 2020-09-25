@@ -69,24 +69,18 @@
 
 #include <linux/ieee80211.h>
 
-#ifdef CONFIG_IOCTL_CFG80211
 	/*	#include <linux/ieee80211.h> */
 	#include <net/cfg80211.h>
-#endif /* CONFIG_IOCTL_CFG80211 */
 
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
 	#include <linux/earlysuspend.h>
 #endif /* CONFIG_HAS_EARLYSUSPEND */
 
-#ifdef CONFIG_EFUSE_CONFIG_FILE
 	#include <linux/fs.h>
-#endif
 
-#ifdef CONFIG_USB_HCI
 	#include <linux/usb.h>
 		#include <linux/usb/ch9.h>
-#endif
 
 #ifdef CONFIG_BT_COEXIST_SOCKET_TRX
 	#include <net/sock.h>
@@ -96,18 +90,11 @@
 	#include <linux/netlink.h>
 #endif /* CONFIG_BT_COEXIST_SOCKET_TRX */
 
-#ifdef CONFIG_USB_HCI
 	typedef struct urb   *PURB;
 		#ifdef CONFIG_USB_SUSPEND
 			#define CONFIG_AUTOSUSPEND	1
 		#endif
-#endif
 
-#if defined(CONFIG_RTW_GRO) && (!defined(CONFIG_RTW_NAPI))
-
-	#error "Enable NAPI before enable GRO\n"
-
-#endif
 
 
 

@@ -21,22 +21,6 @@ enum odm_board_type boardType(u8 InterfaceSel)
 {
 	enum odm_board_type        board	= ODM_BOARD_DEFAULT;
 
-#ifdef CONFIG_PCI_HCI
-	INTERFACE_SELECT_PCIE   pcie	= (INTERFACE_SELECT_PCIE)InterfaceSel;
-	switch (pcie) {
-	case INTF_SEL0_SOLO_MINICARD:
-		board |= ODM_BOARD_MINICARD;
-		break;
-	case INTF_SEL1_BT_COMBO_MINICARD:
-		board |= ODM_BOARD_BT;
-		board |= ODM_BOARD_MINICARD;
-		break;
-	default:
-		board = ODM_BOARD_DEFAULT;
-		break;
-	}
-
-#elif defined(CONFIG_USB_HCI)
 	INTERFACE_SELECT_USB    usb	= (INTERFACE_SELECT_USB)InterfaceSel;
 	switch (usb) {
 	case INTF_SEL1_USB_High_Power:
@@ -59,7 +43,6 @@ enum odm_board_type boardType(u8 InterfaceSel)
 		break;
 	}
 
-#endif
 	/* RTW_INFO("===> boardType(): (pHalData->InterfaceSel, pDM_Odm->BoardType) = (%d, %d)\n", InterfaceSel, board); */
 
 	return board;
@@ -79,9 +62,7 @@ void rtw_hal_update_iqk_fw_offload_cap(_adapter *adapter)
 	RTW_INFO("IQK FW offload:%s\n", hal->RegIQKFWOffload ? "enable" : "disable");
 
 	if (rtw_mi_check_status(adapter, MI_LINKED)) {
-		#ifdef CONFIG_LPS
 		LPS_Leave(adapter, "SWITCH_IQK_OFFLOAD");
-		#endif
 		halrf_iqk_trigger(p_dm_odm, _FALSE);
 	}
 }
@@ -241,17 +222,10 @@ void rtw_phydm_fill_desc_dpt(void *dm, u8 *desc, u8 dpt_lv)
 		break;
 	#endif
 */
-	#ifdef CONFIG_RTL8822B
 	case RTL8822B :
 		SET_TX_DESC_TXPWR_OFSET_8822B(desc, dpt_lv);
 	break;
-	#endif
 
-	#ifdef CONFIG_RTL8821C
-	case RTL8821C :
-		SET_TX_DESC_TXPWR_OFSET_8821C(desc, dpt_lv);
-	break;
-	#endif
 
 	default :
 		RTW_ERR("%s IC not support dynamic tx power\n", __func__);
@@ -450,13 +424,7 @@ void Init_ODM_ComInfo(_adapter *adapter)
 	odm_cmn_info_hook(pDM_Odm, ODM_CMNINFO_TX_TP, &(dvobj->traffic_stat.cur_tx_tp));
 	odm_cmn_info_hook(pDM_Odm, ODM_CMNINFO_RX_TP, &(dvobj->traffic_stat.cur_rx_tp));
 	odm_cmn_info_hook(pDM_Odm, ODM_CMNINFO_ANT_TEST, &(pHalData->antenna_test));
-#ifdef CONFIG_RTL8723B
-	odm_cmn_info_hook(pDM_Odm, ODM_CMNINFO_IS1ANTENNA, &pHalData->EEPROMBluetoothAntNum);
-	odm_cmn_info_hook(pDM_Odm, ODM_CMNINFO_RFDEFAULTPATH, &pHalData->ant_path);
-#endif /*CONFIG_RTL8723B*/
-#ifdef CONFIG_USB_HCI
 	odm_cmn_info_hook(pDM_Odm, ODM_CMNINFO_HUBUSBMODE, &(dvobj->usb_speed));
-#endif
 
 #ifdef CONFIG_DYNAMIC_SOML
 	odm_cmn_info_hook(pDM_Odm, ODM_CMNINFO_ADAPTIVE_SOML, &(adapter->registrypriv.dyn_soml_en));
@@ -469,12 +437,10 @@ void Init_ODM_ComInfo(_adapter *adapter)
 	/*halrf info hook*/
 	/* waiting for PhyDMV034 support*/
 	halrf_cmn_info_hook(pDM_Odm, HALRF_CMNINFO_MANUAL_RF_SUPPORTABILITY, &(adapter->registrypriv.halrf_ability));
-#ifdef CONFIG_MP_INCLUDED
 	halrf_cmn_info_hook(pDM_Odm, HALRF_CMNINFO_CON_TX, &(adapter->mppriv.mpt_ctx.is_start_cont_tx));
 	halrf_cmn_info_hook(pDM_Odm, HALRF_CMNINFO_SINGLE_TONE, &(adapter->mppriv.mpt_ctx.is_single_tone));
 	halrf_cmn_info_hook(pDM_Odm, HALRF_CMNINFO_CARRIER_SUPPRESSION, &(adapter->mppriv.mpt_ctx.is_carrier_suppression));
 	halrf_cmn_info_hook(pDM_Odm, HALRF_CMNINFO_MP_RATE_INDEX, &(adapter->mppriv.mpt_ctx.mpt_rate_index));
-#endif/*CONFIG_MP_INCLUDED*/
 	for (i = 0; i < ODM_ASSOCIATE_ENTRY_NUM; i++)
 		phydm_cmn_sta_info_hook(pDM_Odm, i, NULL);
 
@@ -991,17 +957,6 @@ void SetHalODMVar(
 	}
 		break;
 
-#ifdef CONFIG_ANTENNA_DIVERSITY
-	case HAL_ODM_ANTDIV_SELECT: {
-		u8	antenna = (*(u8 *)pValue1);
-		HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(Adapter);
-		/*switch antenna*/
-		odm_update_rx_idle_ant(&pHalData->odmpriv, antenna);
-		/*RTW_INFO("==> HAL_ODM_ANTDIV_SELECT, Ant_(%s)\n", (antenna == MAIN_ANT) ? "MAIN_ANT" : "AUX_ANT");*/
-
-	}
-		break;
-#endif
 
 	default:
 		break;
@@ -1017,13 +972,6 @@ void GetHalODMVar(
 	struct dm_struct *podmpriv = adapter_to_phydm(Adapter);
 
 	switch (eVariable) {
-#ifdef CONFIG_ANTENNA_DIVERSITY
-	case HAL_ODM_ANTDIV_SELECT: {
-		struct phydm_fat_struct	*pDM_FatTable = &podmpriv->dm_fat_table;
-		*((u8 *)pValue1) = pDM_FatTable->rx_idle_ant;
-	}
-		break;
-#endif
 	case HAL_ODM_INITIAL_GAIN:
 		*((u8 *)pValue1) = rtw_phydm_get_cur_igi(Adapter);
 		break;
@@ -1032,9 +980,7 @@ void GetHalODMVar(
 	}
 }
 
-#ifdef RTW_HALMAC
 #include "../hal_halmac.h"
-#endif
 
 enum hal_status
 rtw_phydm_fw_iqk(
@@ -1043,12 +989,10 @@ rtw_phydm_fw_iqk(
 	u8 segment
 )
 {
-	#ifdef RTW_HALMAC
 	struct _ADAPTER *adapter = p_dm_odm->adapter;
 
 	if (rtw_halmac_iqk(adapter_to_dvobj(adapter), clear, segment) == 0)
 		return HAL_STATUS_SUCCESS;
-	#endif
 	return HAL_STATUS_FAILURE;
 }
 
@@ -1062,7 +1006,6 @@ rtw_phydm_cfg_phy_para(
 	enum rf_path e_rf_path,
 	u32 delay_time)
 {
-	#ifdef RTW_HALMAC
 	struct _ADAPTER *adapter = p_dm_odm->adapter;
 	struct rtw_phy_parameter para;
 
@@ -1151,7 +1094,6 @@ rtw_phydm_cfg_phy_para(
 
 	if (rtw_halmac_cfg_phy_para(adapter_to_dvobj(adapter), &para))
 		return HAL_STATUS_FAILURE;
-	#endif /*RTW_HALMAC*/
 	return HAL_STATUS_SUCCESS;
 }
 
@@ -1202,9 +1144,7 @@ void rtw_phydm_watchdog_in_lps_lclk(_adapter *adapter)
 
 	if ((cur_igi > min_rssi + 5) ||
 		(cur_igi < min_rssi - 5)) {
-#ifdef CONFIG_LPS
 		rtw_dm_in_lps_wk_cmd(adapter);
-#endif
 	}
 }
 #endif /*CONFIG_LPS_LCLK_WD_TIMER*/
@@ -1405,7 +1345,6 @@ static u8 rtw_phydm_config_trx_path(_adapter *adapter)
 	tx_path_nss_set_default(hal_data->txpath_nss, hal_data->txpath_num_nss
 		, GET_HAL_TX_PATH_BMP(adapter));
 
-#if defined(CONFIG_RTL8192F) || defined(CONFIG_RTL8822B) ||defined(CONFIG_RTL8822C)
 {
 	enum bb_path txpath_1ss;
 
@@ -1461,28 +1400,6 @@ static u8 rtw_phydm_config_trx_path(_adapter *adapter)
 		}
 	}
 }
-#elif defined(CONFIG_RTL8814B)
-{
-	if (config_phydm_trx_mode_8814b(adapter_to_phydm(adapter), txpath, rxpath) == FALSE) {
-		RTW_ERR("%s txpath=0x%x, rxpath=0x%x fail\n", __func__
-			, txpath, rxpath);
-		rtw_warn_on(1);
-		goto exit;
-	}
-
-	/* 8814B is always full-TX */
-	tx_path_nss_set_full_tx(hal_data->txpath_nss, hal_data->txpath_num_nss, txpath);
-}
-#elif defined(CONFIG_RTL8812A) || defined(CONFIG_RTL8192E)
-{
-	#ifdef CONFIG_RTW_TX_NPATH_EN
-	if (adapter->registrypriv.tx_npath == 1) {
-		phydm_tx_2path(adapter_to_phydm(adapter));
-		tx_path_nss_set_full_tx(hal_data->txpath_nss, hal_data->txpath_num_nss, txpath);
-	}
-	#endif
-}
-#endif
 
 	hal_data->txpath = txpath;
 	hal_data->rxpath = rxpath;
@@ -1501,9 +1418,6 @@ void rtw_phydm_init(_adapter *adapter)
 	rtw_phydm_config_trx_path(adapter);
 	init_phydm_info(adapter);
 	odm_dm_init(phydm);
-#ifdef CONFIG_CUSTOMER01_SMART_ANTENNA
-	phydm_pathb_q_matrix_rotate_en(phydm);
-#endif
 }
 
 bool rtw_phydm_set_crystal_cap(_adapter *adapter, u8 crystal_cap)
@@ -1572,20 +1486,7 @@ static u8 _rtw_phydm_rfk_condition_check(_adapter *adapter, u8 is_scaning, u8 if
 	return rfk_allowed;
 	#endif
 
-	#ifdef CONFIG_MCC_MODE
-	/*not in MCC State*/
-	if (MCC_EN(adapter) && 
-		rtw_hal_check_mcc_status(adapter, MCC_STATUS_DOING_MCC)) {
-		rfk_allowed = _FALSE;
-		if (0)
-			RTW_INFO("[RFK-CHK] RF-K not allowed due to doing MCC\n");
-		return rfk_allowed;
-	}
-	#endif
 
-	#if defined(CONFIG_TDLS) && defined(CONFIG_TDLS_CH_SW)
-
-	#endif
 
 	if (ifs_linked) {
 		if (is_scaning) {
@@ -1777,13 +1678,9 @@ void rtw_phydm_watchdog(_adapter *adapter, bool in_lps)
 	odm_cmn_info_update(&pHalData->odmpriv, ODM_CMNINFO_LINK, bLinked);
 	odm_cmn_info_update(&pHalData->odmpriv, ODM_CMNINFO_STATION_STATE, bsta_state);
 
-	#ifdef CONFIG_BT_COEXIST
 	bBtDisabled = rtw_btcoex_IsBtDisabled(adapter);
 	odm_cmn_info_update(&pHalData->odmpriv, ODM_CMNINFO_BT_ENABLED,
 				(bBtDisabled == _TRUE) ? _FALSE : _TRUE);
-	#else
-	odm_cmn_info_update(&pHalData->odmpriv, ODM_CMNINFO_BT_ENABLED, _FALSE);
-	#endif /* CONFIG_BT_COEXIST */
 
 	rfk_forbidden = (_rtw_phydm_rfk_condition_check(adapter, pHalData->bScanInProcess, bLinked) == _TRUE) ? _FALSE : _TRUE;
 	halrf_cmn_info_set(&pHalData->odmpriv, HALRF_CMNINFO_RFK_FORBIDDEN, rfk_forbidden);

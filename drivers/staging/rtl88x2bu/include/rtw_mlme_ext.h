@@ -40,11 +40,7 @@
 
 #define DEAUTH_DENY_TO		500 /* unit: ms */
 
-#ifdef CONFIG_GSPI_HCI
-	#define ROAMING_LIMIT	5
-#else
 	#define ROAMING_LIMIT	8
-#endif
 /* #define	IOCMD_REG0		0x10250370 */
 /* #define	IOCMD_REG1		0x10250374 */
 /* #define	IOCMD_REG2		0x10250378 */
@@ -212,9 +208,7 @@ struct ss_res {
 	u8 igi_before_scan; /* used for restoring IGI value without enable DIG & FA_CNT */
 #ifdef CONFIG_SCAN_BACKOP
 	u8 backop_flags_sta; /* policy for station mode*/
-	#ifdef CONFIG_AP_MODE
 	u8 backop_flags_ap; /* policy for ap mode */
-	#endif
 	#ifdef CONFIG_RTW_MESH
 	u8 backop_flags_mesh; /* policy for mesh mode */
 	#endif
@@ -260,27 +254,6 @@ struct ss_res {
 
 #define	WIFI_FW_LINKING_STATE		(WIFI_FW_AUTH_NULL | WIFI_FW_AUTH_STATE | WIFI_FW_AUTH_SUCCESS | WIFI_FW_ASSOC_STATE)
 
-#ifdef CONFIG_TDLS
-enum TDLS_option {
-	TDLS_ESTABLISHED = 1,
-	TDLS_ISSUE_PTI,
-	TDLS_CH_SW_RESP,
-	TDLS_CH_SW_PREPARE,
-	TDLS_CH_SW_START,
-	TDLS_CH_SW_TO_OFF_CHNL,
-	TDLS_CH_SW_TO_BASE_CHNL_UNSOLICITED,
-	TDLS_CH_SW_TO_BASE_CHNL,
-	TDLS_CH_SW_END_TO_BASE_CHNL,
-	TDLS_CH_SW_END,
-	TDLS_RS_RCR,
-	TDLS_TEARDOWN_STA,
-	TDLS_TEARDOWN_STA_NO_WAIT,
-	TDLS_TEARDOWN_STA_LOCALLY,
-	TDLS_TEARDOWN_STA_LOCALLY_POST,
-	maxTDLS,
-};
-
-#endif /* CONFIG_TDLS */
 
 
 /*
@@ -496,9 +469,7 @@ struct mlme_ext_priv {
 	u8	mlmeext_init;
 	ATOMIC_T		event_seq;
 	u16	mgnt_seq;
-#ifdef CONFIG_IEEE80211W
 	u16	sa_query_seq;
-#endif
 	/* struct fw_priv 	fwpriv; */
 
 	unsigned char	cur_channel;
@@ -508,9 +479,7 @@ struct mlme_ext_priv {
 
 	unsigned char	basicrate[NumRates];
 	unsigned char	datarate[NumRates];
-#ifdef CONFIG_80211N_HT
 	unsigned char default_supported_mcs_set[16];
-#endif
 
 	struct ss_res		sitesurvey_res;
 	struct mlme_ext_info	mlmext_info;/* for sta/adhoc mode, including current scanning/connecting/connected related info.
@@ -518,9 +487,6 @@ struct mlme_ext_priv {
 	_timer		survey_timer;
 	_timer		link_timer;
 
-#ifdef CONFIG_RTW_REPEATER_SON
-	_timer		rson_scan_timer;
-#endif
 #ifdef CONFIG_RTW_80211R
 	_timer		ft_link_timer;
 	_timer		ft_roam_timer;
@@ -548,9 +514,7 @@ struct mlme_ext_priv {
 #ifdef CONFIG_BCN_RECV_TIME
 	u16 bcn_rx_time;
 #endif
-#ifdef CONFIG_AP_MODE
 	unsigned char bstart_bss;
-#endif
 
 #ifdef CONFIG_80211D
 	u8 update_channel_plan_by_ap_done;
@@ -749,15 +713,11 @@ void get_assoc_AP_Vendor(char *vendor, u8 assoc_AP_vendor);
 #ifdef CONFIG_RTS_FULL_BW
 void rtw_parse_sta_vendor_ie_8812(_adapter *adapter, struct sta_info *sta, u8 *tlv_ies, u16 tlv_ies_len);
 #endif/*CONFIG_RTS_FULL_BW*/
-#ifdef CONFIG_80211AC_VHT
 void get_vht_bf_cap(u8 *pframe, uint len, struct vht_bf_cap *bf_cap);
-#endif
 
 int WMM_param_handler(_adapter *padapter, PNDIS_802_11_VARIABLE_IEs	pIE);
-#ifdef CONFIG_WFD
 void rtw_process_wfd_ie(_adapter *adapter, u8 *ie, u8 ie_len, const char *tag);
 void rtw_process_wfd_ies(_adapter *adapter, u8 *ies, u8 ies_len, const char *tag);
-#endif
 void WMMOnAssocRsp(_adapter *padapter);
 
 void HT_caps_handler(_adapter *padapter, PNDIS_802_11_VARIABLE_IEs pIE);
@@ -865,22 +825,17 @@ void rtw_macid_ctl_init(struct macid_ctl_t *macid_ctl);
 void rtw_macid_ctl_deinit(struct macid_ctl_t *macid_ctl);
 u8 rtw_iface_bcmc_id_get(_adapter *padapter);
 void rtw_iface_bcmc_id_set(_adapter *padapter, u8 mac_id);
-#if defined(DBG_CONFIG_ERROR_RESET) && defined(CONFIG_CONCURRENT_MODE)
-void rtw_iface_bcmc_sec_cam_map_restore(_adapter *adapter);
-#endif
 bool rtw_bmp_is_set(const u8 *bmp, u8 bmp_len, u8 id);
 void rtw_bmp_set(u8 *bmp, u8 bmp_len, u8 id);
 void rtw_bmp_clear(u8 *bmp, u8 bmp_len, u8 id);
 bool rtw_bmp_not_empty(const u8 *bmp, u8 bmp_len);
 bool rtw_bmp_not_empty_exclude_bit0(const u8 *bmp, u8 bmp_len);
 
-#ifdef CONFIG_AP_MODE
 bool rtw_tim_map_is_set(_adapter *padapter, const u8 *map, u8 id);
 void rtw_tim_map_set(_adapter *padapter, u8 *map, u8 id);
 void rtw_tim_map_clear(_adapter *padapter, u8 *map, u8 id);
 bool rtw_tim_map_anyone_be_set(_adapter *padapter, const u8 *map);
 bool rtw_tim_map_anyone_be_set_exclude_aid0(_adapter *padapter, const u8 *map);
-#endif /* CONFIG_AP_MODE */
 
 u32 report_join_res(_adapter *padapter, int aid_res, u16 status);
 void report_survey_event(_adapter *padapter, union recv_frame *precv_frame);
@@ -934,10 +889,8 @@ void issue_del_ba(_adapter *adapter, unsigned char *ra, u8 tid, u16 reason, u8 i
 int issue_del_ba_ex(_adapter *adapter, unsigned char *ra, u8 tid, u16 reason, u8 initiator, int try_cnt, int wait_ms);
 void issue_action_BSSCoexistPacket(_adapter *padapter);
 
-#ifdef CONFIG_IEEE80211W
 void issue_action_SA_Query(_adapter *padapter, unsigned char *raddr, unsigned char action, unsigned short tid, u8 key_type);
 int issue_deauth_11w(_adapter *padapter, unsigned char *da, unsigned short reason, u8 key_type);
-#endif /* CONFIG_IEEE80211W */
 int issue_action_SM_PS(_adapter *padapter ,  unsigned char *raddr , u8 NewMimoPsMode);
 int issue_action_SM_PS_wait_ack(_adapter *padapter, unsigned char *raddr, u8 NewMimoPsMode, int try_cnt, int wait_ms);
 
@@ -993,9 +946,7 @@ unsigned int OnAction_back(_adapter *padapter, union recv_frame *precv_frame);
 unsigned int on_action_public(_adapter *padapter, union recv_frame *precv_frame);
 unsigned int OnAction_ft(_adapter *padapter, union recv_frame *precv_frame);
 unsigned int OnAction_ht(_adapter *padapter, union recv_frame *precv_frame);
-#ifdef CONFIG_IEEE80211W
 unsigned int OnAction_sa_query(_adapter *padapter, union recv_frame *precv_frame);
-#endif /* CONFIG_IEEE80211W */
 unsigned int on_action_rm(_adapter *padapter, union recv_frame *precv_frame);
 unsigned int OnAction_wmm(_adapter *padapter, union recv_frame *precv_frame);
 unsigned int OnAction_vht(_adapter *padapter, union recv_frame *precv_frame);
@@ -1044,14 +995,9 @@ void rtw_collect_bcn_info(_adapter *adapter);
 void _linked_info_dump(_adapter *padapter);
 
 void survey_timer_hdl(void *ctx);
-#ifdef CONFIG_RTW_REPEATER_SON
-void rson_timer_hdl(void *ctx);
-#endif
 void link_timer_hdl(void *ctx);
 void addba_timer_hdl(void *ctx);
-#ifdef CONFIG_IEEE80211W
 void sa_query_timer_hdl(void *ctx);
-#endif /* CONFIG_IEEE80211W */
 #if 0
 void reauth_timer_hdl(_adapter *padapter);
 void reassoc_timer_hdl(_adapter *padapter);
@@ -1118,9 +1064,7 @@ u8 NULL_hdl(_adapter *padapter, u8 *pbuf);
 u8 join_cmd_hdl(_adapter *padapter, u8 *pbuf);
 u8 disconnect_hdl(_adapter *padapter, u8 *pbuf);
 u8 createbss_hdl(_adapter *padapter, u8 *pbuf);
-#ifdef CONFIG_AP_MODE
 u8 stop_ap_hdl(_adapter *adapter);
-#endif
 u8 setopmode_hdl(_adapter *padapter, u8 *pbuf);
 u8 sitesurvey_cmd_hdl(_adapter *padapter, u8 *pbuf);
 u8 setauth_hdl(_adapter *padapter, u8 *pbuf);
@@ -1229,23 +1173,11 @@ struct cmd_hdl wlancmds[] = {
 
 struct C2HEvent_Header {
 
-#ifdef CONFIG_LITTLE_ENDIAN
 
 	unsigned int len:16;
 	unsigned int ID:8;
 	unsigned int seq:8;
 
-#elif defined(CONFIG_BIG_ENDIAN)
-
-	unsigned int seq:8;
-	unsigned int ID:8;
-	unsigned int len:16;
-
-#else
-
-#  error "Must be LITTLE or BIG Endian"
-
-#endif
 
 	unsigned int rsvd;
 
@@ -1282,9 +1214,7 @@ enum rtw_c2h_event {
 	GEN_EVT_CODE(_ReportPwrState),		/* filen: only for PCIE, USB	 */
 	GEN_EVT_CODE(_CloseRF),				/* filen: only for PCIE, work around ASPM */
 	GEN_EVT_CODE(_WMM),					/*25*/
-#ifdef CONFIG_IEEE80211W
 	GEN_EVT_CODE(_TimeoutSTA),
-#endif /* CONFIG_IEEE80211W */
 #ifdef CONFIG_RTW_80211R
 	GEN_EVT_CODE(_FT_REASSOC),
 #endif
@@ -1322,9 +1252,7 @@ static struct fwevent wlanevents[] = {
 	{0, &rtw_cpwm_event_callback},
 	{0, NULL},
 	{0, &rtw_wmm_event_callback}, /*25*/
-#ifdef CONFIG_IEEE80211W
 	{sizeof(struct stadel_event), &rtw_sta_timeout_event_callback},
-#endif /* CONFIG_IEEE80211W */
 #ifdef CONFIG_RTW_80211R
 	{sizeof(struct stassoc_event), &rtw_ft_reassoc_event_callback},
 #endif

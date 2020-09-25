@@ -17,10 +17,6 @@
 
 #define ffaddr2deviceId(pdvobj, addr)	(pdvobj->Queue2Pipe[addr])
 
-#ifndef RTW_HALMAC
-extern const char *_sdio_tx_queue_str[];
-#define sdio_tx_queue_str(_page_idx) (_page_idx >= SDIO_MAX_TX_QUEUE ? "UNKNOWN" : _sdio_tx_queue_str[_page_idx])
-#endif
 
 u8 rtw_hal_sdio_max_txoqt_free_space(_adapter *padapter);
 u8 rtw_hal_sdio_query_tx_freepage(_adapter *padapter, u8 PageIdx, u8 RequiredPageNum);
@@ -30,19 +26,12 @@ u32 rtw_hal_get_sdio_tx_max_length(PADAPTER padapter, u8 queue_idx);
 bool sdio_power_on_check(PADAPTER padapter);
 
 #ifdef CONFIG_SDIO_TX_ENABLE_AVAL_INT
-#if defined(CONFIG_RTL8188F) || defined(CONFIG_RTL8821A)
-void rtw_hal_sdio_avail_page_threshold_init(_adapter *adapter);
-void rtw_hal_sdio_avail_page_threshold_en(_adapter *adapter, u8 qidx);
-#endif
 #endif /* CONFIG_SDIO_TX_ENABLE_AVAL_INT */
 
 #ifdef CONFIG_FW_C2H_REG
 void sd_c2h_hisr_hdl(_adapter *adapter);
 #endif
 
-#if defined(CONFIG_RTL8188F) || defined (CONFIG_RTL8188GTV) || defined (CONFIG_RTL8192F)
-#define SDIO_LOCAL_CMD_ADDR(addr) ((SDIO_LOCAL_DEVICE_ID << 13) | ((addr) & SDIO_LOCAL_MSK))
-#endif
 
 #ifdef CONFIG_SDIO_CHK_HCI_RESUME
 bool sdio_chk_hci_resume(struct intf_hdl *pintfhdl);

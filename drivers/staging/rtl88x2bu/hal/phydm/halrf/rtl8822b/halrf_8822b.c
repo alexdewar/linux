@@ -215,11 +215,9 @@ void odm_tx_pwr_track_set_pwr8822b(void *dm_void, enum pwrtrack_method method,
 	if (*dm->mp_mode == true) {
 #if (DM_ODM_SUPPORT_TYPE & (ODM_WIN | ODM_CE))
 #if (DM_ODM_SUPPORT_TYPE & ODM_WIN)
-#if (MP_DRIVER == 1)
 		PMPT_CONTEXT p_mpt_ctx = &(adapter->mpt_ctx);
 
 		tx_rate = mpt_to_mgnt_rate(p_mpt_ctx->mpt_rate_index);
-#endif
 #elif (DM_ODM_SUPPORT_TYPE & ODM_CE)
 		PMPT_CONTEXT p_mpt_ctx = &(adapter->mppriv.mpt_ctx);
 
@@ -298,18 +296,14 @@ void odm_tx_pwr_track_set_pwr8822b(void *dm_void, enum pwrtrack_method method,
 	if (*dm->mp_mode == 1) {
 #if (DM_ODM_SUPPORT_TYPE & (ODM_WIN | ODM_CE))
 #if (DM_ODM_SUPPORT_TYPE & ODM_WIN)
-#if (MP_DRIVER == 1)
 		PMPT_CONTEXT p_mpt_ctx = &adapter->MptCtx;
 
 		tx_rate = MptToMgntRate(p_mpt_ctx->MptRateIndex);
-#endif
 #elif (DM_ODM_SUPPORT_TYPE & ODM_CE)
-#ifdef CONFIG_MP_INCLUDED
 		if (rf->mp_rate_index)
 			mpt_rate_index = *rf->mp_rate_index;
 
 		tx_rate = mpt_to_mgnt_rate(mpt_rate_index);
-#endif
 #endif
 #endif
 	} else {
@@ -576,9 +570,6 @@ boolean phy_query_rf_path_switch_8822b(struct dm_struct *dm)
 boolean phy_query_rf_path_switch_8822b(void *adapter)
 #endif
 {
-#if DISABLE_BB_RF
-	return true;
-#endif
 #if ((DM_ODM_SUPPORT_TYPE & ODM_AP) || (DM_ODM_SUPPORT_TYPE == ODM_CE))
 	return _phy_query_rf_path_switch_8822b(dm);
 #else

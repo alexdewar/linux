@@ -15,43 +15,16 @@
 #ifndef __RTL8814A_RECV_H__
 #define __RTL8814A_RECV_H__
 
-#if defined(CONFIG_USB_HCI)
 
 	#ifndef MAX_RECVBUF_SZ
-		#ifndef CONFIG_MINIMAL_MEMORY_USAGE
-			#ifdef CONFIG_PLATFORM_MSTAR
-				#define MAX_RECVBUF_SZ (8192) /* 8K */
-			#else
 				#define MAX_RECVBUF_SZ (32768) /* 32k */
-			#endif
 			/* #define MAX_RECVBUF_SZ (24576) */ /* 24k */
 			/* #define MAX_RECVBUF_SZ (20480) */ /* 20K */
 			/* #define MAX_RECVBUF_SZ (10240) */ /* 10K */
 			/* #define MAX_RECVBUF_SZ (15360) */ /* 15k < 16k */
 			/* #define MAX_RECVBUF_SZ (8192+1024) */ /* 8K+1k */
-		#else
-			#define MAX_RECVBUF_SZ (4000) /* about 4K */
-		#endif
 	#endif /* !MAX_RECVBUF_SZ */
 
-#elif defined(CONFIG_PCI_HCI)
-	/* #ifndef CONFIG_MINIMAL_MEMORY_USAGE */
-	/*	#define MAX_RECVBUF_SZ (9100) */
-	/* #else */
-	#define MAX_RECVBUF_SZ (4000) /* about 4K
-	* #endif */
-
-
-#elif defined(CONFIG_SDIO_HCI)
-	#if 0
-		/* temp solution */
-		#ifdef CONFIG_SDIO_RX_COPY
-			#define MAX_RECVBUF_SZ (10240)
-		#else /*  !CONFIG_SDIO_RX_COPY */
-			#define MAX_RECVBUF_SZ	MAX_RX_DMA_BUFFER_SIZE_8821
-		#endif /*  !CONFIG_SDIO_RX_COPY */
-	#endif
-#endif
 
 
 /* RX buffer descriptor */
@@ -123,11 +96,7 @@
 /* DWORD 2 */
 #define GET_RX_STATUS_DESC_SEQ_8814A(__pRxStatusDesc)						LE_BITS_TO_4BYTE(__pRxStatusDesc+8, 0, 12)
 #define GET_RX_STATUS_DESC_FRAG_8814A(__pRxStatusDesc)						LE_BITS_TO_4BYTE(__pRxStatusDesc+8, 12, 4)
-#ifdef CONFIG_USB_RX_AGGREGATION
-	#define GET_RX_STATUS_DESC_USB_AGG_PKTNUM_8814A(__pRxStatusDesc)			LE_BITS_TO_4BYTE(__pRxStatusDesc+8, 16, 8)
-#else
 	#define GET_RX_STATUS_DESC_RX_IS_QOS_8814A(__pRxStatusDesc)					LE_BITS_TO_4BYTE(__pRxStatusDesc+8, 16, 1)
-#endif
 #define GET_RX_STATUS_DESC_WLANHD_IV_LEN_8814A(__pRxStatusDesc)			LE_BITS_TO_4BYTE(__pRxStatusDesc+8, 18, 6)
 #define GET_RX_STATUS_DESC_HWRSVD_8814A(__pRxStatusDesc)					LE_BITS_TO_4BYTE(__pRxStatusDesc+8, 24, 4)
 #define GET_RX_STATUS_C2H_8814A(__pRxStatusDesc)								LE_BITS_TO_4BYTE(__pRxStatusDesc+8, 28, 1)
@@ -159,22 +128,12 @@
 /* Rx smooth factor */
 #define Rx_Smooth_Factor (20)
 
-#ifdef CONFIG_USB_HCI
 	s32 rtl8814au_init_recv_priv(PADAPTER padapter);
 	void rtl8814au_free_recv_priv(PADAPTER padapter);
-#endif
 
-#ifdef CONFIG_PCI_HCI
-	s32 rtl8814ae_init_recv_priv(PADAPTER padapter);
-	void rtl8814ae_free_recv_priv(PADAPTER padapter);
-#endif
 
 #if 0
 	/* temp solution */
-	#ifdef CONFIG_SDIO_HCI
-		s32 InitRecvPriv8821AS(PADAPTER padapter);
-		void FreeRecvPriv8821AS(PADAPTER padapter);
-	#endif /*  CONFIG_SDIO_HCI */
 #endif
 
 void rtl8814_query_rx_desc_status(union recv_frame *precvframe, u8 *pdesc);

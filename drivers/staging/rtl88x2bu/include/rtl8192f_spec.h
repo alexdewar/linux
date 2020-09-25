@@ -435,11 +435,6 @@
 #define BIT_USB_RXDMA_AGG_EN	BIT(31)
 #define RXDMA_AGG_MODE_EN		BIT(1)
 
-#ifdef CONFIG_WOWLAN
-	#define RXPKT_RELEASE_POLL		BIT(16)
-	#define RXDMA_IDLE				BIT(17)
-	#define RW_RELEASE_EN			BIT(18)
-#endif
 
 #ifdef CONFIG_AMPDU_PRETX_CD
 /*#define BIT_ERRORHDL_INT			BIT(2)*/
@@ -454,65 +449,6 @@
 #define SDIO_HISR_SDIO_CRCERR		BIT(31)
 
 /* PCIE Host Interrupt Mask Register (HIMR) */
-#ifdef CONFIG_PCI_HCI
-/* ----------------------------------------------------------------------------
- *   * 8192F IMR/ISR bits							(offset 0xB0,  8bits)
- *     * ---------------------------------------------------------------------------- */
-
-#define IMR_DISABLED_8192F					0
-/* IMR DW0(0x00B0-00B3) Bit 0-31 */
-#define IMR_TIMER2_8192F					BIT(31)         /* Timeout interrupt 2 */
-#define IMR_TIMER1_8192F					BIT(30)		/* Timeout interrupt 1 */
-#define IMR_PSTIMEOUT_8192F				BIT(29)		/* Power Save Time Out Interrupt */
-#define IMR_GTINT4_8192F					BIT(28)		/* When GTIMER4 expires, this bit is set to 1 */
-#define IMR_GTINT3_8192F					BIT(27)		/* When GTIMER3 expires, this bit is set to 1 */
-#define IMR_TXBCN0ERR_8192F				BIT(26)		/* Transmit Beacon0 Error */
-#define IMR_TXBCN0OK_8192F				BIT(25)		/* Transmit Beacon0 OK */
-#define IMR_TSF_BIT32_TOGGLE_8192F		BIT(24)		/* TSF Timer BIT32 toggle indication interrupt */
-#define IMR_BCNDMAINT0_8192F				BIT(20)		/* Beacon DMA Interrupt 0 */
-#define IMR_BCNDERR0_8192F				BIT(16)		/* Beacon Queue DMA OK0 */
-#define IMR_HSISR_IND_ON_INT_8192F		BIT(15)		/* HSISR Indicator (HSIMR & HSISR is true, this bit is set to 1) */
-#define IMR_BCNDMAINT_E_8192F				BIT(14)		/* Beacon DMA Interrupt Extension for Win7 */
-#define IMR_ATIMEND_8192F					BIT(12)         /* CTWidnow End or ATIM Window End */
-#define IMR_C2HCMD_8192F					BIT(10)		/* CPU to Host Command INT status, Write 1 clear */
-#define IMR_CPWM2_8192F					BIT(9)          /* CPU power mode exchange INT status, Write 1 clear */
-#define IMR_CPWM_8192F						BIT(8)		/* CPU power mode exchange INT status, Write 1 clear */
-#define IMR_HIGHDOK_8192F					BIT(7)		/* High Queue DMA OK */
-#define IMR_MGNTDOK_8192F					BIT(6)		/* Management Queue DMA OK */
-#define IMR_BKDOK_8192F					BIT(5)		/* AC_BK DMA OK */
-#define IMR_BEDOK_8192F					BIT(4)		/* AC_BE DMA OK */
-#define IMR_VIDOK_8192F					BIT(3)		/* AC_VI DMA OK */
-#define IMR_VODOK_8192F					BIT(2)		/* AC_VO DMA OK */
-#define IMR_RDU_8192F						BIT(1)		/* Rx Descriptor Unavailable */
-#define IMR_ROK_8192F						BIT(0)		/* Receive DMA OK */
-
-/* IMR DW1(0x00B4-00B7) Bit 0-31 */
-#define IMR_MCUERR_8192F					BIT(28)
-#define IMR_BCNDMAINT7_8192F				BIT(27) 		/* Beacon DMA Interrupt 7 */
-#define IMR_BCNDMAINT6_8192F				BIT(26)		/* Beacon DMA Interrupt 6 */
-#define IMR_BCNDMAINT5_8192F				BIT(25)		/* Beacon DMA Interrupt 5 */
-#define IMR_BCNDMAINT4_8192F				BIT(24)		/* Beacon DMA Interrupt 4 */
-#define IMR_BCNDMAINT3_8192F				BIT(23)		/* Beacon DMA Interrupt 3 */
-#define IMR_BCNDMAINT2_8192F				BIT(22)		/* Beacon DMA Interrupt 2 */
-#define IMR_BCNDMAINT1_8192F 				BIT(21)		/* Beacon DMA Interrupt 1 */
-#define IMR_BCNDOK7_8192F 					BIT(20)		/* Beacon Queue DMA OK Interrup 7 */
-#define IMR_BCNDOK6_8192F					BIT(19) 		/* Beacon Queue DMA OK Interrup 6 */
-#define IMR_BCNDOK5_8192F					BIT(18)		/* Beacon Queue DMA OK Interrup 5 */
-#define IMR_BCNDOK4_8192F					BIT(17)		/* Beacon Queue DMA OK Interrup 4 */
-#define IMR_BCNDOK3_8192F					BIT(16)		/* Beacon Queue DMA OK Interrup 3 */
-#define IMR_BCNDOK2_8192F					BIT(15)		/* Beacon Queue DMA OK Interrup 2 */
-#define IMR_BCNDOK1_8192F					BIT(14)		/* Beacon Queue DMA OK Interrup 1 */
-#define IMR_ATIMEND_E_8192F				BIT(13)		/* ATIM Window End Extension for Win7 */
-#define IMR_TXERR_8192F					BIT(11)		/* Tx Error Flag Interrupt status, write 1 clear. */
-#define IMR_RXERR_8192F					BIT(10)		/* Rx Error Flag INT status, Write 1 clear */
-#define IMR_TXFOVW_8192F					BIT(9)		/* Transmit FIFO Overflow */
-#define IMR_RXFOVW_8192F 					BIT(8)		/* Receive FIFO Overflow */
-
-/* #define IMR_RX_MASK			(IMR_ROK_8192F|IMR_RDU_8192F|IMR_RXFOVW_8192F) */
-#define IMR_TX_MASK			(IMR_VODOK_8192F | IMR_VIDOK_8192F | IMR_BEDOK_8192F | IMR_BKDOK_8192F | IMR_MGNTDOK_8192F | IMR_HIGHDOK_8192F)
-#define RT_BCN_INT_MASKS		(IMR_BCNDMAINT0_8192F | IMR_TXBCN0OK_8192F | IMR_TXBCN0ERR_8192F | IMR_BCNDERR0_8192F)
-#define RT_AC_INT_MASKS		(IMR_VIDOK_8192F | IMR_VODOK_8192F | IMR_BEDOK_8192F | IMR_BKDOK_8192F)
-#endif /* CONFIG_PCI_HCI */
 
 /* 2 HSISR
  * interrupt mask which needs to clear */

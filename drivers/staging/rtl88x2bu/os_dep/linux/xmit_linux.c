@@ -115,15 +115,6 @@ void rtw_set_tx_chksum_offload(_pkt *pkt, struct pkt_attrib *pattrib)
 int rtw_os_xmit_resource_alloc(_adapter *padapter, struct xmit_buf *pxmitbuf, u32 alloc_sz, u8 flag)
 {
 	if (alloc_sz > 0) {
-#ifdef CONFIG_USE_USB_BUFFER_ALLOC_TX
-		struct dvobj_priv	*pdvobjpriv = adapter_to_dvobj(padapter);
-		struct usb_device	*pusbd = pdvobjpriv->pusbdev;
-
-		pxmitbuf->pallocated_buf = rtw_usb_buffer_alloc(pusbd, (size_t)alloc_sz, &pxmitbuf->dma_transfer_addr);
-		pxmitbuf->pbuf = pxmitbuf->pallocated_buf;
-		if (pxmitbuf->pallocated_buf == NULL)
-			return _FAIL;
-#else /* CONFIG_USE_USB_BUFFER_ALLOC_TX */
 
 		pxmitbuf->pallocated_buf = rtw_zmalloc(alloc_sz);
 		if (pxmitbuf->pallocated_buf == NULL)
@@ -131,11 +122,9 @@ int rtw_os_xmit_resource_alloc(_adapter *padapter, struct xmit_buf *pxmitbuf, u3
 
 		pxmitbuf->pbuf = (u8 *)N_BYTE_ALIGMENT((SIZE_PTR)(pxmitbuf->pallocated_buf), XMITBUF_ALIGN_SZ);
 
-#endif /* CONFIG_USE_USB_BUFFER_ALLOC_TX */
 	}
 
 	if (flag) {
-#ifdef CONFIG_USB_HCI
 		int i;
 		for (i = 0; i < 8; i++) {
 			pxmitbuf->pxmit_urb[i] = usb_alloc_urb(0, GFP_KERNEL);
@@ -144,7 +133,6 @@ int rtw_os_xmit_resource_alloc(_adapter *padapter, struct xmit_buf *pxmitbuf, u3
 				return _FAIL;
 			}
 		}
-#endif
 	}
 
 	return _SUCCESS;
@@ -153,7 +141,6 @@ int rtw_os_xmit_resource_alloc(_adapter *padapter, struct xmit_buf *pxmitbuf, u3
 void rtw_os_xmit_resource_free(_adapter *padapter, struct xmit_buf *pxmitbuf, u32 free_sz, u8 flag)
 {
 	if (flag) {
-#ifdef CONFIG_USB_HCI
 		int i;
 
 		for (i = 0; i < 8; i++) {
@@ -162,21 +149,11 @@ void rtw_os_xmit_resource_free(_adapter *padapter, struct xmit_buf *pxmitbuf, u3
 				usb_free_urb(pxmitbuf->pxmit_urb[i]);
 			}
 		}
-#endif
 	}
 
 	if (free_sz > 0) {
-#ifdef CONFIG_USE_USB_BUFFER_ALLOC_TX
-		struct dvobj_priv	*pdvobjpriv = adapter_to_dvobj(padapter);
-		struct usb_device	*pusbd = pdvobjpriv->pusbdev;
-
-		rtw_usb_buffer_free(pusbd, (size_t)free_sz, pxmitbuf->pallocated_buf, pxmitbuf->dma_transfer_addr);
-		pxmitbuf->pallocated_buf =  NULL;
-		pxmitbuf->dma_transfer_addr = 0;
-#else	/* CONFIG_USE_USB_BUFFER_ALLOC_TX */
 		if (pxmitbuf->pallocated_buf)
 			rtw_mfree(pxmitbuf->pallocated_buf, free_sz);
-#endif /* CONFIG_USE_USB_BUFFER_ALLOC_TX */
 	}
 }
 
@@ -201,20 +178,7 @@ static inline bool rtw_os_need_wake_queue(_adapter *padapter, u16 qidx)
 	if (padapter->registrypriv.wifi_spec) {
 		if (pxmitpriv->hwxmits[qidx].accnt < WMM_XMIT_THRESHOLD)
 			return _TRUE;
-#ifdef DBG_CONFIG_ERROR_DETECT
-#ifdef DBG_CONFIG_ERROR_RESET
-	} else if (rtw_hal_sreset_inprogress(padapter) == _TRUE) {
-		return _FALSE;
-#endif/* #ifdef DBG_CONFIG_ERROR_RESET */
-#endif/* #ifdef DBG_CONFIG_ERROR_DETECT */
 	} else {
-#ifdef CONFIG_MCC_MODE
-		if (MCC_EN(padapter)) {
-			if (rtw_hal_check_mcc_status(padapter, MCC_STATUS_DOING_MCC)
-			    && MCC_STOP(padapter))
-				return _FALSE;
-		}
-#endif /* CONFIG_MCC_MODE */
 		return _TRUE;
 	}
 	return _FALSE;
@@ -258,18 +222,6 @@ void rtw_os_xmit_complete(_adapter *padapter, struct xmit_frame *pxframe)
 
 void rtw_os_xmit_schedule(_adapter *padapter)
 {
-#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
-	_adapter *pri_adapter;
-
-	if (!padapter)
-		return;
-	pri_adapter = GET_PRIMARY_ADAPTER(padapter);
-
-	if (_rtw_queue_empty(&padapter->xmitpriv.pending_xmitbuf_queue) == _FALSE)
-		_rtw_up_sema(&pri_adapter->xmitpriv.xmit_sema);
-
-
-#else
 	_irqL  irqL;
 	struct xmit_priv *pxmitpriv;
 
@@ -285,13 +237,8 @@ void rtw_os_xmit_schedule(_adapter *padapter)
 
 	_exit_critical_bh(&pxmitpriv->lock, &irqL);
 	
-#if defined(CONFIG_PCI_HCI) && defined(CONFIG_XMIT_THREAD_MODE)
-	if (_rtw_queue_empty(&padapter->xmitpriv.pending_xmitbuf_queue) == _FALSE)
-		_rtw_up_sema(&padapter->xmitpriv.xmit_sema);
-#endif
 	
 
-#endif
 }
 
 static bool rtw_check_xmit_resource(_adapter *padapter, _pkt *pkt)
@@ -426,9 +373,6 @@ int _rtw_xmit_entry(_pkt *pkt, _nic_hdl pnetdev)
 
 	if (rtw_if_up(padapter) == _FALSE) {
 		DBG_COUNTER(padapter->tx_logs.os_tx_err_up);
-		#ifdef DBG_TX_DROP_FRAME
-		RTW_INFO("DBG_TX_DROP_FRAME %s if_up fail\n", __FUNCTION__);
-		#endif
 		goto drop_packet;
 	}
 
@@ -472,9 +416,6 @@ int _rtw_xmit_entry(_pkt *pkt, _nic_hdl pnetdev)
 			rtw_mstat_update( MSTAT_TYPE_SKB, MSTAT_ALLOC_SUCCESS, nskb->truesize);
 			res = rtw_xmit(padapter, &nskb);
 			if (res < 0) {
-				#ifdef DBG_TX_DROP_FRAME
-				RTW_INFO("DBG_TX_DROP_FRAME %s rtw_xmit fail\n", __FUNCTION__);
-				#endif
 				pxmitpriv->tx_drop++;
 				rtw_os_pkt_complete(padapter, nskb);
 			}
@@ -486,9 +427,6 @@ int _rtw_xmit_entry(_pkt *pkt, _nic_hdl pnetdev)
 
 	res = rtw_xmit(padapter, &pkt);
 	if (res < 0) {
-		#ifdef DBG_TX_DROP_FRAME
-		RTW_INFO("DBG_TX_DROP_FRAME %s rtw_xmit fail\n", __FUNCTION__);
-		#endif
 		goto drop_packet;
 	}
 

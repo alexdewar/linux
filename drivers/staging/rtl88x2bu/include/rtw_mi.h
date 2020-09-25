@@ -27,14 +27,9 @@ struct mi_state {
 	u8 sta_num;			/* WIFI_STATION_STATE */
 	u8 ld_sta_num;		/* WIFI_STATION_STATE && _FW_LINKED */
 	u8 lg_sta_num;		/* WIFI_STATION_STATE && _FW_UNDER_LINKING */
-#ifdef CONFIG_TDLS
-	u8 ld_tdls_num;		/* adapter.tdlsinfo.link_established */
-#endif
-#ifdef CONFIG_AP_MODE
 	u8 ap_num;			/* WIFI_AP_STATE && _FW_LINKED */
 	u8 starting_ap_num;	/*WIFI_FW_AP_STATE*/
 	u8 ld_ap_num;		/* WIFI_AP_STATE && _FW_LINKED && asoc_sta_count > 2 */
-#endif
 	u8 adhoc_num;		/* (WIFI_ADHOC_STATE | WIFI_ADHOC_MASTER_STATE) && _FW_LINKED */
 	u8 ld_adhoc_num;	/* (WIFI_ADHOC_STATE | WIFI_ADHOC_MASTER_STATE) && _FW_LINKED && asoc_sta_count > 2 */
 #ifdef CONFIG_RTW_MESH
@@ -44,12 +39,10 @@ struct mi_state {
 	u8 scan_num;		/* WIFI_SITE_MONITOR */
 	u8 scan_enter_num;	/* WIFI_SITE_MONITOR && !SCAN_DISABLE && !SCAN_BACK_OP */
 	u8 uwps_num;		/* WIFI_UNDER_WPS */
-#ifdef CONFIG_IOCTL_CFG80211
 	#ifdef CONFIG_P2P
 	u8 roch_num;
 	#endif
 	u8 mgmt_tx_num;
-#endif
 #ifdef CONFIG_P2P
 	u8 p2p_device_num;
 	u8 p2p_gc;
@@ -64,21 +57,11 @@ struct mi_state {
 #define MSTATE_STA_LD_NUM(_mstate)		((_mstate)->ld_sta_num)
 #define MSTATE_STA_LG_NUM(_mstate)		((_mstate)->lg_sta_num)
 
-#ifdef CONFIG_TDLS
-#define MSTATE_TDLS_LD_NUM(_mstate)		((_mstate)->ld_tdls_num)
-#else
 #define MSTATE_TDLS_LD_NUM(_mstate)		0
-#endif
 
-#ifdef CONFIG_AP_MODE
 #define MSTATE_AP_NUM(_mstate)			((_mstate)->ap_num)
 #define MSTATE_AP_STARTING_NUM(_mstate)	((_mstate)->starting_ap_num)
 #define MSTATE_AP_LD_NUM(_mstate)		((_mstate)->ld_ap_num)
-#else
-#define MSTATE_AP_NUM(_mstate)			0
-#define MSTATE_AP_STARTING_NUM(_mstate) 0
-#define MSTATE_AP_LD_NUM(_mstate)		0
-#endif
 
 #define MSTATE_ADHOC_NUM(_mstate)		((_mstate)->adhoc_num)
 #define MSTATE_ADHOC_LD_NUM(_mstate)	((_mstate)->ld_adhoc_num)
@@ -111,11 +94,7 @@ struct mi_state {
 #define MSTATE_P2P_GO_NUM(_mstate)		0
 #endif
 
-#if defined(CONFIG_IOCTL_CFG80211)
 #define MSTATE_MGMT_TX_NUM(_mstate)		((_mstate)->mgmt_tx_num)
-#else
-#define MSTATE_MGMT_TX_NUM(_mstate)		0
-#endif
 
 #define MSTATE_U_CH(_mstate)			((_mstate)->union_ch)
 #define MSTATE_U_BW(_mstate)			((_mstate)->union_bw)
@@ -198,10 +177,6 @@ void rtw_mi_buddy_beacon_update(_adapter *padapter);
 void rtw_mi_hal_dump_macaddr(_adapter *padapter);
 void rtw_mi_buddy_hal_dump_macaddr(_adapter *padapter);
 
-#ifdef CONFIG_PCI_HCI
-void rtw_mi_xmit_tasklet_schedule(_adapter *padapter);
-void rtw_mi_buddy_xmit_tasklet_schedule(_adapter *padapter);
-#endif
 
 u8 rtw_mi_busy_traffic_check(_adapter *padapter, bool check_sc_interval);
 u8 rtw_mi_buddy_busy_traffic_check(_adapter *padapter, bool check_sc_interval);
@@ -236,22 +211,7 @@ void dump_mi_status(void *sel, struct dvobj_priv *dvobj);
 u8 rtw_mi_traffic_statistics(_adapter *padapter);
 u8 rtw_mi_check_miracast_enabled(_adapter *padapter);
 
-#ifdef CONFIG_XMIT_THREAD_MODE
-u8 rtw_mi_check_pending_xmitbuf(_adapter *padapter);
-u8 rtw_mi_buddy_check_pending_xmitbuf(_adapter *padapter);
-#endif
 
-#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
-#ifdef CONFIG_RTL8822B
-	#include <rtl8822b_hal.h>
-#elif defined(CONFIG_RTL8822C)
-	#include <rtl8822c_hal.h>
-#else
-	extern s32 _dequeue_writeport(PADAPTER padapter);
-#endif
-u8 rtw_mi_dequeue_writeport(_adapter *padapter);
-u8 rtw_mi_buddy_dequeue_writeport(_adapter *padapter);
-#endif
 
 void rtw_mi_adapter_reset(_adapter *padapter);
 void rtw_mi_buddy_adapter_reset(_adapter *padapter);
@@ -273,9 +233,6 @@ extern void sreset_start_adapter(_adapter *padapter);
 extern void sreset_stop_adapter(_adapter *padapter);
 u8 rtw_mi_sreset_adapter_hdl(_adapter *padapter, u8 bstart);
 u8 rtw_mi_buddy_sreset_adapter_hdl(_adapter *padapter, u8 bstart);
-#if defined(DBG_CONFIG_ERROR_RESET) && defined(CONFIG_CONCURRENT_MODE)
-void rtw_mi_ap_info_restore(_adapter *adapter);
-#endif
 
 u8 rtw_mi_tx_beacon_hdl(_adapter *padapter);
 u8 rtw_mi_buddy_tx_beacon_hdl(_adapter *padapter);
@@ -296,10 +253,6 @@ _adapter *rtw_get_iface_by_hwport(_adapter *padapter, u8 hw_port);
 
 void rtw_mi_buddy_clone_bcmc_packet(_adapter *padapter, union recv_frame *precvframe, u8 *pphy_status);
 
-#ifdef CONFIG_PCI_HCI
-/*API be create temporary for MI, caller is interrupt-handler, PCIE's interrupt handler cannot apply to multi-AP*/
-_adapter *rtw_mi_get_ap_adapter(_adapter *padapter);
-#endif
 
 u8 rtw_mi_get_ld_sta_ifbmp(_adapter *adapter);
 u8 rtw_mi_get_ap_mesh_ifbmp(_adapter *adapter);

@@ -34,7 +34,6 @@
 /*@Definition */
 /*@============================================================*/
 
-#if DBG
 
 #if (DM_ODM_SUPPORT_TYPE == ODM_AP)
 #define RF_DBG(dm, comp, fmt, args...)                     \
@@ -91,17 +90,6 @@ static __inline void RF_DBG(PDM_ODM_T dm, int comp, char *fmt, ...)
 	} while (0)
 #endif
 
-#else /*#if DBG*/
-
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-static __inline void RF_DBG(struct dm_struct *dm, int comp, char *fmt, ...)
-{
-}
-#else
-#define RF_DBG(dm, comp, fmt, args...)
-#endif
-
-#endif /*#if DBG*/
 
 /*@============================================================*/
 /*@ enumeration */

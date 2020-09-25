@@ -471,11 +471,7 @@ s32 phydm_signal_scale_mapping_92c_series(struct dm_struct *dm, s32 curr_sig)
 
 s32 phydm_signal_scale_mapping(struct dm_struct *dm, s32 curr_sig)
 {
-#ifdef CONFIG_SIGNAL_SCALE_MAPPING
-	return phydm_signal_scale_mapping_92c_series(dm, curr_sig);
-#else
 	return curr_sig;
-#endif
 }
 #endif
 

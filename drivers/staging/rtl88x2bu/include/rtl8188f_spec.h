@@ -105,10 +105,6 @@
 #define REG_TXPKTBUF_BCNQ_BDNY_8188F	0x0424
 #define REG_TXPKTBUF_MGQ_BDNY_8188F	0x0425
 #define REG_TXPKTBUF_WMAC_LBK_BF_HD_8188F	0x045D
-#ifdef CONFIG_WOWLAN
-#define REG_TXPKTBUF_IV_LOW             0x0484
-#define REG_TXPKTBUF_IV_HIGH            0x0488
-#endif
 #define REG_AMPDU_BURST_MODE_8188F	0x04BC
 
 /* -----------------------------------------------------
@@ -183,11 +179,6 @@
 #define BIT_USB_RXDMA_AGG_EN	BIT(31)
 #define RXDMA_AGG_MODE_EN		BIT(1)
 
-#ifdef CONFIG_WOWLAN
-#define RXPKT_RELEASE_POLL		BIT(16)
-#define RXDMA_IDLE				BIT(17)
-#define RW_RELEASE_EN			BIT(18)
-#endif
 
 /* -----------------------------------------------------
  *
@@ -263,13 +254,5 @@
 #define	IMR_TXFOVW_8188F					BIT(9)			/* Transmit FIFO Overflow */
 #define	IMR_RXFOVW_8188F					BIT(8)			/* Receive FIFO Overflow */
 
-#ifdef CONFIG_PCI_HCI
-/* #define IMR_RX_MASK		(IMR_ROK_8188F|IMR_RDU_8188F|IMR_RXFOVW_8188F) */
-#define IMR_TX_MASK			(IMR_VODOK_8188F | IMR_VIDOK_8188F | IMR_BEDOK_8188F | IMR_BKDOK_8188F | IMR_MGNTDOK_8188F | IMR_HIGHDOK_8188F)
-
-#define RT_BCN_INT_MASKS	(IMR_BCNDMAINT0_8188F | IMR_TXBCN0OK_8188F | IMR_TXBCN0ERR_8188F | IMR_BCNDERR0_8188F)
-
-#define RT_AC_INT_MASKS	(IMR_VIDOK_8188F | IMR_VODOK_8188F | IMR_BEDOK_8188F | IMR_BKDOK_8188F)
-#endif
 
 #endif /* __RTL8188F_SPEC_H__ */

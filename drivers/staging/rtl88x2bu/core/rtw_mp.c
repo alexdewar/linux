@@ -16,26 +16,8 @@
 #include <drv_types.h>
 
 #include "../hal/phydm/phydm_precomp.h"
-#if defined(CONFIG_RTL8723B) || defined(CONFIG_RTL8821A)
-	#include <rtw_bt_mp.h>
-#endif
 
-#ifdef CONFIG_MP_VHT_HW_TX_MODE
-#define CEILING_POS(X) ((X - (int)(X)) > 0 ? (int)(X + 1) : (int)(X))
-#define CEILING_NEG(X) ((X - (int)(X)) < 0 ? (int)(X - 1) : (int)(X))
-#define ceil(X) (((X) > 0) ? CEILING_POS(X) : CEILING_NEG(X))
 
-int rtfloor(float x)
-{
-	int i = x - 2;
-	while
-	(++i <= x - 1)
-		;
-	return i;
-}
-#endif
-
-#ifdef CONFIG_MP_INCLUDED
 u32 read_macreg(_adapter *padapter, u32 addr, u32 sz)
 {
 	u32 val = 0;
@@ -154,9 +136,7 @@ static void _init_mp_priv_(struct mp_priv *pmp_priv)
 	_rtw_memcpy(pnetwork->Ssid.Ssid, "mp_871x", pnetwork->Ssid.SsidLength);
 
 	pmp_priv->tx.payload = MP_TX_Payload_default_random;
-#ifdef CONFIG_80211N_HT
 	pmp_priv->tx.attrib.ht_en = 1;
-#endif
 
 	pmp_priv->mpt_ctx.mpt_rate_index = 1;
 
@@ -202,7 +182,6 @@ static void mp_init_xmit_attrib(struct mp_tx *pmptx, PADAPTER padapter)
 	else
 		pattrib->raid = RATEID_IDX_BGN_40M_1SS;
 
-#ifdef CONFIG_80211AC_VHT
 	if (pHalData->rf_type == RF_1T1R)
 		pattrib->raid = RATEID_IDX_VHT_1SS;
 	else if (pHalData->rf_type == RF_2T2R || pHalData->rf_type == RF_2T4R)
@@ -211,7 +190,6 @@ static void mp_init_xmit_attrib(struct mp_tx *pmptx, PADAPTER padapter)
 		pattrib->raid = RATEID_IDX_VHT_3SS;
 	else
 		pattrib->raid = RATEID_IDX_BGN_40M_1SS;
-#endif
 }
 
 s32 init_mp_priv(PADAPTER padapter)
@@ -331,20 +309,9 @@ void mpt_InitHWConfig(PADAPTER Adapter)
 		phy_set_mac_reg(Adapter, 0x4C, BIT22, 0x1);		/*0x4C[23:22]=01*/
 	} else if (IS_HARDWARE_TYPE_8188ES(Adapter))
 		phy_set_mac_reg(Adapter, 0x4C , BIT23, 0);		/*select DPDT_P and DPDT_N as output pin*/
-#ifdef CONFIG_RTL8814A
-	else if (IS_HARDWARE_TYPE_8814A(Adapter))
-		PlatformEFIOWrite2Byte(Adapter, REG_RXFLTMAP1_8814A, 0x2000);
-#endif
-
-#ifdef CONFIG_RTL8812A
-	else if (IS_HARDWARE_TYPE_8812(Adapter)) {
-		rtw_write32(Adapter, 0x520, rtw_read32(Adapter, 0x520) | 0x8000);
-		rtw_write32(Adapter, 0x524, rtw_read32(Adapter, 0x524) & (~0x800));
-	}
-#endif
 
 
-#ifdef CONFIG_RTL8822B
+
 	else if (IS_HARDWARE_TYPE_8822B(Adapter)) {
 		u32 tmp_reg = 0;
 
@@ -357,38 +324,6 @@ void mpt_InitHWConfig(PADAPTER Adapter)
 		phy_set_bb_reg(Adapter, 0x1700, bMaskDWord, 0xc00f0038);
 		RTW_INFO(" 0x1700 = 0x%x\n", phy_query_bb_reg(Adapter, 0x1700, bMaskDWord));
 	}
-#endif /* CONFIG_RTL8822B */
-#ifdef CONFIG_RTL8821C
-	else if (IS_HARDWARE_TYPE_8821C(Adapter))
-		PlatformEFIOWrite2Byte(Adapter, REG_RXFLTMAP1_8821C, 0x2000);
-#endif /* CONFIG_RTL8821C */
-#if defined(CONFIG_RTL8188F) || defined(CONFIG_RTL8188GTV)
-	else if (IS_HARDWARE_TYPE_8188F(Adapter) || IS_HARDWARE_TYPE_8188GTV(Adapter)) {
-		if (IS_A_CUT(hal->version_id) || IS_B_CUT(hal->version_id)) {
-			RTW_INFO("%s() Active large power detection\n", __func__);
-			phy_active_large_power_detection_8188f(&(GET_HAL_DATA(Adapter)->odmpriv));
-		}
-	}
-#endif
-#if defined(CONFIG_RTL8822C)
-	else if( IS_HARDWARE_TYPE_8822C(Adapter)) {
-		rtw_write16(Adapter, REG_RXFLTMAP1_8822C, 0x2000);
-		/* 0x7D8[31] : time out enable when cca is not assert
-			0x60D[7:0] : time out value (Unit : us)*/
-		rtw_write8(Adapter, 0x7db, 0xc0);
-		RTW_INFO(" 0x7d8 = 0x%x\n", rtw_read8(Adapter, 0x7d8));
-		rtw_write8(Adapter, 0x60d, 0x0c);
-		RTW_INFO(" 0x60d = 0x%x\n", rtw_read8(Adapter, 0x60d));
-		phy_set_bb_reg(Adapter, 0x1c44, BIT10, 0x1);
-		RTW_INFO(" 0x1c44 = 0x%x\n", phy_query_bb_reg(Adapter, 0x1c44, bMaskDWord));
-	}
-#endif
-#if defined(CONFIG_RTL8814B)
-	else if(IS_HARDWARE_TYPE_8814B(Adapter))
-	{
-		PlatformEFIOWrite2Byte(Adapter, REG_RXFLTMAP1_8814B, 0x2000);
-	}
-#endif
 
 }
 
@@ -450,9 +385,6 @@ static u8 PHY_QueryRFPathSwitch(PADAPTER padapter)
 */
 
 	if (IS_HARDWARE_TYPE_8821C(padapter)) {
-#ifdef CONFIG_RTL8821C
-		bmain = phy_query_rf_path_switch_8821c(padapter);
-#endif
 	}
 
 	return bmain;
@@ -464,96 +396,31 @@ static void  PHY_SetRFPathSwitch(PADAPTER padapter , BOOLEAN bMain) {
 	struct dm_struct *phydm = &hal->odmpriv;
 
 	if (IS_HARDWARE_TYPE_8723B(padapter)) {
-#ifdef CONFIG_RTL8723B
-		phy_set_rf_path_switch_8723b(phydm, bMain);
-#endif
 	} else if (IS_HARDWARE_TYPE_8188E(padapter)) {
-#ifdef CONFIG_RTL8188E
-		phy_set_rf_path_switch_8188e(phydm, bMain);
-#endif
 	} else if (IS_HARDWARE_TYPE_8814A(padapter)) {
-#ifdef CONFIG_RTL8814A
-		phy_set_rf_path_switch_8814a(phydm, bMain);
-#endif
 	} else if (IS_HARDWARE_TYPE_8812(padapter) || IS_HARDWARE_TYPE_8821(padapter)) {
-#if defined(CONFIG_RTL8812A) || defined(CONFIG_RTL8821A)
-		phy_set_rf_path_switch_8812a(phydm, bMain);
-#endif
 	} else if (IS_HARDWARE_TYPE_8192E(padapter)) {
-#ifdef CONFIG_RTL8192E
-		phy_set_rf_path_switch_8192e(phydm, bMain);
-#endif
 	} else if (IS_HARDWARE_TYPE_8703B(padapter)) {
 #ifdef CONFIG_RTL8703B
 		phy_set_rf_path_switch_8703b(phydm, bMain);
 #endif
 	} else if (IS_HARDWARE_TYPE_8188F(padapter) || IS_HARDWARE_TYPE_8188GTV(padapter)) {
-#if defined(CONFIG_RTL8188F) || defined(CONFIG_RTL8188GTV)
-		phy_set_rf_path_switch_8188f(phydm, bMain);
-#endif
 	} else if (IS_HARDWARE_TYPE_8192F(padapter)) {
-#ifdef CONFIG_RTL8192F
-		phy_set_rf_path_switch_8192f(padapter, bMain);
-#endif
 	} else if (IS_HARDWARE_TYPE_8822B(padapter)) {
-#ifdef CONFIG_RTL8822B
 		phy_set_rf_path_switch_8822b(phydm, bMain);
-#endif
 	} else if (IS_HARDWARE_TYPE_8723D(padapter)) {
-#ifdef CONFIG_RTL8723D
-		phy_set_rf_path_switch_8723d(phydm, bMain);
-#endif
 	} else if (IS_HARDWARE_TYPE_8821C(padapter)) {
-#ifdef CONFIG_RTL8821C
-		phy_set_rf_path_switch_8821c(phydm, bMain);
-#endif
 	} else if (IS_HARDWARE_TYPE_8822C(padapter)) {
-#ifdef CONFIG_RTL8822C
-		/* remove for MP EVM Fail, need to review by willis 20180809
-		phy_set_rf_path_switch_8822c(phydm, bMain);
-		*/
-#endif
 	} else if (IS_HARDWARE_TYPE_8814B(padapter)) {
-#ifdef CONFIG_RTL8814B
-		/* phy_set_rf_path_switch_8814b(phydm, bMain); */
-#endif
 	}
 }
 
 
 static void phy_switch_rf_path_set(PADAPTER padapter , u8 *prf_set_State) {
-#ifdef CONFIG_RTL8821C
-	HAL_DATA_TYPE *pHalData = GET_HAL_DATA(padapter);
-	struct dm_struct *p_dm = &pHalData->odmpriv;
-
-	if (IS_HARDWARE_TYPE_8821C(padapter)) {
-		config_phydm_set_ant_path(p_dm, *prf_set_State, p_dm->current_ant_num_8821c);
-		/* Do IQK when switching to BTG/WLG, requested by RF Binson */
-		if (*prf_set_State == SWITCH_TO_BTG || *prf_set_State == SWITCH_TO_WLG)
-			PHY_IQCalibrate(padapter, FALSE);
-	}
-#endif
 
 }
 
 
-#ifdef CONFIG_ANTENNA_DIVERSITY
-u8 rtw_mp_set_antdiv(PADAPTER padapter, BOOLEAN bMain)
-{
-	HAL_DATA_TYPE *pHalData = GET_HAL_DATA(padapter);
-	u8 cur_ant, change_ant;
-
-	if (!pHalData->AntDivCfg)
-		return _FALSE;
-	/*rtw_hal_get_odm_var(padapter, HAL_ODM_ANTDIV_SELECT, &cur_ant, NULL);*/
-	change_ant = (bMain == MAIN_ANT) ? MAIN_ANT : AUX_ANT;
-
-	RTW_INFO("%s: config %s\n", __func__, (bMain == MAIN_ANT) ? "MAIN_ANT" : "AUX_ANT");
-	rtw_antenna_select_cmd(padapter, change_ant, _FALSE);
-
-	return _TRUE;
-}
-#endif
 
 s32
 MPT_InitializeAdapter(
@@ -571,34 +438,9 @@ MPT_InitializeAdapter(
 	pMptCtx->bMptIndexEven = _TRUE;	/* default gain index is -6.0db */
 	pMptCtx->h2cReqNum = 0x0;
 	/* init for BT MP */
-#if defined(CONFIG_RTL8723B)
-	pMptCtx->bMPh2c_timeout = _FALSE;
-	pMptCtx->MptH2cRspEvent = _FALSE;
-	pMptCtx->MptBtC2hEvent = _FALSE;
-	_rtw_init_sema(&pMptCtx->MPh2c_Sema, 0);
-	rtw_init_timer(&pMptCtx->MPh2c_timeout_timer, pAdapter, MPh2c_timeout_handle, pAdapter);
-#endif
 
 	mpt_InitHWConfig(pAdapter);
 
-#ifdef CONFIG_RTL8723B
-	rtl8723b_InitAntenna_Selection(pAdapter);
-	if (IS_HARDWARE_TYPE_8723B(pAdapter)) {
-
-		/* <20130522, Kordan> Turn off equalizer to improve Rx sensitivity. (Asked by EEChou)*/
-		phy_set_bb_reg(pAdapter, 0xA00, BIT8, 0x0);
-		PHY_SetRFPathSwitch(pAdapter, 1/*pHalData->bDefaultAntenna*/); /*default use Main*/
-
-		if (pHalData->PackageType == PACKAGE_DEFAULT)
-			phy_set_rf_reg(pAdapter, RF_PATH_A, 0x51, bRFRegOffsetMask, 0x6B04E);
-		else
-			phy_set_rf_reg(pAdapter, RF_PATH_A, 0x51, bRFRegOffsetMask, 0x6F10E);
-
-	}
-	/*set ant to wifi side in mp mode*/
-	rtw_write16(pAdapter, 0x870, 0x300);
-	rtw_write16(pAdapter, 0x860, 0x110);
-#endif
 
 	pMptCtx->bMptWorkItemInProgress = _FALSE;
 	pMptCtx->CurrMptAct = NULL;
@@ -625,18 +467,6 @@ MPT_InitializeAdapter(
 	pMptCtx->backup0xc30 = (u8)phy_query_bb_reg(pAdapter, rOFDM0_RxDetector1, bMaskByte0);
 	pMptCtx->backup0x52_RF_A = (u8)phy_query_rf_reg(pAdapter, RF_PATH_A, RF_0x52, 0x000F0);
 	pMptCtx->backup0x52_RF_B = (u8)phy_query_rf_reg(pAdapter, RF_PATH_B, RF_0x52, 0x000F0);
-#ifdef CONFIG_RTL8188E
-	rtw_write32(pAdapter, REG_MACID_NO_LINK_0, 0x0);
-	rtw_write32(pAdapter, REG_MACID_NO_LINK_1, 0x0);
-#endif
-#ifdef CONFIG_RTL8814A
-	if (IS_HARDWARE_TYPE_8814A(pAdapter)) {
-		pHalData->BackUp_IG_REG_4_Chnl_Section[0] = (u8)phy_query_bb_reg(pAdapter, rA_IGI_Jaguar, bMaskByte0);
-		pHalData->BackUp_IG_REG_4_Chnl_Section[1] = (u8)phy_query_bb_reg(pAdapter, rB_IGI_Jaguar, bMaskByte0);
-		pHalData->BackUp_IG_REG_4_Chnl_Section[2] = (u8)phy_query_bb_reg(pAdapter, rC_IGI_Jaguar2, bMaskByte0);
-		pHalData->BackUp_IG_REG_4_Chnl_Section[3] = (u8)phy_query_bb_reg(pAdapter, rD_IGI_Jaguar2, bMaskByte0);
-	}
-#endif
 	return	rtStatus;
 }
 
@@ -665,13 +495,6 @@ MPT_DeInitAdapter(
 	PMPT_CONTEXT		pMptCtx = &pAdapter->mppriv.mpt_ctx;
 
 	pMptCtx->bMptDrvUnload = _TRUE;
-#if defined(CONFIG_RTL8723B)
-	_rtw_free_sema(&(pMptCtx->MPh2c_Sema));
-	_cancel_timer_ex(&pMptCtx->MPh2c_timeout_timer);
-#endif
-#if	defined(CONFIG_RTL8723B)
-	phy_set_bb_reg(pAdapter, 0xA01, BIT0, 1); /* /suggestion  by jerry for MP Rx. */
-#endif
 #if 0 /* for Windows */
 	PlatformFreeWorkItem(&(pMptCtx->MptWorkItem));
 
@@ -922,47 +745,15 @@ end_of_mp_start_test:
 s32 mp_start_test(PADAPTER padapter)
 {
 	struct mp_priv *pmppriv = &padapter->mppriv;
-#ifdef CONFIG_PCI_HCI
-	PHAL_DATA_TYPE hal;
-#endif
 	s32 res = _SUCCESS;
 
 	padapter->registrypriv.mp_mode = 1;
 
 	init_mp_data(padapter);
-#ifdef CONFIG_RTL8814A
-	rtl8814_InitHalDm(padapter);
-#endif /* CONFIG_RTL8814A */
-#ifdef CONFIG_RTL8812A
-	rtl8812_InitHalDm(padapter);
-#endif /* CONFIG_RTL8812A */
-#ifdef CONFIG_RTL8723B
-	rtl8723b_InitHalDm(padapter);
-#endif /* CONFIG_RTL8723B */
 #ifdef CONFIG_RTL8703B
 	rtl8703b_InitHalDm(padapter);
 #endif /* CONFIG_RTL8703B */
-#ifdef CONFIG_RTL8192E
-	rtl8192e_InitHalDm(padapter);
-#endif
-#ifdef CONFIG_RTL8188F
-	rtl8188f_InitHalDm(padapter);
-#endif
-#ifdef CONFIG_RTL8188GTV
-	rtl8188gtv_InitHalDm(padapter);
-#endif
-#ifdef CONFIG_RTL8188E
-	rtl8188e_InitHalDm(padapter);
-#endif
-#ifdef CONFIG_RTL8723D
-	rtl8723d_InitHalDm(padapter);
-#endif /* CONFIG_RTL8723D */
 
-#ifdef CONFIG_PCI_HCI
-	hal = GET_HAL_DATA(padapter);
-	hal->pci_backdoor_ctrl = 0;
-	rtw_pci_aspm_config(padapter);
-#endif
 
 
 	/* 3 0. update mp_priv */
@@ -1000,10 +791,6 @@ void mp_stop_test(PADAPTER padapter)
 	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
 	struct wlan_network *tgt_network = &pmlmepriv->cur_network;
 	struct sta_info *psta;
-#ifdef CONFIG_PCI_HCI
-	struct registry_priv  *registry_par = &padapter->registrypriv;
-	PHAL_DATA_TYPE hal;
-#endif
 
 	_irqL irqL;
 
@@ -1035,32 +822,9 @@ end_of_mp_stop_test:
 
 		_exit_critical_bh(&pmlmepriv->lock, &irqL);
 
-#ifdef CONFIG_PCI_HCI
-		hal = GET_HAL_DATA(padapter);
-		hal->pci_backdoor_ctrl = registry_par->pci_aspm_config;
-		rtw_pci_aspm_config(padapter);
-#endif
 
-#ifdef CONFIG_RTL8812A
-		rtl8812_InitHalDm(padapter);
-#endif
-#ifdef CONFIG_RTL8723B
-		rtl8723b_InitHalDm(padapter);
-#endif
 #ifdef CONFIG_RTL8703B
 		rtl8703b_InitHalDm(padapter);
-#endif
-#ifdef CONFIG_RTL8192E
-		rtl8192e_InitHalDm(padapter);
-#endif
-#ifdef CONFIG_RTL8188F
-		rtl8188f_InitHalDm(padapter);
-#endif
-#ifdef CONFIG_RTL8188GTV
-		rtl8188gtv_InitHalDm(padapter);
-#endif
-#ifdef CONFIG_RTL8723D
-		rtl8723d_InitHalDm(padapter);
 #endif
 	}
 }
@@ -1299,47 +1063,6 @@ static struct xmit_frame *alloc_mp_xmitframe(struct xmit_priv *pxmitpriv)
 
 }
 
-#ifdef CONFIG_PCI_HCI
-static u8 check_nic_enough_desc(_adapter *padapter, struct pkt_attrib *pattrib)
-{
-	u32 prio;
-	struct xmit_priv	*pxmitpriv = &padapter->xmitpriv;
-	struct rtw_tx_ring	*ring;
-
-	switch (pattrib->qsel) {
-	case 0:
-	case 3:
-		prio = BE_QUEUE_INX;
-		break;
-	case 1:
-	case 2:
-		prio = BK_QUEUE_INX;
-		break;
-	case 4:
-	case 5:
-		prio = VI_QUEUE_INX;
-		break;
-	case 6:
-	case 7:
-		prio = VO_QUEUE_INX;
-		break;
-	default:
-		prio = BE_QUEUE_INX;
-		break;
-	}
-
-	ring = &pxmitpriv->tx_ring[prio];
-
-	/*
-	 * for now we reserve two free descriptor as a safety boundary
-	 * between the tail and the head
-	 */
-	if ((ring->entries - ring->qlen) >= 2)
-		return _TRUE;
-	else
-		return _FALSE;
-}
-#endif
 
 static thread_return mp_xmit_packet_thread(thread_context context)
 {
@@ -1359,12 +1082,6 @@ static thread_return mp_xmit_packet_thread(thread_context context)
 	RTW_INFO("%s:pkTx Start\n", __func__);
 	while (1) {
 		pxmitframe = alloc_mp_xmitframe(pxmitpriv);
-#ifdef CONFIG_PCI_HCI
-		if(check_nic_enough_desc(padapter, &pmptx->attrib) == _FALSE) {
-			rtw_usleep_os(1000);
-			continue;
-		}
-#endif
 		if (pxmitframe == NULL) {
 			if (pmptx->stop ||
 			    RTW_CANNOT_RUN(padapter))
@@ -1410,259 +1127,9 @@ void fill_txdesc_for_mp(PADAPTER padapter, u8 *ptxdesc)
 	_rtw_memcpy(ptxdesc, pmp_priv->tx.desc, TXDESC_SIZE);
 }
 
-#if defined(CONFIG_RTL8188E)
-void fill_tx_desc_8188e(PADAPTER padapter)
-{
-	struct mp_priv *pmp_priv = &padapter->mppriv;
-	struct tx_desc *desc   = (struct tx_desc *)&(pmp_priv->tx.desc);
-	struct pkt_attrib *pattrib = &(pmp_priv->tx.attrib);
-	u32	pkt_size = pattrib->last_txcmdsz;
-	s32 bmcast = IS_MCAST(pattrib->ra);
-	/* offset 0 */
-#if !defined(CONFIG_RTL8188E_SDIO) && !defined(CONFIG_PCI_HCI)
-	desc->txdw0 |= cpu_to_le32(OWN | FSG | LSG);
-	desc->txdw0 |= cpu_to_le32(pkt_size & 0x0000FFFF); /* packet size */
-	desc->txdw0 |= cpu_to_le32(((TXDESC_SIZE + OFFSET_SZ) << OFFSET_SHT) & 0x00FF0000); /* 32 bytes for TX Desc */
-	if (bmcast)
-		desc->txdw0 |= cpu_to_le32(BMC); /* broadcast packet */
-
-	desc->txdw1 |= cpu_to_le32((0x01 << 26) & 0xff000000);
-#endif
-
-	desc->txdw1 |= cpu_to_le32((pattrib->mac_id) & 0x3F); /* CAM_ID(MAC_ID) */
-	desc->txdw1 |= cpu_to_le32((pattrib->qsel << QSEL_SHT) & 0x00001F00); /* Queue Select, TID */
-	desc->txdw1 |= cpu_to_le32((pattrib->raid << RATE_ID_SHT) & 0x000F0000); /* Rate Adaptive ID */
-	/* offset 8 */
-	/* desc->txdw2 |= cpu_to_le32(AGG_BK); */ /* AGG BK */
-
-	desc->txdw3 |= cpu_to_le32((pattrib->seqnum << 16) & 0x0fff0000);
-	desc->txdw4 |= cpu_to_le32(HW_SSN);
-
-	desc->txdw4 |= cpu_to_le32(USERATE);
-	desc->txdw4 |= cpu_to_le32(DISDATAFB);
-
-	if (pmp_priv->preamble) {
-		if (HwRateToMPTRate(pmp_priv->rateidx) <=  MPT_RATE_54M)
-			desc->txdw4 |= cpu_to_le32(DATA_SHORT); /* CCK Short Preamble */
-	}
-
-	if (pmp_priv->bandwidth == CHANNEL_WIDTH_40)
-		desc->txdw4 |= cpu_to_le32(DATA_BW);
-
-	/* offset 20 */
-	desc->txdw5 |= cpu_to_le32(pmp_priv->rateidx & 0x0000001F);
-
-	if (pmp_priv->preamble) {
-		if (HwRateToMPTRate(pmp_priv->rateidx) > MPT_RATE_54M)
-			desc->txdw5 |= cpu_to_le32(SGI); /* MCS Short Guard Interval */
-	}
-
-	desc->txdw5 |= cpu_to_le32(RTY_LMT_EN); /* retry limit enable */
-	desc->txdw5 |= cpu_to_le32(0x00180000); /* DATA/RTS Rate Fallback Limit	 */
 
 
-}
-#endif
 
-#if defined(CONFIG_RTL8814A)
-void fill_tx_desc_8814a(PADAPTER padapter)
-{
-	struct mp_priv *pmp_priv = &padapter->mppriv;
-	u8 *pDesc   = (u8 *)&(pmp_priv->tx.desc);
-	struct pkt_attrib *pattrib = &(pmp_priv->tx.attrib);
-
-	u32	pkt_size = pattrib->last_txcmdsz;
-	s32 bmcast = IS_MCAST(pattrib->ra);
-	u8 offset;
-
-	/* SET_TX_DESC_FIRST_SEG_8814A(pDesc, 1); */
-	SET_TX_DESC_LAST_SEG_8814A(pDesc, 1);
-	/* SET_TX_DESC_OWN_(pDesc, 1); */
-
-	SET_TX_DESC_PKT_SIZE_8814A(pDesc, pkt_size);
-
-	offset = TXDESC_SIZE + OFFSET_SZ;
-
-	SET_TX_DESC_OFFSET_8814A(pDesc, offset);
-#if defined(CONFIG_PCI_HCI)
-	SET_TX_DESC_PKT_OFFSET_8814A(pDesc, 0); /* 8814AE pkt_offset is 0 */
-#else
-	SET_TX_DESC_PKT_OFFSET_8814A(pDesc, 1);
-#endif
-
-	if (bmcast)
-		SET_TX_DESC_BMC_8814A(pDesc, 1);
-
-	SET_TX_DESC_MACID_8814A(pDesc, pattrib->mac_id);
-	SET_TX_DESC_RATE_ID_8814A(pDesc, pattrib->raid);
-
-	/* SET_TX_DESC_RATE_ID_8812(pDesc, RATEID_IDX_G); */
-	SET_TX_DESC_QUEUE_SEL_8814A(pDesc,  pattrib->qsel);
-	/* SET_TX_DESC_QUEUE_SEL_8812(pDesc,  QSLT_MGNT); */
-
-	if (pmp_priv->preamble)
-		SET_TX_DESC_DATA_SHORT_8814A(pDesc, 1);
-
-	if (!pattrib->qos_en) {
-		SET_TX_DESC_HWSEQ_EN_8814A(pDesc, 1); /* Hw set sequence number */
-	} else
-		SET_TX_DESC_SEQ_8814A(pDesc, pattrib->seqnum);
-
-	if (pmp_priv->bandwidth <= CHANNEL_WIDTH_160)
-		SET_TX_DESC_DATA_BW_8814A(pDesc, pmp_priv->bandwidth);
-	else {
-		RTW_INFO("%s:Err: unknown bandwidth %d, use 20M\n", __func__, pmp_priv->bandwidth);
-		SET_TX_DESC_DATA_BW_8814A(pDesc, CHANNEL_WIDTH_20);
-	}
-
-	SET_TX_DESC_DISABLE_FB_8814A(pDesc, 1);
-	SET_TX_DESC_USE_RATE_8814A(pDesc, 1);
-	SET_TX_DESC_TX_RATE_8814A(pDesc, pmp_priv->rateidx);
-
-}
-#endif
-
-#if defined(CONFIG_RTL8812A) || defined(CONFIG_RTL8821A)
-void fill_tx_desc_8812a(PADAPTER padapter)
-{
-	struct mp_priv *pmp_priv = &padapter->mppriv;
-	u8 *pDesc   = (u8 *)&(pmp_priv->tx.desc);
-	struct pkt_attrib *pattrib = &(pmp_priv->tx.attrib);
-
-	u32	pkt_size = pattrib->last_txcmdsz;
-	s32 bmcast = IS_MCAST(pattrib->ra);
-	u8 data_rate, pwr_status, offset;
-
-	SET_TX_DESC_FIRST_SEG_8812(pDesc, 1);
-	SET_TX_DESC_LAST_SEG_8812(pDesc, 1);
-	SET_TX_DESC_OWN_8812(pDesc, 1);
-
-	SET_TX_DESC_PKT_SIZE_8812(pDesc, pkt_size);
-
-	offset = TXDESC_SIZE + OFFSET_SZ;
-
-	SET_TX_DESC_OFFSET_8812(pDesc, offset);
-
-#if defined(CONFIG_PCI_HCI)
-	SET_TX_DESC_PKT_OFFSET_8812(pDesc, 0);
-#else
-	SET_TX_DESC_PKT_OFFSET_8812(pDesc, 1);
-#endif
-	if (bmcast)
-		SET_TX_DESC_BMC_8812(pDesc, 1);
-
-	SET_TX_DESC_MACID_8812(pDesc, pattrib->mac_id);
-	SET_TX_DESC_RATE_ID_8812(pDesc, pattrib->raid);
-
-	/* SET_TX_DESC_RATE_ID_8812(pDesc, RATEID_IDX_G); */
-	SET_TX_DESC_QUEUE_SEL_8812(pDesc,  pattrib->qsel);
-	/* SET_TX_DESC_QUEUE_SEL_8812(pDesc,  QSLT_MGNT); */
-
-	if (!pattrib->qos_en) {
-		SET_TX_DESC_HWSEQ_EN_8812(pDesc, 1); /* Hw set sequence number */
-	} else
-		SET_TX_DESC_SEQ_8812(pDesc, pattrib->seqnum);
-
-	if (pmp_priv->bandwidth <= CHANNEL_WIDTH_160)
-		SET_TX_DESC_DATA_BW_8812(pDesc, pmp_priv->bandwidth);
-	else {
-		RTW_INFO("%s:Err: unknown bandwidth %d, use 20M\n", __func__, pmp_priv->bandwidth);
-		SET_TX_DESC_DATA_BW_8812(pDesc, CHANNEL_WIDTH_20);
-	}
-
-	SET_TX_DESC_DISABLE_FB_8812(pDesc, 1);
-	SET_TX_DESC_USE_RATE_8812(pDesc, 1);
-	SET_TX_DESC_TX_RATE_8812(pDesc, pmp_priv->rateidx);
-
-}
-#endif
-#if defined(CONFIG_RTL8192E)
-void fill_tx_desc_8192e(PADAPTER padapter)
-{
-	struct mp_priv *pmp_priv = &padapter->mppriv;
-	u8 *pDesc	= (u8 *)&(pmp_priv->tx.desc);
-	struct pkt_attrib *pattrib = &(pmp_priv->tx.attrib);
-
-	u32 pkt_size = pattrib->last_txcmdsz;
-	s32 bmcast = IS_MCAST(pattrib->ra);
-	u8 data_rate, pwr_status, offset;
-
-
-	SET_TX_DESC_PKT_SIZE_92E(pDesc, pkt_size);
-
-	offset = TXDESC_SIZE + OFFSET_SZ;
-
-	SET_TX_DESC_OFFSET_92E(pDesc, offset);
-#if defined(CONFIG_PCI_HCI) /* 8192EE */
-
-	SET_TX_DESC_PKT_OFFSET_92E(pDesc, 0); /* 8192EE pkt_offset is 0 */
-#else /* 8192EU 8192ES */
-	SET_TX_DESC_PKT_OFFSET_92E(pDesc, 1);
-#endif
-
-	if (bmcast)
-		SET_TX_DESC_BMC_92E(pDesc, 1);
-
-	SET_TX_DESC_MACID_92E(pDesc, pattrib->mac_id);
-	SET_TX_DESC_RATE_ID_92E(pDesc, pattrib->raid);
-
-
-	SET_TX_DESC_QUEUE_SEL_92E(pDesc,  pattrib->qsel);
-	/* SET_TX_DESC_QUEUE_SEL_8812(pDesc,  QSLT_MGNT); */
-
-	if (!pattrib->qos_en) {
-		SET_TX_DESC_EN_HWSEQ_92E(pDesc, 1);/* Hw set sequence number */
-		SET_TX_DESC_HWSEQ_SEL_92E(pDesc, pattrib->hw_ssn_sel);
-	} else
-		SET_TX_DESC_SEQ_92E(pDesc, pattrib->seqnum);
-
-	if ((pmp_priv->bandwidth == CHANNEL_WIDTH_20) || (pmp_priv->bandwidth == CHANNEL_WIDTH_40))
-		SET_TX_DESC_DATA_BW_92E(pDesc, pmp_priv->bandwidth);
-	else {
-		RTW_INFO("%s:Err: unknown bandwidth %d, use 20M\n", __func__, pmp_priv->bandwidth);
-		SET_TX_DESC_DATA_BW_92E(pDesc, CHANNEL_WIDTH_20);
-	}
-
-	/* SET_TX_DESC_DATA_SC_92E(pDesc, SCMapping_92E(padapter,pattrib)); */
-
-	SET_TX_DESC_DISABLE_FB_92E(pDesc, 1);
-	SET_TX_DESC_USE_RATE_92E(pDesc, 1);
-	SET_TX_DESC_TX_RATE_92E(pDesc, pmp_priv->rateidx);
-
-}
-#endif
-
-#if defined(CONFIG_RTL8723B)
-void fill_tx_desc_8723b(PADAPTER padapter)
-{
-	struct mp_priv *pmp_priv = &padapter->mppriv;
-	struct pkt_attrib *pattrib = &(pmp_priv->tx.attrib);
-	u8 *ptxdesc = pmp_priv->tx.desc;
-
-	SET_TX_DESC_AGG_BREAK_8723B(ptxdesc, 1);
-	SET_TX_DESC_MACID_8723B(ptxdesc, pattrib->mac_id);
-	SET_TX_DESC_QUEUE_SEL_8723B(ptxdesc, pattrib->qsel);
-
-	SET_TX_DESC_RATE_ID_8723B(ptxdesc, pattrib->raid);
-	SET_TX_DESC_SEQ_8723B(ptxdesc, pattrib->seqnum);
-	SET_TX_DESC_HWSEQ_EN_8723B(ptxdesc, 1);
-	SET_TX_DESC_USE_RATE_8723B(ptxdesc, 1);
-	SET_TX_DESC_DISABLE_FB_8723B(ptxdesc, 1);
-
-	if (pmp_priv->preamble) {
-		if (HwRateToMPTRate(pmp_priv->rateidx) <=  MPT_RATE_54M)
-			SET_TX_DESC_DATA_SHORT_8723B(ptxdesc, 1);
-	}
-
-	if (pmp_priv->bandwidth == CHANNEL_WIDTH_40)
-		SET_TX_DESC_DATA_BW_8723B(ptxdesc, 1);
-
-	SET_TX_DESC_TX_RATE_8723B(ptxdesc, pmp_priv->rateidx);
-
-	SET_TX_DESC_DATA_RATE_FB_LIMIT_8723B(ptxdesc, 0x1F);
-	SET_TX_DESC_RTS_RATE_FB_LIMIT_8723B(ptxdesc, 0xF);
-}
-#endif
 
 #if defined(CONFIG_RTL8703B)
 void fill_tx_desc_8703b(PADAPTER padapter)
@@ -1696,164 +1163,10 @@ void fill_tx_desc_8703b(PADAPTER padapter)
 }
 #endif
 
-#if defined(CONFIG_RTL8188F)
-void fill_tx_desc_8188f(PADAPTER padapter)
-{
-	struct mp_priv *pmp_priv = &padapter->mppriv;
-	struct pkt_attrib *pattrib = &(pmp_priv->tx.attrib);
-	u8 *ptxdesc = pmp_priv->tx.desc;
 
-	SET_TX_DESC_AGG_BREAK_8188F(ptxdesc, 1);
-	SET_TX_DESC_MACID_8188F(ptxdesc, pattrib->mac_id);
-	SET_TX_DESC_QUEUE_SEL_8188F(ptxdesc, pattrib->qsel);
 
-	SET_TX_DESC_RATE_ID_8188F(ptxdesc, pattrib->raid);
-	SET_TX_DESC_SEQ_8188F(ptxdesc, pattrib->seqnum);
-	SET_TX_DESC_HWSEQ_EN_8188F(ptxdesc, 1);
-	SET_TX_DESC_USE_RATE_8188F(ptxdesc, 1);
-	SET_TX_DESC_DISABLE_FB_8188F(ptxdesc, 1);
 
-	if (pmp_priv->preamble)
-		if (HwRateToMPTRate(pmp_priv->rateidx) <=  MPT_RATE_54M)
-			SET_TX_DESC_DATA_SHORT_8188F(ptxdesc, 1);
 
-	if (pmp_priv->bandwidth == CHANNEL_WIDTH_40)
-		SET_TX_DESC_DATA_BW_8188F(ptxdesc, 1);
-
-	SET_TX_DESC_TX_RATE_8188F(ptxdesc, pmp_priv->rateidx);
-
-	SET_TX_DESC_DATA_RATE_FB_LIMIT_8188F(ptxdesc, 0x1F);
-	SET_TX_DESC_RTS_RATE_FB_LIMIT_8188F(ptxdesc, 0xF);
-}
-#endif
-
-#if defined(CONFIG_RTL8188GTV)
-void fill_tx_desc_8188gtv(PADAPTER padapter)
-{
-	struct mp_priv *pmp_priv = &padapter->mppriv;
-	struct pkt_attrib *pattrib = &(pmp_priv->tx.attrib);
-	u8 *ptxdesc = pmp_priv->tx.desc;
-
-	SET_TX_DESC_AGG_BREAK_8188GTV(ptxdesc, 1);
-	SET_TX_DESC_MACID_8188GTV(ptxdesc, pattrib->mac_id);
-	SET_TX_DESC_QUEUE_SEL_8188GTV(ptxdesc, pattrib->qsel);
-
-	SET_TX_DESC_RATE_ID_8188GTV(ptxdesc, pattrib->raid);
-	SET_TX_DESC_SEQ_8188GTV(ptxdesc, pattrib->seqnum);
-	SET_TX_DESC_HWSEQ_EN_8188GTV(ptxdesc, 1);
-	SET_TX_DESC_USE_RATE_8188GTV(ptxdesc, 1);
-	SET_TX_DESC_DISABLE_FB_8188GTV(ptxdesc, 1);
-
-	if (pmp_priv->preamble)
-		if (HwRateToMPTRate(pmp_priv->rateidx) <=  MPT_RATE_54M)
-			SET_TX_DESC_DATA_SHORT_8188GTV(ptxdesc, 1);
-
-	if (pmp_priv->bandwidth == CHANNEL_WIDTH_40)
-		SET_TX_DESC_DATA_BW_8188GTV(ptxdesc, 1);
-
-	SET_TX_DESC_TX_RATE_8188GTV(ptxdesc, pmp_priv->rateidx);
-
-	SET_TX_DESC_DATA_RATE_FB_LIMIT_8188GTV(ptxdesc, 0x1F);
-	SET_TX_DESC_RTS_RATE_FB_LIMIT_8188GTV(ptxdesc, 0xF);
-}
-#endif
-
-#if defined(CONFIG_RTL8723D)
-void fill_tx_desc_8723d(PADAPTER padapter)
-{
-	struct mp_priv *pmp_priv = &padapter->mppriv;
-	struct pkt_attrib *pattrib = &(pmp_priv->tx.attrib);
-	u8 *ptxdesc = pmp_priv->tx.desc;
-
-	SET_TX_DESC_BK_8723D(ptxdesc, 1);
-	SET_TX_DESC_MACID_8723D(ptxdesc, pattrib->mac_id);
-	SET_TX_DESC_QUEUE_SEL_8723D(ptxdesc, pattrib->qsel);
-
-	SET_TX_DESC_RATE_ID_8723D(ptxdesc, pattrib->raid);
-	SET_TX_DESC_SEQ_8723D(ptxdesc, pattrib->seqnum);
-	SET_TX_DESC_HWSEQ_EN_8723D(ptxdesc, 1);
-	SET_TX_DESC_USE_RATE_8723D(ptxdesc, 1);
-	SET_TX_DESC_DISABLE_FB_8723D(ptxdesc, 1);
-
-	if (pmp_priv->preamble) {
-		if (HwRateToMPTRate(pmp_priv->rateidx) <=  MPT_RATE_54M)
-			SET_TX_DESC_DATA_SHORT_8723D(ptxdesc, 1);
-	}
-
-	if (pmp_priv->bandwidth == CHANNEL_WIDTH_40)
-		SET_TX_DESC_DATA_BW_8723D(ptxdesc, 1);
-
-	SET_TX_DESC_TX_RATE_8723D(ptxdesc, pmp_priv->rateidx);
-
-	SET_TX_DESC_DATA_RATE_FB_LIMIT_8723D(ptxdesc, 0x1F);
-	SET_TX_DESC_RTS_RATE_FB_LIMIT_8723D(ptxdesc, 0xF);
-}
-#endif
-
-#if defined(CONFIG_RTL8710B)
-void fill_tx_desc_8710b(PADAPTER padapter)
-{
-	struct mp_priv *pmp_priv = &padapter->mppriv;
-	struct pkt_attrib *pattrib = &(pmp_priv->tx.attrib);
-	u8 *ptxdesc = pmp_priv->tx.desc;
-
-	SET_TX_DESC_BK_8710B(ptxdesc, 1);
-	SET_TX_DESC_MACID_8710B(ptxdesc, pattrib->mac_id);
-	SET_TX_DESC_QUEUE_SEL_8710B(ptxdesc, pattrib->qsel);
-
-	SET_TX_DESC_RATE_ID_8710B(ptxdesc, pattrib->raid);
-	SET_TX_DESC_SEQ_8710B(ptxdesc, pattrib->seqnum);
-	SET_TX_DESC_HWSEQ_EN_8710B(ptxdesc, 1);
-	SET_TX_DESC_USE_RATE_8710B(ptxdesc, 1);
-	SET_TX_DESC_DISABLE_FB_8710B(ptxdesc, 1);
-
-	if (pmp_priv->preamble) {
-		if (HwRateToMPTRate(pmp_priv->rateidx) <=  MPT_RATE_54M)
-			SET_TX_DESC_DATA_SHORT_8710B(ptxdesc, 1);
-	}
-
-	if (pmp_priv->bandwidth == CHANNEL_WIDTH_40)
-		SET_TX_DESC_DATA_BW_8710B(ptxdesc, 1);
-
-	SET_TX_DESC_TX_RATE_8710B(ptxdesc, pmp_priv->rateidx);
-
-	SET_TX_DESC_DATA_RATE_FB_LIMIT_8710B(ptxdesc, 0x1F);
-	SET_TX_DESC_RTS_RATE_FB_LIMIT_8710B(ptxdesc, 0xF);
-}
-#endif
-
-#if defined(CONFIG_RTL8192F)
-void fill_tx_desc_8192f(PADAPTER padapter)
-{
-	struct mp_priv *pmp_priv = &padapter->mppriv;
-	struct pkt_attrib *pattrib = &(pmp_priv->tx.attrib);
-	u8 *ptxdesc = pmp_priv->tx.desc;
-
-	SET_TX_DESC_BK_8192F(ptxdesc, 1);
-	SET_TX_DESC_MACID_8192F(ptxdesc, pattrib->mac_id);
-	SET_TX_DESC_QUEUE_SEL_8192F(ptxdesc, pattrib->qsel);
-
-	SET_TX_DESC_RATE_ID_8192F(ptxdesc, pattrib->raid);
-	SET_TX_DESC_SEQ_8192F(ptxdesc, pattrib->seqnum);
-	SET_TX_DESC_HWSEQ_EN_8192F(ptxdesc, 1);
-	SET_TX_DESC_USE_RATE_8192F(ptxdesc, 1);
-	SET_TX_DESC_DISABLE_FB_8192F(ptxdesc, 1);
-
-	if (pmp_priv->preamble) {
-		if (HwRateToMPTRate(pmp_priv->rateidx) <=  MPT_RATE_54M)
-			SET_TX_DESC_DATA_SHORT_8192F(ptxdesc, 1);
-	}
-
-	if (pmp_priv->bandwidth == CHANNEL_WIDTH_40)
-		SET_TX_DESC_DATA_BW_8192F(ptxdesc, 1);
-
-	SET_TX_DESC_TX_RATE_8192F(ptxdesc, pmp_priv->rateidx);
-
-	SET_TX_DESC_DATA_RATE_FB_LIMIT_8192F(ptxdesc, 0x1F);
-	SET_TX_DESC_RTS_RATE_FB_LIMIT_8192F(ptxdesc, 0xF);
-}
-
-#endif
 static void Rtw_MPSetMacTxEDCA(PADAPTER padapter)
 {
 
@@ -1928,77 +1241,23 @@ void SetPacketTx(PADAPTER padapter)
 	pkt_end = pkt_start + pkt_size;
 
 	/* 3 3. init TX descriptor */
-#if defined(CONFIG_RTL8188E)
-	if (IS_HARDWARE_TYPE_8188E(padapter))
-		fill_tx_desc_8188e(padapter);
-#endif
 
-#if defined(CONFIG_RTL8814A)
-	if (IS_HARDWARE_TYPE_8814A(padapter))
-		fill_tx_desc_8814a(padapter);
-#endif /* defined(CONFIG_RTL8814A) */
 
-#if defined(CONFIG_RTL8822B)
 	if (IS_HARDWARE_TYPE_8822B(padapter))
 		rtl8822b_prepare_mp_txdesc(padapter, pmp_priv);
-#endif /* CONFIG_RTL8822B */
 
-#if defined(CONFIG_RTL8822C)
-	if (IS_HARDWARE_TYPE_8822C(padapter))
-		rtl8822c_prepare_mp_txdesc(padapter, pmp_priv);
-#endif /* CONFIG_RTL8822C */
 
-#if defined(CONFIG_RTL8821C)
-	if (IS_HARDWARE_TYPE_8821C(padapter))
-		rtl8821c_prepare_mp_txdesc(padapter, pmp_priv);
-#endif /* CONFIG_RTL8821C */
 
-#if defined(CONFIG_RTL8812A) || defined(CONFIG_RTL8821A)
-	if (IS_HARDWARE_TYPE_8812(padapter) || IS_HARDWARE_TYPE_8821(padapter))
-		fill_tx_desc_8812a(padapter);
-#endif
 
-#if defined(CONFIG_RTL8192E)
-	if (IS_HARDWARE_TYPE_8192E(padapter))
-		fill_tx_desc_8192e(padapter);
-#endif
-#if defined(CONFIG_RTL8723B)
-	if (IS_HARDWARE_TYPE_8723B(padapter))
-		fill_tx_desc_8723b(padapter);
-#endif
 #if defined(CONFIG_RTL8703B)
 	if (IS_HARDWARE_TYPE_8703B(padapter))
 		fill_tx_desc_8703b(padapter);
 #endif
 
-#if defined(CONFIG_RTL8188F)
-	if (IS_HARDWARE_TYPE_8188F(padapter))
-		fill_tx_desc_8188f(padapter);
-#endif
 
-#if defined(CONFIG_RTL8188GTV)
-	if (IS_HARDWARE_TYPE_8188GTV(padapter))
-		fill_tx_desc_8188gtv(padapter);
-#endif
 
-#if defined(CONFIG_RTL8723D)
-	if (IS_HARDWARE_TYPE_8723D(padapter))
-		fill_tx_desc_8723d(padapter);
-#endif
-#if defined(CONFIG_RTL8192F)
-		if (IS_HARDWARE_TYPE_8192F(padapter))
-			fill_tx_desc_8192f(padapter);
-#endif
 
-#if defined(CONFIG_RTL8710B)
-	if (IS_HARDWARE_TYPE_8710B(padapter))
-		fill_tx_desc_8710b(padapter);
-#endif
 
-#if defined(CONFIG_RTL8814B)
-	if (IS_HARDWARE_TYPE_8814B(padapter))
-		rtl8814b_prepare_mp_txdesc(padapter, pmp_priv);
-#endif /* CONFIG_RTL8814B */
 
 	/* 3 4. make wlan header, make_wlanhdr() */
 	hdr = (struct rtw_ieee80211_hdr *)pkt_start;
@@ -2090,10 +1349,6 @@ void SetPacketRx(PADAPTER pAdapter, u8 bStartRx, u8 bAB)
 
 
 	if (bStartRx) {
-#ifdef CONFIG_RTL8723B
-		phy_set_mac_reg(pAdapter, 0xe70, BIT23 | BIT22, 0x3); /* Power on adc  (in RX_WAIT_CCA state) */
-		write_bbreg(pAdapter, 0xa01, BIT0, bDisable);/* improve Rx performance by jerry	 */
-#endif
 		pHalData->ReceiveConfig = RCR_AAP | RCR_APM | RCR_AM | RCR_AMF | RCR_HTC_LOC_CTRL;
 		pHalData->ReceiveConfig |= RCR_ACRC32;
 		pHalData->ReceiveConfig |= RCR_APP_PHYST_RXFF | RCR_APP_ICV | RCR_APP_MIC;
@@ -2105,9 +1360,7 @@ void SetPacketRx(PADAPTER pAdapter, u8 bStartRx, u8 bAB)
 			pHalData->ReceiveConfig |= RCR_CBSSID_DATA | RCR_CBSSID_BCN |RCR_APM | RCR_AM | RCR_AB |RCR_AMF;
 			pHalData->ReceiveConfig |= RCR_APP_PHYST_RXFF;
 
-#if defined(CONFIG_RTL8822B) || defined(CONFIG_RTL8821C) || defined(CONFIG_RTL8822C)
 			write_bbreg(pAdapter, 0x550, BIT3, bEnable);
-#endif
 			rtw_write16(pAdapter, REG_RXFLTMAP0, 0xFFEF); /* REG_RXFLTMAP0 (RX Filter Map Group 0) */
 			pmppriv->brx_filter_beacon = _TRUE;
 
@@ -2120,10 +1373,6 @@ void SetPacketRx(PADAPTER pAdapter, u8 bStartRx, u8 bAB)
 		if (bAB)
 			pHalData->ReceiveConfig |= RCR_AB;
 	} else {
-#ifdef CONFIG_RTL8723B
-		phy_set_mac_reg(pAdapter, 0xe70, BIT23 | BIT22, 0x00); /* Power off adc  (in RX_WAIT_CCA state)*/
-		write_bbreg(pAdapter, 0xa01, BIT0, bEnable);/* improve Rx performance by jerry	 */
-#endif
 		pHalData->ReceiveConfig = 0;
 		rtw_write16(pAdapter, REG_RXFLTMAP0, 0xFFFF); /* REG_RXFLTMAP0 (RX Filter Map Group 0) */
 	}
@@ -2347,13 +1596,8 @@ static u32 rtw_GetPSDData(PADAPTER pAdapter, u32 point)
 {
 	u32 psd_val = 0;
 
-#if defined(CONFIG_RTL8812A) || defined(CONFIG_RTL8821A) || defined(CONFIG_RTL8814A) || defined(CONFIG_RTL8822B) || defined(CONFIG_RTL8821C) || defined(CONFIG_RTL8822C)
 	u16 psd_reg = 0x910;
 	u16 psd_regL = 0xF44;
-#else
-	u16 psd_reg = 0x808;
-	u16 psd_regL = 0x8B4;
-#endif
 
 	psd_val = rtw_read32(pAdapter, psd_reg);
 
@@ -2368,11 +1612,7 @@ static u32 rtw_GetPSDData(PADAPTER pAdapter, u32 point)
 	rtw_mdelay_os(1);
 
 	psd_val = rtw_read32(pAdapter, psd_regL);
-#if defined(CONFIG_RTL8821C)
-	psd_val = (psd_val & 0x00FFFFFF) / 32;
-#else
 	psd_val &= 0x0000FFFF;
-#endif
 
 	return psd_val;
 }
@@ -2439,11 +1679,7 @@ u32 mp_query_psd(PADAPTER pAdapter, u8 *data)
 			halrf_cmn_info_set(p_dm, HALRF_CMNINFO_MP_PSD_AVERAGE, 0x20000);
 
 			halrf_psd_init(p_dm);
-#ifdef CONFIG_LONG_DELAY_ISSUE
 		rtw_msleep_os(100);
-#else
-		rtw_mdelay_os(10);
-#endif
 			halrf_psd_query(p_dm, psdbuf, 256);
 
 			i = 0;
@@ -2470,11 +1706,7 @@ u32 mp_query_psd(PADAPTER pAdapter, u8 *data)
 
 	}
 
-#ifdef CONFIG_LONG_DELAY_ISSUE
 	rtw_msleep_os(100);
-#else
-	rtw_mdelay_os(100);
-#endif
 
 	if (psd_analysis)
 		rtw_mp_psd_close(pAdapter, &regs);
@@ -2546,17 +1778,8 @@ void _rtw_mp_xmit_priv(struct xmit_priv *pxmitpriv)
 			goto exit;
 		}
 
-#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
-		pxmitbuf->phead = pxmitbuf->pbuf;
-		pxmitbuf->pend = pxmitbuf->pbuf + max_xmit_extbuf_size;
-		pxmitbuf->len = 0;
-		pxmitbuf->pdata = pxmitbuf->ptail = pxmitbuf->phead;
-#endif
 
 		rtw_list_insert_tail(&pxmitbuf->list, &(pxmitpriv->free_xmit_extbuf_queue.queue));
-#ifdef DBG_XMIT_BUF_EXT
-		pxmitbuf->no = i;
-#endif
 		pxmitbuf++;
 
 	}
@@ -3122,830 +2345,3 @@ u32 mpt_get_tx_power_finalabs_val(PADAPTER	padapter, u8 rf_path)
 	return powerdbm;
 }
 
-#ifdef CONFIG_MP_VHT_HW_TX_MODE
-static inline void dump_buf(u8 *buf, u32 len)
-{
-	u32 i;
-
-	RTW_INFO("-----------------Len %d----------------\n", len);
-	for (i = 0; i < len; i++)
-		RTW_INFO("%2.2x-", *(buf + i));
-	RTW_INFO("\n");
-}
-
-void ByteToBit(
-	u8	*out,
-	bool	*in,
-	u8	in_size)
-{
-	u8 i = 0, j = 0;
-
-	for (i = 0; i < in_size; i++) {
-		for (j = 0; j < 8; j++) {
-			if (in[8 * i + j])
-				out[i] |= (1 << j);
-		}
-	}
-}
-
-
-void CRC16_generator(
-	bool *out,
-	bool *in,
-	u8 in_size
-)
-{
-	u8 i = 0;
-	bool temp = 0, reg[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-
-	for (i = 0; i < in_size; i++) {/* take one's complement and bit reverse*/
-		temp = in[i] ^ reg[15];
-		reg[15]	= reg[14];
-		reg[14]	= reg[13];
-		reg[13]	= reg[12];
-		reg[12]	= reg[11];
-		reg[11]	= reg[10];
-		reg[10]	= reg[9];
-		reg[9]	= reg[8];
-		reg[8]	= reg[7];
-
-		reg[7]	= reg[6];
-		reg[6]	= reg[5];
-		reg[5]	= reg[4];
-		reg[4]	= reg[3];
-		reg[3]	= reg[2];
-		reg[2]	= reg[1];
-		reg[1]	= reg[0];
-		reg[12]	= reg[12] ^ temp;
-		reg[5]	= reg[5] ^ temp;
-		reg[0]	= temp;
-	}
-	for (i = 0; i < 16; i++)	/* take one's complement and bit reverse*/
-		out[i] = 1 - reg[15 - i];
-}
-
-
-
-/*========================================
-	SFD		SIGNAL	SERVICE	LENGTH	CRC
-	16 bit	8 bit	8 bit	16 bit	16 bit
-========================================*/
-void CCK_generator(
-	PRT_PMAC_TX_INFO	pPMacTxInfo,
-	PRT_PMAC_PKT_INFO	pPMacPktInfo
-)
-{
-	double	ratio = 0;
-	bool	crc16_in[32] = {0}, crc16_out[16] = {0};
-	bool LengthExtBit;
-	double LengthExact;
-	double LengthPSDU;
-	u8 i;
-	u32 PacketLength = pPMacTxInfo->PacketLength;
-
-	if (pPMacTxInfo->bSPreamble)
-		pPMacTxInfo->SFD = 0x05CF;
-	else
-		pPMacTxInfo->SFD = 0xF3A0;
-
-	switch (pPMacPktInfo->MCS) {
-	case 0:
-		pPMacTxInfo->SignalField = 0xA;
-		ratio = 8;
-		/*CRC16_in(1,0:7)=[0 1 0 1 0 0 0 0]*/
-		crc16_in[1] = crc16_in[3] = 1;
-		break;
-	case 1:
-		pPMacTxInfo->SignalField = 0x14;
-		ratio = 4;
-		/*CRC16_in(1,0:7)=[0 0 1 0 1 0 0 0];*/
-		crc16_in[2] = crc16_in[4] = 1;
-		break;
-	case 2:
-		pPMacTxInfo->SignalField = 0x37;
-		ratio = 8.0 / 5.5;
-		/*CRC16_in(1,0:7)=[1 1 1 0 1 1 0 0];*/
-		crc16_in[0] = crc16_in[1] = crc16_in[2] = crc16_in[4] = crc16_in[5] = 1;
-		break;
-	case 3:
-		pPMacTxInfo->SignalField = 0x6E;
-		ratio = 8.0 / 11.0;
-		/*CRC16_in(1,0:7)=[0 1 1 1 0 1 1 0];*/
-		crc16_in[1] = crc16_in[2] = crc16_in[3] = crc16_in[5] = crc16_in[6] = 1;
-		break;
-	}
-
-	LengthExact = PacketLength * ratio;
-	LengthPSDU = ceil(LengthExact);
-
-	if ((pPMacPktInfo->MCS == 3) &&
-	    ((LengthPSDU - LengthExact) >= 0.727 || (LengthPSDU - LengthExact) <= -0.727))
-		LengthExtBit = 1;
-	else
-		LengthExtBit = 0;
-
-
-	pPMacTxInfo->LENGTH = (u32)LengthPSDU;
-	/* CRC16_in(1,16:31) = LengthPSDU[0:15]*/
-	for (i = 0; i < 16; i++)
-		crc16_in[i + 16] = (pPMacTxInfo->LENGTH >> i) & 0x1;
-
-	if (LengthExtBit == 0) {
-		pPMacTxInfo->ServiceField = 0x0;
-		/* CRC16_in(1,8:15) = [0 0 0 0 0 0 0 0];*/
-	} else {
-		pPMacTxInfo->ServiceField = 0x80;
-		/*CRC16_in(1,8:15)=[0 0 0 0 0 0 0 1];*/
-		crc16_in[15] = 1;
-	}
-
-	CRC16_generator(crc16_out, crc16_in, 32);
-
-	_rtw_memset(pPMacTxInfo->CRC16, 0, 2);
-	ByteToBit(pPMacTxInfo->CRC16, crc16_out, 2);
-
-}
-
-
-void PMAC_Get_Pkt_Param(
-	PRT_PMAC_TX_INFO	pPMacTxInfo,
-	PRT_PMAC_PKT_INFO	pPMacPktInfo)
-{
-
-	u8		TX_RATE_HEX = 0, MCS = 0;
-	u8		TX_RATE = pPMacTxInfo->TX_RATE;
-
-	/*	TX_RATE & Nss	*/
-	if (MPT_IS_2SS_RATE(TX_RATE))
-		pPMacPktInfo->Nss = 2;
-	else if (MPT_IS_3SS_RATE(TX_RATE))
-		pPMacPktInfo->Nss = 3;
-	else if (MPT_IS_4SS_RATE(TX_RATE))
-		pPMacPktInfo->Nss = 4;
-	else
-		pPMacPktInfo->Nss = 1;
-
-	RTW_INFO("PMacTxInfo.Nss =%d\n", pPMacPktInfo->Nss);
-
-	/*	MCS & TX_RATE_HEX*/
-	if (MPT_IS_CCK_RATE(TX_RATE)) {
-		switch (TX_RATE) {
-		case MPT_RATE_1M:
-			TX_RATE_HEX = MCS = 0;
-			break;
-		case MPT_RATE_2M:
-			TX_RATE_HEX = MCS = 1;
-			break;
-		case MPT_RATE_55M:
-			TX_RATE_HEX = MCS = 2;
-			break;
-		case MPT_RATE_11M:
-			TX_RATE_HEX = MCS = 3;
-			break;
-		}
-	} else if (MPT_IS_OFDM_RATE(TX_RATE)) {
-		MCS = TX_RATE - MPT_RATE_6M;
-		TX_RATE_HEX = MCS + 4;
-	} else if (MPT_IS_HT_RATE(TX_RATE)) {
-		MCS = TX_RATE - MPT_RATE_MCS0;
-		TX_RATE_HEX = MCS + 12;
-	} else if (MPT_IS_VHT_RATE(TX_RATE)) {
-		TX_RATE_HEX = TX_RATE - MPT_RATE_VHT1SS_MCS0 + 44;
-
-		if (MPT_IS_VHT_2S_RATE(TX_RATE))
-			MCS = TX_RATE - MPT_RATE_VHT2SS_MCS0;
-		else if (MPT_IS_VHT_3S_RATE(TX_RATE))
-			MCS = TX_RATE - MPT_RATE_VHT3SS_MCS0;
-		else if (MPT_IS_VHT_4S_RATE(TX_RATE))
-			MCS = TX_RATE - MPT_RATE_VHT4SS_MCS0;
-		else
-			MCS = TX_RATE - MPT_RATE_VHT1SS_MCS0;
-	}
-
-	pPMacPktInfo->MCS = MCS;
-	pPMacTxInfo->TX_RATE_HEX = TX_RATE_HEX;
-
-	RTW_INFO(" MCS=%d, TX_RATE_HEX =0x%x\n", MCS, pPMacTxInfo->TX_RATE_HEX);
-	/*	mSTBC & Nsts*/
-	pPMacPktInfo->Nsts = pPMacPktInfo->Nss;
-	if (pPMacTxInfo->bSTBC) {
-		if (pPMacPktInfo->Nss == 1) {
-			pPMacTxInfo->m_STBC = 2;
-			pPMacPktInfo->Nsts = pPMacPktInfo->Nss * 2;
-		} else
-			pPMacTxInfo->m_STBC = 1;
-	} else
-		pPMacTxInfo->m_STBC = 1;
-}
-
-
-u32 LDPC_parameter_generator(
-	u32 N_pld_int,
-	u32 N_CBPSS,
-	u32 N_SS,
-	u32 R,
-	u32 m_STBC,
-	u32 N_TCB_int
-)
-{
-	double	CR = 0.;
-	double	N_pld = (double)N_pld_int;
-	double	N_TCB = (double)N_TCB_int;
-	double	N_CW = 0., N_shrt = 0., N_spcw = 0., N_fshrt = 0.;
-	double	L_LDPC = 0., K_LDPC = 0., L_LDPC_info = 0.;
-	double	N_punc = 0., N_ppcw = 0., N_fpunc = 0., N_rep = 0., N_rpcw = 0., N_frep = 0.;
-	double	R_eff = 0.;
-	u32	VHTSIGA2B3  = 0;/* extra symbol from VHT-SIG-A2 Bit 3*/
-
-	if (R == 0)
-		CR	= 0.5;
-	else if (R == 1)
-		CR = 2. / 3.;
-	else if (R == 2)
-		CR = 3. / 4.;
-	else if (R == 3)
-		CR = 5. / 6.;
-
-	if (N_TCB <= 648.) {
-		N_CW	= 1.;
-		if (N_TCB >= N_pld + 912.*(1. - CR))
-			L_LDPC	= 1296.;
-		else
-			L_LDPC	= 648.;
-	} else if (N_TCB <= 1296.) {
-		N_CW	= 1.;
-		if (N_TCB >= (double)N_pld + 1464.*(1. - CR))
-			L_LDPC	= 1944.;
-		else
-			L_LDPC	= 1296.;
-	} else if	(N_TCB <= 1944.) {
-		N_CW	= 1.;
-		L_LDPC	= 1944.;
-	} else if (N_TCB <= 2592.) {
-		N_CW	= 2.;
-		if (N_TCB >= N_pld + 2916.*(1. - CR))
-			L_LDPC	= 1944.;
-		else
-			L_LDPC	= 1296.;
-	} else {
-		N_CW = ceil(N_pld / 1944. / CR);
-		L_LDPC	= 1944.;
-	}
-	/*	Number of information bits per CW*/
-	K_LDPC = L_LDPC * CR;
-	/*	Number of shortening bits					max(0, (N_CW * L_LDPC * R) - N_pld)*/
-	N_shrt = (N_CW * K_LDPC - N_pld) > 0. ? (N_CW * K_LDPC - N_pld) : 0.;
-	/*	Number of shortening bits per CW			N_spcw = rtfloor(N_shrt/N_CW)*/
-	N_spcw = rtfloor(N_shrt / N_CW);
-	/*	The first N_fshrt CWs shorten 1 bit more*/
-	N_fshrt = (double)((int)N_shrt % (int)N_CW);
-	/*	Number of data bits for the last N_CW-N_fshrt CWs*/
-	L_LDPC_info = K_LDPC - N_spcw;
-	/*	Number of puncturing bits*/
-	N_punc = (N_CW * L_LDPC - N_TCB - N_shrt) > 0. ? (N_CW * L_LDPC - N_TCB - N_shrt) : 0.;
-	if (((N_punc > .1 * N_CW * L_LDPC * (1. - CR)) && (N_shrt < 1.2 * N_punc * CR / (1. - CR))) ||
-	    (N_punc > 0.3 * N_CW * L_LDPC * (1. - CR))) {
-		/*cout << "*** N_TCB and N_punc are Recomputed ***" << endl;*/
-		VHTSIGA2B3 = 1;
-		N_TCB += (double)N_CBPSS * N_SS * m_STBC;
-		N_punc = (N_CW * L_LDPC - N_TCB - N_shrt) > 0. ? (N_CW * L_LDPC - N_TCB - N_shrt) : 0.;
-	} else
-		VHTSIGA2B3 = 0;
-
-	return VHTSIGA2B3;
-}	/* function end of LDPC_parameter_generator */
-
-/*========================================
-	Data field of PPDU
-	Get N_sym and SIGA2BB3
-========================================*/
-void PMAC_Nsym_generator(
-	PRT_PMAC_TX_INFO	pPMacTxInfo,
-	PRT_PMAC_PKT_INFO	pPMacPktInfo)
-{
-	u32	SIGA2B3 = 0;
-	u8	TX_RATE = pPMacTxInfo->TX_RATE;
-
-	u32 R, R_list[10] = {0, 0, 2, 0, 2, 1, 2, 3, 2, 3};
-	double CR = 0;
-	u32 N_SD, N_BPSC_list[10] = {1, 2, 2, 4, 4, 6, 6, 6, 8, 8};
-	u32 N_BPSC = 0, N_CBPS = 0, N_DBPS = 0, N_ES = 0, N_SYM = 0, N_pld = 0, N_TCB = 0;
-	int D_R = 0;
-
-	RTW_INFO("TX_RATE = %d\n", TX_RATE);
-	/*	N_SD*/
-	if (pPMacTxInfo->BandWidth == 0)
-		N_SD = 52;
-	else if (pPMacTxInfo->BandWidth == 1)
-		N_SD = 108;
-	else
-		N_SD = 234;
-
-	if (MPT_IS_HT_RATE(TX_RATE)) {
-		u8 MCS_temp;
-
-		if (pPMacPktInfo->MCS > 23)
-			MCS_temp = pPMacPktInfo->MCS - 24;
-		else if (pPMacPktInfo->MCS > 15)
-			MCS_temp = pPMacPktInfo->MCS - 16;
-		else if (pPMacPktInfo->MCS > 7)
-			MCS_temp = pPMacPktInfo->MCS - 8;
-		else
-			MCS_temp = pPMacPktInfo->MCS;
-
-		R = R_list[MCS_temp];
-
-		switch (R) {
-		case 0:
-			CR = .5;
-			break;
-		case 1:
-			CR = 2. / 3.;
-			break;
-		case 2:
-			CR = 3. / 4.;
-			break;
-		case 3:
-			CR = 5. / 6.;
-			break;
-		}
-
-		N_BPSC = N_BPSC_list[MCS_temp];
-		N_CBPS = N_BPSC * N_SD * pPMacPktInfo->Nss;
-		N_DBPS = (u32)((double)N_CBPS * CR);
-
-		if (pPMacTxInfo->bLDPC == FALSE) {
-			N_ES = (u32)ceil((double)(N_DBPS * pPMacPktInfo->Nss) / 4. / 300.);
-			RTW_INFO("N_ES = %d\n", N_ES);
-
-			/*	N_SYM = m_STBC* (8*length+16+6*N_ES) / (m_STBC*N_DBPS)*/
-			N_SYM = pPMacTxInfo->m_STBC * (u32)ceil((double)(pPMacTxInfo->PacketLength * 8 + 16 + N_ES * 6) /
-					(double)(N_DBPS * pPMacTxInfo->m_STBC));
-
-		} else {
-			N_ES = 1;
-			/*	N_pld = length * 8 + 16*/
-			N_pld = pPMacTxInfo->PacketLength * 8 + 16;
-			RTW_INFO("N_pld = %d\n", N_pld);
-			N_SYM = pPMacTxInfo->m_STBC * (u32)ceil((double)(N_pld) /
-					(double)(N_DBPS * pPMacTxInfo->m_STBC));
-			RTW_INFO("N_SYM = %d\n", N_SYM);
-			/*	N_avbits = N_CBPS *m_STBC *(N_pld/N_CBPS*R*m_STBC)*/
-			N_TCB = N_CBPS * N_SYM;
-			RTW_INFO("N_TCB = %d\n", N_TCB);
-			SIGA2B3 = LDPC_parameter_generator(N_pld, N_CBPS, pPMacPktInfo->Nss, R, pPMacTxInfo->m_STBC, N_TCB);
-			RTW_INFO("SIGA2B3 = %d\n", SIGA2B3);
-			N_SYM = N_SYM + SIGA2B3 * pPMacTxInfo->m_STBC;
-			RTW_INFO("N_SYM = %d\n", N_SYM);
-		}
-	} else if (MPT_IS_VHT_RATE(TX_RATE)) {
-		R = R_list[pPMacPktInfo->MCS];
-
-		switch (R) {
-		case 0:
-			CR = .5;
-			break;
-		case 1:
-			CR = 2. / 3.;
-			break;
-		case 2:
-			CR = 3. / 4.;
-			break;
-		case 3:
-			CR = 5. / 6.;
-			break;
-		}
-		N_BPSC = N_BPSC_list[pPMacPktInfo->MCS];
-		N_CBPS = N_BPSC * N_SD * pPMacPktInfo->Nss;
-		N_DBPS = (u32)((double)N_CBPS * CR);
-		if (pPMacTxInfo->bLDPC == FALSE) {
-			if (pPMacTxInfo->bSGI)
-				N_ES = (u32)ceil((double)(N_DBPS) / 3.6 / 600.);
-			else
-				N_ES = (u32)ceil((double)(N_DBPS) / 4. / 600.);
-			/*	N_SYM = m_STBC* (8*length+16+6*N_ES) / (m_STBC*N_DBPS)*/
-			N_SYM = pPMacTxInfo->m_STBC * (u32)ceil((double)(pPMacTxInfo->PacketLength * 8 + 16 + N_ES * 6) / (double)(N_DBPS * pPMacTxInfo->m_STBC));
-			SIGA2B3 = 0;
-		} else {
-			N_ES = 1;
-			/*	N_SYM = m_STBC* (8*length+N_service) / (m_STBC*N_DBPS)*/
-			N_SYM = pPMacTxInfo->m_STBC * (u32)ceil((double)(pPMacTxInfo->PacketLength * 8 + 16) / (double)(N_DBPS * pPMacTxInfo->m_STBC));
-			/*	N_avbits = N_sys_init * N_CBPS*/
-			N_TCB = N_CBPS * N_SYM;
-			/*	N_pld = N_sys_init * N_DBPS*/
-			N_pld = N_SYM * N_DBPS;
-			SIGA2B3 = LDPC_parameter_generator(N_pld, N_CBPS, pPMacPktInfo->Nss, R, pPMacTxInfo->m_STBC, N_TCB);
-			N_SYM = N_SYM + SIGA2B3 * pPMacTxInfo->m_STBC;
-		}
-
-		switch (R) {
-		case 0:
-			D_R = 2;
-			break;
-		case 1:
-			D_R = 3;
-			break;
-		case 2:
-			D_R = 4;
-			break;
-		case 3:
-			D_R = 6;
-			break;
-		}
-
-		if (((N_CBPS / N_ES) % D_R) != 0) {
-			RTW_INFO("MCS= %d is not supported when Nss=%d and BW= %d !!\n",  pPMacPktInfo->MCS, pPMacPktInfo->Nss, pPMacTxInfo->BandWidth);
-			return;
-		}
-
-		RTW_INFO("MCS= %d Nss=%d and BW= %d !!\n",  pPMacPktInfo->MCS, pPMacPktInfo->Nss, pPMacTxInfo->BandWidth);
-	}
-
-	pPMacPktInfo->N_sym = N_SYM;
-	pPMacPktInfo->SIGA2B3 = SIGA2B3;
-}
-
-/*========================================
-	L-SIG	Rate	R	Length	P	Tail
-			4b		1b	12b		1b	6b
-========================================*/
-
-void L_SIG_generator(
-	u32	N_SYM,		/* Max: 750*/
-	PRT_PMAC_TX_INFO	pPMacTxInfo,
-	PRT_PMAC_PKT_INFO	pPMacPktInfo)
-{
-	u8	sig_bi[24] = {0};	/* 24 BIT*/
-	u32	mode, LENGTH;
-	int i;
-
-	if (MPT_IS_OFDM_RATE(pPMacTxInfo->TX_RATE)) {
-		mode = pPMacPktInfo->MCS;
-		LENGTH = pPMacTxInfo->PacketLength;
-	} else {
-		u8	N_LTF;
-		double	T_data;
-		u32	OFDM_symbol;
-
-		mode = 0;
-
-		/*	Table 20-13 Num of HT-DLTFs request*/
-		if (pPMacPktInfo->Nsts <= 2)
-			N_LTF = pPMacPktInfo->Nsts;
-		else
-			N_LTF = 4;
-
-		if (pPMacTxInfo->bSGI)
-			T_data = 3.6;
-		else
-			T_data = 4.0;
-
-		/*(L-SIG, HT-SIG, HT-STF, HT-LTF....HT-LTF, Data)*/
-		if (MPT_IS_VHT_RATE(pPMacTxInfo->TX_RATE))
-			OFDM_symbol = (u32)ceil((double)(8 + 4 + N_LTF * 4 + N_SYM * T_data + 4) / 4.);
-		else
-			OFDM_symbol = (u32)ceil((double)(8 + 4 + N_LTF * 4 + N_SYM * T_data) / 4.);
-
-		RTW_INFO("%s , OFDM_symbol =%d\n", __func__, OFDM_symbol);
-		LENGTH = OFDM_symbol * 3 - 3;
-		RTW_INFO("%s , LENGTH =%d\n", __func__, LENGTH);
-
-	}
-	/*	Rate Field*/
-	switch (mode) {
-	case	0:
-		sig_bi[0] = 1;
-		sig_bi[1] = 1;
-		sig_bi[2] = 0;
-		sig_bi[3] = 1;
-		break;
-	case	1:
-		sig_bi[0] = 1;
-		sig_bi[1] = 1;
-		sig_bi[2] = 1;
-		sig_bi[3] = 1;
-		break;
-	case	2:
-		sig_bi[0] = 0;
-		sig_bi[1] = 1;
-		sig_bi[2] = 0;
-		sig_bi[3] = 1;
-		break;
-	case	3:
-		sig_bi[0] = 0;
-		sig_bi[1] = 1;
-		sig_bi[2] = 1;
-		sig_bi[3] = 1;
-		break;
-	case	4:
-		sig_bi[0] = 1;
-		sig_bi[1] = 0;
-		sig_bi[2] = 0;
-		sig_bi[3] = 1;
-		break;
-	case	5:
-		sig_bi[0] = 1;
-		sig_bi[1] = 0;
-		sig_bi[2] = 1;
-		sig_bi[3] = 1;
-		break;
-	case	6:
-		sig_bi[0] = 0;
-		sig_bi[1] = 0;
-		sig_bi[2] = 0;
-		sig_bi[3] = 1;
-		break;
-	case	7:
-		sig_bi[0] = 0;
-		sig_bi[1] = 0;
-		sig_bi[2] = 1;
-		sig_bi[3] = 1;
-		break;
-	}
-	/*Reserved bit*/
-	sig_bi[4] = 0;
-
-	/*	Length Field*/
-	for (i = 0; i < 12; i++)
-		sig_bi[i + 5] = (LENGTH >> i) & 1;
-
-	/* Parity Bit*/
-	sig_bi[17] = 0;
-	for (i = 0; i < 17; i++)
-		sig_bi[17] = sig_bi[17] + sig_bi[i];
-
-	sig_bi[17] %= 2;
-
-	/*	Tail Field*/
-	for (i = 18; i < 24; i++)
-		sig_bi[i] = 0;
-
-	/* dump_buf(sig_bi,24);*/
-	_rtw_memset(pPMacTxInfo->LSIG, 0, 3);
-	ByteToBit(pPMacTxInfo->LSIG, (bool *)sig_bi, 3);
-}
-
-
-void CRC8_generator(
-	bool	*out,
-	bool	*in,
-	u8	in_size
-)
-{
-	u8 i = 0;
-	bool temp = 0, reg[] = {1, 1, 1, 1, 1, 1, 1, 1};
-
-	for (i = 0; i < in_size; i++) { /* take one's complement and bit reverse*/
-		temp = in[i] ^ reg[7];
-		reg[7]	= reg[6];
-		reg[6]	= reg[5];
-		reg[5]	= reg[4];
-		reg[4]	= reg[3];
-		reg[3]	= reg[2];
-		reg[2]	= reg[1] ^ temp;
-		reg[1]	= reg[0] ^ temp;
-		reg[0]	= temp;
-	}
-	for (i = 0; i < 8; i++)/* take one's complement and bit reverse*/
-		out[i] = reg[7 - i] ^ 1;
-}
-
-/*/================================================================================
-	HT-SIG1	MCS	CW	Length		24BIT + 24BIT
-			7b	1b	16b
-	HT-SIG2	Smoothing	Not sounding	Rsvd		AGG	STBC	FEC	SGI	N_ELTF	CRC	Tail
-			1b			1b			1b		1b	2b		1b	1b	2b		8b	6b
-================================================================================*/
-void HT_SIG_generator(
-	PRT_PMAC_TX_INFO	pPMacTxInfo,
-	PRT_PMAC_PKT_INFO	pPMacPktInfo
-)
-{
-	u32 i;
-	bool sig_bi[48] = {0}, crc8[8] = {0};
-	/*	MCS Field*/
-	for (i = 0; i < 7; i++)
-		sig_bi[i] = (pPMacPktInfo->MCS >> i) & 0x1;
-	/*	Packet BW Setting*/
-	sig_bi[7] = pPMacTxInfo->BandWidth;
-	/*	HT-Length Field*/
-	for (i = 0; i < 16; i++)
-		sig_bi[i + 8] = (pPMacTxInfo->PacketLength >> i) & 0x1;
-	/*	Smoothing;	1->allow smoothing*/
-	sig_bi[24] = 1;
-	/*Not Sounding*/
-	sig_bi[25] = 1 - pPMacTxInfo->NDP_sound;
-	/*Reserved bit*/
-	sig_bi[26] = 1;
-	/*/Aggregate*/
-	sig_bi[27] = 0;
-	/*STBC Field*/
-	if (pPMacTxInfo->bSTBC) {
-		sig_bi[28] = 1;
-		sig_bi[29] = 0;
-	} else {
-		sig_bi[28] = 0;
-		sig_bi[29] = 0;
-	}
-	/*Advance Coding,	0: BCC, 1: LDPC*/
-	sig_bi[30] = pPMacTxInfo->bLDPC;
-	/* Short GI*/
-	sig_bi[31] = pPMacTxInfo->bSGI;
-	/* N_ELTFs*/
-	if (pPMacTxInfo->NDP_sound == FALSE) {
-		sig_bi[32]	= 0;
-		sig_bi[33]	= 0;
-	} else {
-		int	N_ELTF = pPMacTxInfo->Ntx - pPMacPktInfo->Nss;
-
-		for (i = 0; i < 2; i++)
-			sig_bi[32 + i] = (N_ELTF >> i) % 2;
-	}
-	/*	CRC-8*/
-	CRC8_generator(crc8, sig_bi, 34);
-
-	for (i = 0; i < 8; i++)
-		sig_bi[34 + i] = crc8[i];
-
-	/*Tail*/
-	for (i = 42; i < 48; i++)
-		sig_bi[i] = 0;
-
-	_rtw_memset(pPMacTxInfo->HT_SIG, 0, 6);
-	ByteToBit(pPMacTxInfo->HT_SIG, sig_bi, 6);
-}
-
-
-/*======================================================================================
-	VHT-SIG-A1
-	BW	Reserved	STBC	G_ID	SU_Nsts	P_AID	TXOP_PS_NOT_ALLOW	Reserved
-	2b	1b			1b		6b	3b	9b		1b		2b					1b
-	VHT-SIG-A2
-	SGI	SGI_Nsym	SU/MU coding	LDPC_Extra	SU_NCS	Beamformed	Reserved	CRC	Tail
-	1b	1b			1b				1b			4b		1b			1b			8b	6b
-======================================================================================*/
-void VHT_SIG_A_generator(
-	PRT_PMAC_TX_INFO	pPMacTxInfo,
-	PRT_PMAC_PKT_INFO	pPMacPktInfo)
-{
-	u32 i;
-	bool sig_bi[48], crc8[8];
-
-	_rtw_memset(sig_bi, 0, 48);
-	_rtw_memset(crc8, 0, 8);
-
-	/*	BW Setting*/
-	for (i = 0; i < 2; i++)
-		sig_bi[i] = (pPMacTxInfo->BandWidth >> i) & 0x1;
-	/* Reserved Bit*/
-	sig_bi[2] = 1;
-	/*STBC Field*/
-	sig_bi[3] = pPMacTxInfo->bSTBC;
-	/*Group ID: Single User->A value of 0 or 63 indicates an SU PPDU. */
-	for (i = 0; i < 6; i++)
-		sig_bi[4 + i] = 0;
-	/*	N_STS/Partial AID*/
-	for (i = 0; i < 12; i++) {
-		if (i < 3)
-			sig_bi[10 + i] = ((pPMacPktInfo->Nsts - 1) >> i) & 0x1;
-		else
-			sig_bi[10 + i] = 0;
-	}
-	/*TXOP_PS_NOT_ALLPWED*/
-	sig_bi[22]	= 0;
-	/*Reserved Bits*/
-	sig_bi[23]	= 1;
-	/*Short GI*/
-	sig_bi[24] = pPMacTxInfo->bSGI;
-	if (pPMacTxInfo->bSGI > 0 && (pPMacPktInfo->N_sym % 10) == 9)
-		sig_bi[25] = 1;
-	else
-		sig_bi[25] = 0;
-	/* SU/MU[0] Coding*/
-	sig_bi[26] = pPMacTxInfo->bLDPC;	/*	0:BCC, 1:LDPC		*/
-	sig_bi[27] = pPMacPktInfo->SIGA2B3;	/*/	Record Extra OFDM Symols is added or not when LDPC is used*/
-	/*SU MCS/MU[1-3] Coding*/
-	for (i = 0; i < 4; i++)
-		sig_bi[28 + i] = (pPMacPktInfo->MCS >> i) & 0x1;
-	/*SU Beamform */
-	sig_bi[32] = 0;	/*packet.TXBF_en;*/
-	/*Reserved Bit*/
-	sig_bi[33] = 1;
-	/*CRC-8*/
-	CRC8_generator(crc8, sig_bi, 34);
-	for (i = 0; i < 8; i++)
-		sig_bi[34 + i]	= crc8[i];
-	/*Tail*/
-	for (i = 42; i < 48; i++)
-		sig_bi[i] = 0;
-
-	_rtw_memset(pPMacTxInfo->VHT_SIG_A, 0, 6);
-	ByteToBit(pPMacTxInfo->VHT_SIG_A, sig_bi, 6);
-}
-
-/*======================================================================================
-	VHT-SIG-B
-	Length				Resesrved	Trail
-	17/19/21 BIT		3/2/2 BIT	6b
-======================================================================================*/
-void VHT_SIG_B_generator(
-	PRT_PMAC_TX_INFO	pPMacTxInfo)
-{
-	bool sig_bi[32], crc8_bi[8];
-	u32 i, len, res, tail = 6, total_len, crc8_in_len;
-	u32 sigb_len;
-
-	_rtw_memset(sig_bi, 0, 32);
-	_rtw_memset(crc8_bi, 0, 8);
-
-	/*Sounding Packet*/
-	if (pPMacTxInfo->NDP_sound == 1) {
-		if (pPMacTxInfo->BandWidth == 0) {
-			bool sigb_temp[26] = {0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0};
-
-			_rtw_memcpy(sig_bi, sigb_temp, 26);
-		} else if (pPMacTxInfo->BandWidth == 1) {
-			bool sigb_temp[27] = {1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0};
-
-			_rtw_memcpy(sig_bi, sigb_temp, 27);
-		} else if (pPMacTxInfo->BandWidth == 2) {
-			bool sigb_temp[29] = {0, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0};
-
-			_rtw_memcpy(sig_bi, sigb_temp, 29);
-		}
-	} else {	/* Not NDP Sounding*/
-		bool *sigb_temp[29] = {0};
-
-		if (pPMacTxInfo->BandWidth == 0) {
-			len = 17;
-			res = 3;
-		} else if (pPMacTxInfo->BandWidth == 1) {
-			len = 19;
-			res = 2;
-		} else if (pPMacTxInfo->BandWidth == 2) {
-			len	= 21;
-			res	= 2;
-		} else {
-			len	= 21;
-			res	= 2;
-		}
-		total_len = len + res + tail;
-		crc8_in_len = len + res;
-
-		/*Length Field*/
-		sigb_len = (pPMacTxInfo->PacketLength + 3) >> 2;
-
-		for (i = 0; i < len; i++)
-			sig_bi[i] = (sigb_len >> i) & 0x1;
-		/*Reserved Field*/
-		for (i = 0; i < res; i++)
-			sig_bi[len + i] = 1;
-		/* CRC-8*/
-		CRC8_generator(crc8_bi, sig_bi, crc8_in_len);
-
-		/* Tail */
-		for (i = 0; i < tail; i++)
-			sig_bi[len + res + i] = 0;
-	}
-
-	_rtw_memset(pPMacTxInfo->VHT_SIG_B, 0, 4);
-	ByteToBit(pPMacTxInfo->VHT_SIG_B, sig_bi, 4);
-
-	pPMacTxInfo->VHT_SIG_B_CRC = 0;
-	ByteToBit(&(pPMacTxInfo->VHT_SIG_B_CRC), crc8_bi, 1);
-}
-
-/*=======================
- VHT Delimiter
-=======================*/
-void VHT_Delimiter_generator(
-	PRT_PMAC_TX_INFO	pPMacTxInfo
-)
-{
-	bool sig_bi[32] = {0}, crc8[8] = {0};
-	u32 crc8_in_len = 16;
-	u32 PacketLength = pPMacTxInfo->PacketLength;
-	int j;
-
-	/* Delimiter[0]: EOF*/
-	sig_bi[0] = 1;
-	/* Delimiter[1]: Reserved*/
-	sig_bi[1] = 0;
-	/* Delimiter[3:2]: MPDU Length High*/
-	sig_bi[2] = ((PacketLength - 4) >> 12) % 2;
-	sig_bi[3] = ((PacketLength - 4) >> 13) % 2;
-	/* Delimiter[15:4]: MPDU Length Low*/
-	for (j = 4; j < 16; j++)
-		sig_bi[j] = ((PacketLength - 4) >> (j - 4)) % 2;
-	CRC8_generator(crc8, sig_bi, crc8_in_len);
-	for (j = 16; j < 24; j++) /* Delimiter[23:16]: CRC 8*/
-		sig_bi[j] = crc8[j - 16];
-	for (j = 24; j < 32; j++) /* Delimiter[31:24]: Signature ('4E' in Hex, 78 in Dec)*/
-		sig_bi[j]	= (78 >> (j - 24)) % 2;
-
-	_rtw_memset(pPMacTxInfo->VHT_Delimiter, 0, 4);
-	ByteToBit(pPMacTxInfo->VHT_Delimiter, sig_bi, 4);
-}
-
-#endif
-#endif

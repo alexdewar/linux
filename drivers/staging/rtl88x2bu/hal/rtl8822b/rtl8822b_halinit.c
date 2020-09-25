@@ -144,23 +144,11 @@ u8 rtl8822b_hal_init(PADAPTER adapter)
 	hal->bFWReady = _FALSE;
 	hal->fw_ractrl = _FALSE;
 
-#ifdef CONFIG_FILE_FWIMG
-	rtw_get_phy_file_path(adapter, MAC_FILE_FW_NIC);
-	if (rtw_is_file_readable(rtw_phy_para_file_path) == _TRUE) {
-		RTW_INFO("%s acquire FW from file:%s\n", __FUNCTION__, rtw_phy_para_file_path);
-		fw_bin = _TRUE;
-	} else
-#endif /* CONFIG_FILE_FWIMG */
 	{
 		RTW_INFO("%s fw source from array\n", __FUNCTION__);
 		fw_bin = _FALSE;
 	}
 
-#ifdef CONFIG_FILE_FWIMG
-	if (_TRUE == fw_bin)
-		err = rtw_halmac_init_hal_fw_file(d, rtw_phy_para_file_path);
-	else
-#endif /* CONFIG_FILE_FWIMG */
 		err = rtw_halmac_init_hal_fw(d, array_mp_8822b_fw_nic, array_length_mp_8822b_fw_nic);
 
 	if (err) {
@@ -231,9 +219,7 @@ void rtl8822b_init_misc(PADAPTER adapter)
 			if (iface) {
 				iface->registrypriv.wireless_mode = WIRELESS_MODE_5G;
 				iface->registrypriv.channel = 149;
-#ifdef CONFIG_80211N_HT
 				iface->registrypriv.stbc_cap &= ~(BIT0 | BIT4);
-#endif /* CONFIG_80211N_HT */
 			}
 		}
 	}
@@ -250,11 +236,9 @@ void rtl8822b_init_misc(PADAPTER adapter)
 	/*Enable MAC security engine*/
 	rtw_write16(adapter, REG_CR, (rtw_read16(adapter, REG_CR) | BIT_MAC_SEC_EN));
 
-#ifdef CONFIG_XMIT_ACK
 	/* ack for xmit mgmt frames. */
 	rtw_write32(adapter, REG_FWHW_TXQ_CTRL_8822B,
 		rtw_read32(adapter, REG_FWHW_TXQ_CTRL_8822B) | BIT_EN_QUEUE_RPT_8822B(BIT(4)));
-#endif /* CONFIG_XMIT_ACK */
 
 #ifdef CONFIG_TCP_CSUM_OFFLOAD_RX
 	rtw_hal_rcr_add(adapter, BIT_TCPOFLD_EN_8822B);
@@ -295,16 +279,13 @@ u32 rtl8822b_init(PADAPTER adapter)
 		return _FAIL;
 
 	rtl8822b_phy_init_haldm(adapter);
-#ifdef CONFIG_BEAMFORMING
 	rtl8822b_phy_bf_init(adapter);
-#endif
 
 #ifdef CONFIG_FW_MULTI_PORT_SUPPORT
 	/*HW / FW init*/
 	rtw_hal_set_default_port_id_cmd(adapter, 0);
 #endif
 
-#ifdef CONFIG_BT_COEXIST
 	/* Init BT hw config. */
 	if (_TRUE == hal->EEPROMBluetoothCoexist) {
 		rtw_btcoex_HAL_Initialize(adapter, _FALSE);
@@ -312,7 +293,6 @@ u32 rtl8822b_init(PADAPTER adapter)
 		rtw_hal_set_wifi_btc_port_id_cmd(adapter);
 		#endif
 	} else
-#endif /* CONFIG_BT_COEXIST */
 		rtw_btcoex_wifionly_hw_config(adapter);
 
 	rtl8822b_init_misc(adapter);

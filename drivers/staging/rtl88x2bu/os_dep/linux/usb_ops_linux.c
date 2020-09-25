@@ -31,27 +31,15 @@ int usbctrl_vendorreq(struct intf_hdl *pintfhdl, u8 request, u16 value, u16 inde
 
 	unsigned int pipe;
 	int status = 0;
-#ifdef CONFIG_USB_VENDOR_REQ_BUFFER_DYNAMIC_ALLOCATE
-	u32 tmp_buflen = 0;
-#endif
 	u8 reqtype;
 	u8 *pIo_buf;
 	int vendorreq_times = 0;
 
-#if (defined(CONFIG_RTL8822B) || defined(CONFIG_RTL8821C)) || defined(CONFIG_RTL8822C)
 #define REG_ON_SEC 0x00
 #define REG_OFF_SEC 0x01
 #define REG_LOCAL_SEC 0x02
 	u8 current_reg_sec = REG_LOCAL_SEC;
-#endif
 
-#ifdef CONFIG_USB_VENDOR_REQ_BUFFER_DYNAMIC_ALLOCATE
-	u8 *tmp_buf;
-#else /* use stack memory */
-	#ifndef CONFIG_USB_VENDOR_REQ_BUFFER_PREALLOC
-	u8 tmp_buf[MAX_USB_IO_CTL_SIZE];
-	#endif
-#endif
 
 	/* RTW_INFO("%s %s:%d\n",__FUNCTION__, current->comm, current->pid); */
 
@@ -66,27 +54,11 @@ int usbctrl_vendorreq(struct intf_hdl *pintfhdl, u8 request, u16 value, u16 inde
 		goto exit;
 	}
 
-#ifdef CONFIG_USB_VENDOR_REQ_MUTEX
 	_enter_critical_mutex_lock(&pdvobjpriv->usb_vendor_req_mutex, NULL);
-#endif
 
 
 	/* Acquire IO memory for vendorreq */
-#ifdef CONFIG_USB_VENDOR_REQ_BUFFER_PREALLOC
 	pIo_buf = pdvobjpriv->usb_vendor_req_buf;
-#else
-	#ifdef CONFIG_USB_VENDOR_REQ_BUFFER_DYNAMIC_ALLOCATE
-	tmp_buf = rtw_malloc((u32) len + ALIGNMENT_UNIT);
-	tmp_buflen = (u32)len + ALIGNMENT_UNIT;
-	#else /* use stack memory */
-	tmp_buflen = MAX_USB_IO_CTL_SIZE;
-	#endif
-
-	/* Added by Albert 2010/02/09 */
-	/* For mstar platform, mstar suggests the address for USB IO should be 16 bytes alignment. */
-	/* Trying to fix it here. */
-	pIo_buf = (tmp_buf == NULL) ? NULL : tmp_buf + ALIGNMENT_UNIT - ((SIZE_PTR)(tmp_buf) & 0x0f);
-#endif
 
 	if (pIo_buf == NULL) {
 		RTW_INFO("[%s] pIo_buf == NULL\n", __FUNCTION__);
@@ -139,12 +111,10 @@ int usbctrl_vendorreq(struct intf_hdl *pintfhdl, u8 request, u16 value, u16 inde
 				if (status == (-ESHUTDOWN)	|| status == -ENODEV)
 					rtw_set_surprise_removed(padapter);
 				else {
-					#ifdef DBG_CONFIG_ERROR_DETECT
 					{
 						HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(padapter);
 						pHalData->srestpriv.Wifi_Error_Status = USB_VEN_REQ_CMD_FAIL;
 					}
-					#endif
 				}
 			} else { /* status != len && status >= 0 */
 				if (status > 0) {
@@ -168,7 +138,6 @@ int usbctrl_vendorreq(struct intf_hdl *pintfhdl, u8 request, u16 value, u16 inde
 
 	}
 
-#if (defined(CONFIG_RTL8822B) || defined(CONFIG_RTL8821C)) || defined(CONFIG_RTL8822C)
 	if (value < 0xFE00) {
 		if (value <= 0xff)
 			current_reg_sec = REG_ON_SEC;
@@ -198,89 +167,16 @@ int usbctrl_vendorreq(struct intf_hdl *pintfhdl, u8 request, u16 value, u16 inde
 			RTW_INFO("reg 0x%x, usb %s %u fail, status:%d\n", t_reg, "write" , t_len, status);
 
 	}
-#endif
 
 	/* release IO memory used by vendorreq */
-#ifdef CONFIG_USB_VENDOR_REQ_BUFFER_DYNAMIC_ALLOCATE
-	rtw_mfree(tmp_buf, tmp_buflen);
-#endif
 
 release_mutex:
-#ifdef CONFIG_USB_VENDOR_REQ_MUTEX
 	_exit_critical_mutex(&pdvobjpriv->usb_vendor_req_mutex, NULL);
-#endif
 exit:
 	return status;
 
 }
 
-#ifdef CONFIG_USB_SUPPORT_ASYNC_VDN_REQ
-static void _usbctrl_vendorreq_async_callback(struct urb *urb, struct pt_regs *regs)
-{
-	if (urb) {
-		if (urb->context)
-			rtw_mfree(urb->context, sizeof(struct rtw_async_write_data));
-		usb_free_urb(urb);
-	}
-}
-
-int _usbctrl_vendorreq_async_write(struct usb_device *udev, u8 request,
-	u16 value, u16 index, void *pdata, u16 len, u8 requesttype)
-{
-	int rc;
-	unsigned int pipe;
-	u8 reqtype;
-	struct usb_ctrlrequest *dr;
-	struct urb *urb;
-	struct rtw_async_write_data *buf;
-
-
-	if (requesttype == VENDOR_READ) {
-		pipe = usb_rcvctrlpipe(udev, 0);/* read_in */
-		reqtype =  REALTEK_USB_VENQT_READ;
-	} else {
-		pipe = usb_sndctrlpipe(udev, 0);/* write_out */
-		reqtype =  REALTEK_USB_VENQT_WRITE;
-	}
-
-	buf = (struct rtl819x_async_write_data *)rtw_zmalloc(sizeof(*buf));
-	if (!buf) {
-		rc = -ENOMEM;
-		goto exit;
-	}
-
-	urb = usb_alloc_urb(0, GFP_ATOMIC);
-	if (!urb) {
-		rtw_mfree((u8 *)buf, sizeof(*buf));
-		rc = -ENOMEM;
-		goto exit;
-	}
-
-	dr = &buf->dr;
-
-	dr->bRequestType = reqtype;
-	dr->bRequest = request;
-	dr->wValue = cpu_to_le16(value);
-	dr->wIndex = cpu_to_le16(index);
-	dr->wLength = cpu_to_le16(len);
-
-	_rtw_memcpy(buf, pdata, len);
-
-	usb_fill_control_urb(urb, udev, pipe, (unsigned char *)dr, buf, len,
-		_usbctrl_vendorreq_async_callback, buf);
-
-	rc = usb_submit_urb(urb, GFP_ATOMIC);
-	if (rc < 0) {
-		rtw_mfree((u8 *)buf, sizeof(*buf));
-		usb_free_urb(urb);
-	}
-
-exit:
-	return rc;
-}
-
-
-#endif /* CONFIG_USB_SUPPORT_ASYNC_VDN_REQ */
 
 unsigned int ffaddr2pipehdl(struct dvobj_priv *pdvobj, u32 addr)
 {
@@ -293,19 +189,12 @@ unsigned int ffaddr2pipehdl(struct dvobj_priv *pdvobj, u32 addr)
 	else if (addr == RECV_INT_IN_ADDR)
 		pipe = usb_rcvintpipe(pusbd, pdvobj->RtInPipe[1]);
 
-#ifdef RTW_HALMAC
          /* halmac already translate queue id to bulk out id (addr 0~3) */
 		 /* 8814BU bulk out id range is 0~6 */
         else if (addr < MAX_BULKOUT_NUM) {
                 ep_num = pdvobj->RtOutPipe[addr];
                 pipe = usb_sndbulkpipe(pusbd, ep_num);
         }
-#else
-        else if (addr < HW_QUEUE_ENTRY) {
-                ep_num = pdvobj->Queue2Pipe[addr];
-                pipe = usb_sndbulkpipe(pusbd, ep_num);
-        }
-#endif
 
 
 	return pipe;
@@ -540,12 +429,10 @@ static void usb_write_port_complete(struct urb *purb, struct pt_regs *regs)
 		}
 	}
 
-	#ifdef DBG_CONFIG_ERROR_DETECT
 	{
 		HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(padapter);
 		pHalData->srestpriv.last_tx_complete_time = rtw_get_current_time();
 	}
-	#endif
 
 check_completion:
 	_enter_critical(&pxmitpriv->lock_sctx, &irqL);
@@ -578,11 +465,6 @@ u32 usb_write_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *wmem)
 	struct usb_device *pusbd = pdvobj->pusbdev;
 
 	if (RTW_CANNOT_TX(padapter)) {
-#ifdef DBG_TX
-		RTW_INFO(" DBG_TX %s:%d bDriverStopped%s, bSurpriseRemoved:%s\n", __func__, __LINE__
-			 , rtw_is_drv_stopped(padapter) ? "True" : "False"
-			, rtw_is_surprise_removed(padapter) ? "True" : "False");
-#endif
 		rtw_sctx_done_err(&pxmitbuf->sctx, RTW_SCTX_DONE_TX_DENY);
 		goto exit;
 	}
@@ -619,21 +501,8 @@ u32 usb_write_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *wmem)
 	purb	= pxmitbuf->pxmit_urb[0];
 
 	/* translate DMA FIFO addr to pipehandle */
-#ifdef RTW_HALMAC
 	pipe = ffaddr2pipehdl(pdvobj, pxmitbuf->bulkout_id);
-#else
-	pipe = ffaddr2pipehdl(pdvobj, addr);
-#endif
 
-#ifdef CONFIG_REDUCE_USB_TX_INT
-	if ((pxmitpriv->free_xmitbuf_cnt % NR_XMITBUFF == 0)
-	    || (pxmitbuf->buf_tag > XMITBUF_DATA))
-		purb->transfer_flags  &= (~URB_NO_INTERRUPT);
-	else {
-		purb->transfer_flags  |=  URB_NO_INTERRUPT;
-		/* RTW_INFO("URB_NO_INTERRUPT "); */
-	}
-#endif
 
 
 	usb_fill_bulk_urb(purb, pusbd, pipe,
@@ -642,11 +511,6 @@ u32 usb_write_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *wmem)
 			  usb_write_port_complete,
 			  pxmitbuf);/* context is pxmitbuf */
 
-#ifdef CONFIG_USE_USB_BUFFER_ALLOC_TX
-	purb->transfer_dma = pxmitbuf->dma_transfer_addr;
-	purb->transfer_flags |= URB_NO_TRANSFER_DMA_MAP;
-	purb->transfer_flags |= URB_ZERO_PACKET;
-#endif /* CONFIG_USE_USB_BUFFER_ALLOC_TX */
 
 #ifdef USB_PACKET_OFFSET_SZ
 #if (USB_PACKET_OFFSET_SZ == 0)
@@ -661,12 +525,10 @@ u32 usb_write_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *wmem)
 
 	status = usb_submit_urb(purb, GFP_ATOMIC);
 	if (!status) {
-		#ifdef DBG_CONFIG_ERROR_DETECT
 		{
 			HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(padapter);
 			pHalData->srestpriv.last_tx_time = rtw_get_current_time();
 		}
-		#endif
 	} else {
 		rtw_sctx_done_err(&pxmitbuf->sctx, RTW_SCTX_DONE_WRITE_PORT_ERR);
 		RTW_INFO("usb_write_port, status=%d\n", status);
@@ -816,12 +678,10 @@ void usb_read_port_complete(struct urb *purb, struct pt_regs *regs)
 		case -ETIME:
 		case -ECOMM:
 		case -EOVERFLOW:
-			#ifdef DBG_CONFIG_ERROR_DETECT
 			{
 				HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(padapter);
 				pHalData->srestpriv.Wifi_Error_Status = USB_READ_PORT_FAIL;
 			}
-			#endif
 			rtw_read_port(padapter, precvpriv->ff_hwaddr, 0, (unsigned char *)precvbuf);
 			break;
 		case -EINPROGRESS:
@@ -975,12 +835,10 @@ void usb_read_port_complete(struct urb *purb, struct pt_regs *regs)
 		case -ETIME:
 		case -ECOMM:
 		case -EOVERFLOW:
-			#ifdef DBG_CONFIG_ERROR_DETECT
 			{
 				HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(padapter);
 				pHalData->srestpriv.Wifi_Error_Status = USB_READ_PORT_FAIL;
 			}
-			#endif
 			rtw_read_port(padapter, precvpriv->ff_hwaddr, 0, (unsigned char *)precvbuf);
 			break;
 		case -EINPROGRESS:

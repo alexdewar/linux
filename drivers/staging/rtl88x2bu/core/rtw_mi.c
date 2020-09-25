@@ -201,10 +201,6 @@ void rtw_mi_status_by_ifbmp(struct dvobj_priv *dvobj, u8 ifbmp, struct mi_state 
 			if (check_fwstate(&iface->mlmepriv, _FW_LINKED) == _TRUE) {
 				MSTATE_STA_LD_NUM(mstate)++;
 
-				#ifdef CONFIG_TDLS
-				if (iface->tdlsinfo.link_established == _TRUE)
-					MSTATE_TDLS_LD_NUM(mstate)++;
-				#endif
 				#ifdef CONFIG_P2P
 				if (MLME_IS_GC(iface))
 					MSTATE_P2P_GC_NUM(mstate)++;
@@ -213,7 +209,6 @@ void rtw_mi_status_by_ifbmp(struct dvobj_priv *dvobj, u8 ifbmp, struct mi_state 
 			if (check_fwstate(&iface->mlmepriv, _FW_UNDER_LINKING) == _TRUE)
 				MSTATE_STA_LG_NUM(mstate)++;
 
-#ifdef CONFIG_AP_MODE
 		} else if (check_fwstate(&iface->mlmepriv, WIFI_AP_STATE) == _TRUE ) {
 			if (check_fwstate(&iface->mlmepriv, _FW_LINKED) == _TRUE) {
 				MSTATE_AP_NUM(mstate)++;
@@ -225,7 +220,6 @@ void rtw_mi_status_by_ifbmp(struct dvobj_priv *dvobj, u8 ifbmp, struct mi_state 
 				#endif
 			} else
 				MSTATE_AP_STARTING_NUM(mstate)++;
-#endif
 
 		} else if (check_fwstate(&iface->mlmepriv, WIFI_ADHOC_STATE | WIFI_ADHOC_MASTER_STATE) == _TRUE
 			&& check_fwstate(&iface->mlmepriv, _FW_LINKED) == _TRUE
@@ -256,14 +250,12 @@ void rtw_mi_status_by_ifbmp(struct dvobj_priv *dvobj, u8 ifbmp, struct mi_state 
 				MSTATE_SCAN_ENTER_NUM(mstate)++;
 		}
 
-#ifdef CONFIG_IOCTL_CFG80211
 		if (rtw_cfg80211_get_is_mgmt_tx(iface))
 			MSTATE_MGMT_TX_NUM(mstate)++;
 		#ifdef CONFIG_P2P
 		if (rtw_cfg80211_get_is_roch(iface) == _TRUE)
 			MSTATE_ROCH_NUM(mstate)++;
 		#endif
-#endif /* CONFIG_IOCTL_CFG80211 */
 #ifdef CONFIG_P2P
 		if (MLME_IS_PD(iface))
 			MSTATE_P2P_DV_NUM(mstate)++;
@@ -292,13 +284,8 @@ inline void rtw_mi_status_merge(struct mi_state *d, struct mi_state *a)
 	d->sta_num += a->sta_num;
 	d->ld_sta_num += a->ld_sta_num;
 	d->lg_sta_num += a->lg_sta_num;
-#ifdef CONFIG_TDLS
-	d->ld_tdls_num += a->ld_tdls_num;
-#endif
-#ifdef CONFIG_AP_MODE
 	d->ap_num += a->ap_num;
 	d->ld_ap_num += a->ld_ap_num;
-#endif
 	d->adhoc_num += a->adhoc_num;
 	d->ld_adhoc_num += a->ld_adhoc_num;
 #ifdef CONFIG_RTW_MESH
@@ -308,12 +295,10 @@ inline void rtw_mi_status_merge(struct mi_state *d, struct mi_state *a)
 	d->scan_num += a->scan_num;
 	d->scan_enter_num += a->scan_enter_num;
 	d->uwps_num += a->uwps_num;
-#ifdef CONFIG_IOCTL_CFG80211
 	#ifdef CONFIG_P2P
 	d->roch_num += a->roch_num;
 	#endif
 	d->mgmt_tx_num += a->mgmt_tx_num;
-#endif
 }
 
 void dump_mi_status(void *sel, struct dvobj_priv *dvobj)
@@ -322,14 +307,9 @@ void dump_mi_status(void *sel, struct dvobj_priv *dvobj)
 	RTW_PRINT_SEL(sel, "sta_num:%d\n", DEV_STA_NUM(dvobj));
 	RTW_PRINT_SEL(sel, "linking_sta_num:%d\n", DEV_STA_LG_NUM(dvobj));
 	RTW_PRINT_SEL(sel, "linked_sta_num:%d\n", DEV_STA_LD_NUM(dvobj));
-#ifdef CONFIG_TDLS
-	RTW_PRINT_SEL(sel, "linked_tdls_num:%d\n", DEV_TDLS_LD_NUM(dvobj));
-#endif
-#ifdef CONFIG_AP_MODE
 	RTW_PRINT_SEL(sel, "ap_num:%d\n", DEV_AP_NUM(dvobj));
 	RTW_PRINT_SEL(sel, "starting_ap_num:%d\n", DEV_AP_STARTING_NUM(dvobj));
 	RTW_PRINT_SEL(sel, "linked_ap_num:%d\n", DEV_AP_LD_NUM(dvobj));
-#endif
 	RTW_PRINT_SEL(sel, "adhoc_num:%d\n", DEV_ADHOC_NUM(dvobj));
 	RTW_PRINT_SEL(sel, "linked_adhoc_num:%d\n", DEV_ADHOC_LD_NUM(dvobj));
 #ifdef CONFIG_RTW_MESH
@@ -343,12 +323,10 @@ void dump_mi_status(void *sel, struct dvobj_priv *dvobj)
 #endif
 	RTW_PRINT_SEL(sel, "scan_num:%d\n", DEV_SCAN_NUM(dvobj));
 	RTW_PRINT_SEL(sel, "under_wps_num:%d\n", DEV_WPS_NUM(dvobj));
-#if defined(CONFIG_IOCTL_CFG80211)
 	#if defined(CONFIG_P2P)
 	RTW_PRINT_SEL(sel, "roch_num:%d\n", DEV_ROCH_NUM(dvobj));
 	#endif
 	RTW_PRINT_SEL(sel, "mgmt_tx_num:%d\n", DEV_MGMT_TX_NUM(dvobj));
-#endif
 	RTW_PRINT_SEL(sel, "union_ch:%d\n", DEV_U_CH(dvobj));
 	RTW_PRINT_SEL(sel, "union_bw:%d\n", DEV_U_BW(dvobj));
 	RTW_PRINT_SEL(sel, "union_offset:%d\n", DEV_U_OFFSET(dvobj));
@@ -858,24 +836,6 @@ void rtw_mi_buddy_hal_dump_macaddr(_adapter *padapter)
 	_rtw_mi_process(padapter, _TRUE, NULL, _rtw_mi_hal_dump_macaddr);
 }
 
-#ifdef CONFIG_PCI_HCI
-static u8 _rtw_mi_xmit_tasklet_schedule(_adapter *padapter, void *data)
-{
-	if (rtw_txframes_pending(padapter)) {
-		/* try to deal with the pending packets */
-		tasklet_hi_schedule(&(padapter->xmitpriv.xmit_tasklet));
-	}
-	return _TRUE;
-}
-void rtw_mi_xmit_tasklet_schedule(_adapter *padapter)
-{
-	_rtw_mi_process(padapter, _FALSE, NULL, _rtw_mi_xmit_tasklet_schedule);
-}
-void rtw_mi_buddy_xmit_tasklet_schedule(_adapter *padapter)
-{
-	_rtw_mi_process(padapter, _TRUE, NULL, _rtw_mi_xmit_tasklet_schedule);
-}
-#endif
 
 u8 _rtw_mi_busy_traffic_check(_adapter *padapter, void *data)
 {
@@ -1027,52 +987,7 @@ u8 rtw_mi_check_miracast_enabled(_adapter *padapter)
 	return _rtw_mi_process(padapter, _FALSE, NULL, _rtw_mi_check_miracast_enabled);
 }
 
-#ifdef CONFIG_XMIT_THREAD_MODE
-static u8 _rtw_mi_check_pending_xmitbuf(_adapter *padapter , void *data)
-{
-	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
 
-	return check_pending_xmitbuf(pxmitpriv);
-}
-u8 rtw_mi_check_pending_xmitbuf(_adapter *padapter)
-{
-	return _rtw_mi_process(padapter, _FALSE, NULL, _rtw_mi_check_pending_xmitbuf);
-}
-u8 rtw_mi_buddy_check_pending_xmitbuf(_adapter *padapter)
-{
-	return _rtw_mi_process(padapter, _TRUE, NULL, _rtw_mi_check_pending_xmitbuf);
-}
-#endif
-
-#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
-static u8 _rtw_mi_dequeue_writeport(_adapter *padapter , bool exclude_self)
-{
-	int i;
-	u8	queue_empty = _TRUE;
-	_adapter *iface;
-	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
-
-	for (i = 0; i < dvobj->iface_nums; i++) {
-		iface = dvobj->padapters[i];
-		if ((iface) && rtw_is_adapter_up(iface)) {
-
-			if ((exclude_self) && (iface == padapter))
-				continue;
-
-			queue_empty &= _dequeue_writeport(iface);
-		}
-	}
-	return queue_empty;
-}
-u8 rtw_mi_dequeue_writeport(_adapter *padapter)
-{
-	return _rtw_mi_dequeue_writeport(padapter, _FALSE);
-}
-u8 rtw_mi_buddy_dequeue_writeport(_adapter *padapter)
-{
-	return _rtw_mi_dequeue_writeport(padapter, _TRUE);
-}
-#endif
 static void _rtw_mi_adapter_reset(_adapter *padapter , u8 exclude_self)
 {
 	int i;
@@ -1172,27 +1087,6 @@ u8 rtw_mi_sreset_adapter_hdl(_adapter *padapter, u8 bstart)
 	return _rtw_mi_process(padapter, _FALSE, &in_data, _rtw_mi_sreset_adapter_hdl);
 }
 
-#if defined(DBG_CONFIG_ERROR_RESET) && defined(CONFIG_CONCURRENT_MODE)
-void rtw_mi_ap_info_restore(_adapter *adapter)
-{
-	int i;
-	_adapter *iface;
-	struct mlme_priv *pmlmepriv;
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-
-	for (i = 0; i < dvobj->iface_nums; i++) {
-		iface = dvobj->padapters[i];
-		if (iface) {
-			pmlmepriv = &iface->mlmepriv;
-
-			if (MLME_IS_AP(iface) || MLME_IS_MESH(iface)) {
-				RTW_INFO(FUNC_ADPT_FMT" %s\n", FUNC_ADPT_ARG(iface), MLME_IS_AP(iface) ? "AP" : "MESH");
-				rtw_iface_bcmc_sec_cam_map_restore(iface);
-			}
-		}
-	}
-}
-#endif /*#if defined(DBG_CONFIG_ERROR_RESET) && defined(CONFIG_CONCURRENT_MODE)*/
 
 u8 rtw_mi_buddy_sreset_adapter_hdl(_adapter *padapter, u8 bstart)
 {
@@ -1206,11 +1100,7 @@ static u8 _rtw_mi_tx_beacon_hdl(_adapter *adapter, void *data)
 		&& check_fwstate(&adapter->mlmepriv, WIFI_ASOC_STATE) == _TRUE
 	) {
 		adapter->mlmepriv.update_bcn = _TRUE;
-#ifndef CONFIG_INTERRUPT_BASED_TXBCN
-#if defined(CONFIG_USB_HCI) || defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI) || defined(CONFIG_PCI_BCN_POLLING)
 		tx_beacon_hdl(adapter, NULL);
-#endif
-#endif
 	}
 	return _TRUE;
 }
@@ -1462,27 +1352,6 @@ void rtw_mi_buddy_clone_bcmc_packet(_adapter *padapter, union recv_frame *precvf
 
 }
 
-#ifdef CONFIG_PCI_HCI
-/*API be created temporary for MI, caller is interrupt-handler, PCIE's interrupt handler cannot apply to multi-AP*/
-_adapter *rtw_mi_get_ap_adapter(_adapter *padapter)
-{
-	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
-	int i;
-	_adapter *iface = NULL;
-
-	for (i = 0; i < dvobj->iface_nums; i++) {
-		iface = dvobj->padapters[i];
-		if (!iface)
-			continue;
-
-		if (check_fwstate(&iface->mlmepriv, WIFI_AP_STATE) == _TRUE
-		    && check_fwstate(&iface->mlmepriv, WIFI_ASOC_STATE) == _TRUE)
-			break;
-
-	}
-	return iface;
-}
-#endif
 
 u8 rtw_mi_get_ld_sta_ifbmp(_adapter *adapter)
 {

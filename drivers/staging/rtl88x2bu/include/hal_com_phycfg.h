@@ -288,9 +288,7 @@ void phy_reload_default_tx_power_ext_info(_adapter *adapter);
 
 const struct map_t *hal_pg_txpwr_def_info(_adapter *adapter);
 
-#ifdef CONFIG_EFUSE_CONFIG_FILE
 int check_phy_efuse_tx_power_info_valid(_adapter *adapter);
-#endif
 
 #ifdef CONFIG_TXPWR_PG_WITH_PWR_IDX
 void dump_hal_txpwr_info_2g(void *sel, _adapter *adapter, u8 rfpath_num, u8 max_tx_cnt);
@@ -305,7 +303,6 @@ void dump_tx_power_by_rate(void *sel, _adapter *adapter);
 
 int rtw_get_phy_file_path(_adapter *adapter, const char *file_name);
 
-#ifdef CONFIG_LOAD_PHY_PARA_FROM_FILE
 #define MAC_FILE_FW_NIC			"FW_NIC.bin"
 #define MAC_FILE_FW_WW_IMG		"FW_WoWLAN.bin"
 #define PHY_FILE_MAC_REG		"MAC_REG.txt"
@@ -345,6 +342,5 @@ int PHY_ConfigRFWithPowerLimitTableParaFile(PADAPTER	Adapter, const char *pFileN
 #endif
 void phy_free_filebuf_mask(_adapter *padapter, u8 mask);
 void phy_free_filebuf(_adapter *padapter);
-#endif /* CONFIG_LOAD_PHY_PARA_FROM_FILE */
 u8 phy_check_under_survey_ch(_adapter *adapter);
 #endif /* __HAL_COMMON_H__ */

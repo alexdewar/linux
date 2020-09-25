@@ -17,7 +17,6 @@
 #include <drv_types.h>
 #include <hal_data.h>
 
-#ifdef CONFIG_BEAMFORMING
 
 #ifdef RTW_BEAMFORMING_VERSION_2
 
@@ -95,9 +94,7 @@ static void _get_sta_beamform_cap(PADAPTER adapter, struct sta_info *sta,
 {
 	struct beamforming_info *info;
 	struct ht_priv *ht;
-#ifdef CONFIG_80211AC_VHT
 	struct vht_priv *vht;
-#endif /* CONFIG_80211AC_VHT */
 	u16 bf_cap;
 
 
@@ -107,9 +104,7 @@ static void _get_sta_beamform_cap(PADAPTER adapter, struct sta_info *sta,
 
 	info = GET_BEAMFORM_INFO(adapter);
 	ht = &adapter->mlmepriv.htpriv;
-#ifdef CONFIG_80211AC_VHT
 	vht = &adapter->mlmepriv.vhtpriv;
-#endif /* CONFIG_80211AC_VHT */
 
 	if (is_supported_ht(sta->wireless_mode) == _TRUE) {
 		/* HT */
@@ -127,7 +122,6 @@ static void _get_sta_beamform_cap(PADAPTER adapter, struct sta_info *sta,
 		}
 	}
 
-#ifdef CONFIG_80211AC_VHT
 	if (is_supported_vht(sta->wireless_mode) == _TRUE) {
 		/* VHT */
 		bf_cap = vht->beamform_cap;
@@ -159,7 +153,6 @@ static void _get_sta_beamform_cap(PADAPTER adapter, struct sta_info *sta,
 			*comp_steering = (bf_cap & BEAMFORMING_VHT_BEAMFORMER_STS_CAP) >> 8;
 		}
 	}
-#endif /* CONFIG_80211AC_VHT */
 }
 
 static u8 _send_ht_ndpa_packet(PADAPTER adapter, u8 *ra, enum channel_width bw)
@@ -1357,9 +1350,7 @@ static void _beamforming_enter(PADAPTER adapter, void *p)
 {
 	struct mlme_priv *mlme;
 	struct ht_priv *htpriv;
-#ifdef CONFIG_80211AC_VHT
 	struct vht_priv *vhtpriv;
-#endif
 	struct mlme_ext_priv *mlme_ext;
 	struct sta_info *sta, *sta_copy;
 	struct beamforming_info *info;
@@ -1373,9 +1364,7 @@ static void _beamforming_enter(PADAPTER adapter, void *p)
 
 	mlme = &adapter->mlmepriv;
 	htpriv = &mlme->htpriv;
-#ifdef CONFIG_80211AC_VHT
 	vhtpriv = &mlme->vhtpriv;
-#endif
 	mlme_ext = &adapter->mlmeextpriv;
 	info = GET_BEAMFORM_INFO(adapter);
 
@@ -1400,9 +1389,7 @@ static void _beamforming_enter(PADAPTER adapter, void *p)
 	}
 
 	if ((0 == htpriv->beamform_cap)
-#ifdef CONFIG_80211AC_VHT
 	    && (0 == vhtpriv->beamform_cap)
-#endif
 	   ) {
 		RTW_INFO("The configuration disabled Beamforming! Skip...\n");
 		return;
@@ -2118,4 +2105,3 @@ void update_attrib_txbf_info(_adapter *padapter, struct pkt_attrib *pattrib, str
 }
 #endif /* !RTW_BEAMFORMING_VERSION_2 */
 
-#endif /* CONFIG_BEAMFORMING */

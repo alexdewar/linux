@@ -15,7 +15,6 @@
 
 #include <drv_types.h>
 #include <hal_data.h>
-#ifdef CONFIG_RTW_SW_LED
 
 /*
  *	Description:
@@ -1842,11 +1841,7 @@ void BlinkTimerCallback(void *data)
 		return;
 	}
 
-#ifdef CONFIG_RTW_LED_HANDLED_BY_CMD_THREAD
-	rtw_led_blink_cmd(padapter, (void *)pLed);
-#else
 	_set_workitem(&(pLed->BlinkWorkItem));
-#endif
 }
 
 /*
@@ -4126,10 +4121,8 @@ LedControlUSB(
 {
 	struct led_priv	*ledpriv = adapter_to_led(padapter);
 
-#if (MP_DRIVER == 1)
 	if (padapter->registrypriv.mp_mode == 1)
 		return;
-#endif
 
 	if (RTW_CANNOT_RUN(padapter) || (!rtw_is_hw_init_completed(padapter))) {
 		/*RTW_INFO("%s bDriverStopped:%s, bSurpriseRemoved:%s\n"
@@ -4287,4 +4280,3 @@ DeInitLed(
 	_cancel_timer_ex(&(pLed->BlinkTimer));
 	ResetLedStatus(pLed);
 }
-#endif

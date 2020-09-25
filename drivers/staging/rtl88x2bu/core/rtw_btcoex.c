@@ -14,7 +14,6 @@
  *****************************************************************************/
 #include <drv_types.h>
 #include <hal_data.h>
-#ifdef CONFIG_BT_COEXIST
 #include <hal_btcoex.h>
 
 void rtw_btcoex_Initialize(PADAPTER padapter)
@@ -108,13 +107,6 @@ static void _rtw_btcoex_connect_notify(PADAPTER padapter, u8 action)
 	if (_FALSE == pHalData->EEPROMBluetoothCoexist)
 		return;
 
-#ifdef DBG_CONFIG_ERROR_RESET
-	if (_TRUE == rtw_hal_sreset_inprogress(padapter)) {
-		RTW_INFO(FUNC_ADPT_FMT ": [BTCoex] under reset, skip notify!\n",
-			 FUNC_ADPT_ARG(padapter));
-		return;
-	}
-#endif /* DBG_CONFIG_ERROR_RESET */
 
 #ifdef CONFIG_CONCURRENT_MODE
 	if (_FALSE == action) {
@@ -134,13 +126,6 @@ void rtw_btcoex_MediaStatusNotify(PADAPTER padapter, u8 mediaStatus)
 	if (_FALSE == pHalData->EEPROMBluetoothCoexist)
 		return;
 
-#ifdef DBG_CONFIG_ERROR_RESET
-	if (_TRUE == rtw_hal_sreset_inprogress(padapter)) {
-		RTW_INFO(FUNC_ADPT_FMT ": [BTCoex] under reset, skip notify!\n",
-			 FUNC_ADPT_ARG(padapter));
-		return;
-	}
-#endif /* DBG_CONFIG_ERROR_RESET */
 
 #ifdef CONFIG_CONCURRENT_MODE
 	if (RT_MEDIA_DISCONNECT == mediaStatus) {
@@ -515,13 +500,6 @@ u8 rtw_btcoex_get_pg_rfe_type(PADAPTER padapter)
 
 u8 rtw_btcoex_is_tfbga_package_type(PADAPTER padapter)
 {
-#ifdef CONFIG_RTL8723B
-	HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(padapter);
-
-	if ((pHalData->PackageType == PACKAGE_TFBGA79) || (pHalData->PackageType == PACKAGE_TFBGA80)
-	    || (pHalData->PackageType == PACKAGE_TFBGA90))
-		return _TRUE;
-#endif
 
 	return _FALSE;
 }
@@ -1752,11 +1730,9 @@ void rtw_btcoex_SendScanNotify(PADAPTER padapter, u8 scanType)
 	rtw_btcoex_sendmsgbysocket(padapter, (u8 *)pEvent, tx_event_length, _FALSE);
 }
 #endif /* CONFIG_BT_COEXIST_SOCKET_TRX */
-#endif /* CONFIG_BT_COEXIST */
 
 void rtw_btcoex_set_ant_info(PADAPTER padapter)
 {
-#ifdef CONFIG_BT_COEXIST
 	PHAL_DATA_TYPE hal = GET_HAL_DATA(padapter);
 
 	if (hal->EEPROMBluetoothCoexist == _TRUE) {
@@ -1768,13 +1744,11 @@ void rtw_btcoex_set_ant_info(PADAPTER padapter)
 			rtw_btcoex_PowerOnSetting(padapter);
 	}
 	else
-#endif
 		rtw_btcoex_wifionly_AntInfoSetting(padapter);
 }
 
 void rtw_btcoex_connect_notify(PADAPTER padapter, u8 join_type)
 {
-#ifdef CONFIG_BT_COEXIST
 	PHAL_DATA_TYPE	pHalData;
 
 	pHalData = GET_HAL_DATA(padapter);
@@ -1782,7 +1756,6 @@ void rtw_btcoex_connect_notify(PADAPTER padapter, u8 join_type)
 	if (pHalData->EEPROMBluetoothCoexist == _TRUE)
 		_rtw_btcoex_connect_notify(padapter, join_type ? _FALSE : _TRUE);
 	else
-#endif /* CONFIG_BT_COEXIST */
 	rtw_btcoex_wifionly_connect_notify(padapter);
 }
 

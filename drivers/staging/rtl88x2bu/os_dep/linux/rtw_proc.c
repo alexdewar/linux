@@ -19,7 +19,6 @@
 #include "rtw_proc.h"
 #include <rtw_btcoex.h>
 
-#ifdef CONFIG_PROC_DEBUG
 
 static struct proc_dir_entry *rtw_proc = NULL;
 
@@ -90,7 +89,6 @@ static ssize_t proc_set_log_level(struct file *file, const char __user *buffer, 
 		return -EFAULT;
 	}
 
-#ifdef CONFIG_RTW_DEBUG
 	if (buffer && !copy_from_user(tmp, buffer, count)) {
 
 		int num = sscanf(tmp, "%d ", &log_level);
@@ -102,20 +100,10 @@ static ssize_t proc_set_log_level(struct file *file, const char __user *buffer, 
 		}
 	} else
 		return -EFAULT;
-#else
-	printk("CONFIG_RTW_DEBUG is disabled\n");
-#endif
 
 	return count;
 }
 
-#ifdef DBG_MEM_ALLOC
-static int proc_get_mstat(struct seq_file *m, void *v)
-{
-	rtw_mstat_dump(m);
-	return 0;
-}
-#endif /* DBG_MEM_ALLOC */
 
 static int proc_get_country_chplan_map(struct seq_file *m, void *v)
 {
@@ -141,7 +129,6 @@ static int proc_get_chplan_ver(struct seq_file *m, void *v)
 	return 0;
 }
 
-#ifdef RTW_HALMAC
 extern void rtw_halmac_get_version(char *str, u32 len);
 
 static int proc_get_halmac_info(struct seq_file *m, void *v)
@@ -154,7 +141,6 @@ static int proc_get_halmac_info(struct seq_file *m, void *v)
 
 	return 0;
 }
-#endif
 
 /*
 * rtw_drv_proc:
@@ -164,16 +150,11 @@ const struct rtw_proc_hdl drv_proc_hdls[] = {
 	RTW_PROC_HDL_SSEQ("ver_info", proc_get_drv_version, NULL),
 	RTW_PROC_HDL_SSEQ("log_level", proc_get_log_level, proc_set_log_level),
 	RTW_PROC_HDL_SSEQ("drv_cfg", proc_get_drv_cfg, NULL),
-#ifdef DBG_MEM_ALLOC
-	RTW_PROC_HDL_SSEQ("mstat", proc_get_mstat, NULL),
-#endif /* DBG_MEM_ALLOC */
 	RTW_PROC_HDL_SSEQ("country_chplan_map", proc_get_country_chplan_map, NULL),
 	RTW_PROC_HDL_SSEQ("chplan_id_list", proc_get_chplan_id_list, NULL),
 	RTW_PROC_HDL_SSEQ("chplan_test", proc_get_chplan_test, NULL),
 	RTW_PROC_HDL_SSEQ("chplan_ver", proc_get_chplan_ver, NULL),
-#ifdef RTW_HALMAC
 	RTW_PROC_HDL_SSEQ("halmac_info", proc_get_halmac_info, NULL),
-#endif /* RTW_HALMAC */
 };
 
 const int drv_proc_hdls_num = sizeof(drv_proc_hdls) / sizeof(struct rtw_proc_hdl);
@@ -348,162 +329,6 @@ struct seq_operations seq_file_test = {
 };
 #endif /* RTW_SEQ_FILE_TEST */
 
-#ifdef CONFIG_SDIO_HCI
-static int proc_get_sd_f0_reg_dump(struct seq_file *m, void *v)
-{
-	struct net_device *dev = m->private;
-	_adapter *adapter = (_adapter *)rtw_netdev_priv(dev);
-
-	sd_f0_reg_dump(m, adapter);
-
-	return 0;
-}
-
-static int proc_get_sdio_local_reg_dump(struct seq_file *m, void *v)
-{
-	struct net_device *dev = m->private;
-	_adapter *adapter = (_adapter *)rtw_netdev_priv(dev);
-
-	sdio_local_reg_dump(m, adapter);
-
-	return 0;
-}
-static int proc_get_sdio_card_info(struct seq_file *m, void *v)
-{
-	struct net_device *dev = m->private;
-	_adapter *adapter = (_adapter *)rtw_netdev_priv(dev);
-
-	dump_sdio_card_info(m, adapter_to_dvobj(adapter));
-
-	return 0;
-}
-
-#ifdef DBG_SDIO
-static int proc_get_sdio_dbg(struct seq_file *m, void *v)
-{
-	struct net_device *dev;
-	struct _ADAPTER *a;
-	struct dvobj_priv *d;
-	struct sdio_data *sdio;
-
-
-	dev = m->private;
-	a = (struct _ADAPTER *)rtw_netdev_priv(dev);
-	d = adapter_to_dvobj(a);
-	sdio = &d->intf_data;
-
-	dump_sdio_card_info(m, d);
-
-	RTW_PRINT_SEL(m, "CMD52 error cnt: %d\n", sdio->cmd52_err_cnt);
-	RTW_PRINT_SEL(m, "CMD53 error cnt: %d\n", sdio->cmd53_err_cnt);
-
-#if (DBG_SDIO >= 3)
-	RTW_PRINT_SEL(m, "dbg: %s\n", sdio->dbg_enable?"enable":"disable");
-	RTW_PRINT_SEL(m, "err_stop: %s\n", sdio->err_stop?"enable":"disable");
-	RTW_PRINT_SEL(m, "err_test: %s\n", sdio->err_test?"enable":"disable");
-	RTW_PRINT_SEL(m, "err_test_triggered: %s\n",
-		      sdio->err_test_triggered?"yes":"no");
-#endif /* DBG_SDIO >= 3 */
-
-#if (DBG_SDIO >= 2)
-	RTW_PRINT_SEL(m, "I/O error dump mark: %d\n", sdio->reg_dump_mark);
-	if (sdio->reg_dump_mark) {
-		if (sdio->dbg_msg)
-			RTW_PRINT_SEL(m, "debug messages: %s\n", sdio->dbg_msg);
-		if (sdio->reg_mac)
-			RTW_BUF_DUMP_SEL(_DRV_ALWAYS_, m, "MAC register:",
-					 _TRUE, sdio->reg_mac, 0x800);
-		if (sdio->reg_mac_ext)
-			RTW_BUF_DUMP_SEL(_DRV_ALWAYS_, m, "MAC EXT register:",
-					 _TRUE, sdio->reg_mac_ext, 0x800);
-		if (sdio->reg_local)
-			RTW_BUF_DUMP_SEL(_DRV_ALWAYS_, m, "SDIO Local register:",
-					 _TRUE, sdio->reg_local, 0x100);
-		if (sdio->reg_cia)
-			RTW_BUF_DUMP_SEL(_DRV_ALWAYS_, m, "SDIO CIA register:",
-					 _TRUE, sdio->reg_cia, 0x200);
-	}
-#endif /* DBG_SDIO >= 2 */
-
-	return 0;
-}
-
-#if (DBG_SDIO >= 2)
-#define strnicmp	strncasecmp
-void rtw_sdio_dbg_reg_free(struct dvobj_priv *d);
-#endif /* DBG_SDIO >= 2 */
-
-ssize_t proc_set_sdio_dbg(struct file *file, const char __user *buffer,
-			  size_t count, loff_t *pos, void *data)
-{
-#if (DBG_SDIO >= 2)
-	struct net_device *dev = data;
-	struct dvobj_priv *d;
-	struct _ADAPTER *a;
-	struct sdio_data *sdio;
-	char tmp[32], cmd[32] = {0};
-	int num;
-
-
-	if (count < 1)
-		return -EFAULT;
-
-	if (count > sizeof(tmp)) {
-		rtw_warn_on(1);
-		return -EFAULT;
-	}
-
-	a = (struct _ADAPTER *)rtw_netdev_priv(dev);
-	d = adapter_to_dvobj(a);
-	sdio = &d->intf_data;
-
-	if (buffer && !copy_from_user(tmp, buffer, count)) {
-		num = sscanf(tmp, "%s", cmd);
-
-		if (num >= 1) {
-			if (strnicmp(cmd, "reg_reset", 10) == 0) {
-				sdio->reg_dump_mark = 0;
-				goto exit;
-			}
-			if (strnicmp(cmd, "reg_free", 9) == 0) {
-				rtw_sdio_dbg_reg_free(d);
-				sdio->reg_dump_mark = 0;
-				goto exit;
-			}
-#if (DBG_SDIO >= 3)
-			if (strnicmp(cmd, "dbg_enable", 11) == 0) {
-				sdio->dbg_enable = 1;
-				goto exit;
-			}
-			if (strnicmp(cmd, "dbg_disable", 12) == 0) {
-				sdio->dbg_enable = 0;
-				goto exit;
-			}
-			if (strnicmp(cmd, "err_stop", 9) == 0) {
-				sdio->err_stop = 1;
-				goto exit;
-			}
-			if (strnicmp(cmd, "err_stop_disable", 16) == 0) {
-				sdio->err_stop = 0;
-				goto exit;
-			}
-			if (strnicmp(cmd, "err_test", 9) == 0) {
-				sdio->err_test_triggered = 0;
-				sdio->err_test = 1;
-				goto exit;
-			}
-#endif /* DBG_SDIO >= 3 */
-		}
-
-		return -EINVAL;
-	}
-
-exit:
-#endif /* DBG_SDIO >= 2 */
-	return count;
-}
-#endif /* DBG_SDIO */
-#endif /* CONFIG_SDIO_HCI */
 
 static int proc_get_fw_info(struct seq_file *m, void *v)
 {
@@ -553,7 +378,6 @@ static int proc_get_rf_reg_dump(struct seq_file *m, void *v)
 	return 0;
 }
 
-#ifdef CONFIG_RTW_LED
 int proc_get_led_config(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -593,9 +417,7 @@ ssize_t proc_set_led_config(struct file *file, const char __user *buffer, size_t
 
 	return count;
 }
-#endif /* CONFIG_RTW_LED */
 
-#ifdef CONFIG_AP_MODE
 int proc_get_aid_status(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -673,7 +495,6 @@ ssize_t proc_set_ap_isolate(struct file *file, const char __user *buffer, size_t
 
 	return count;
 }
-#endif /* CONFIG_AP_MODE */
 
 static int proc_get_dump_tx_rate_bmp(struct seq_file *m, void *v)
 {
@@ -757,7 +578,6 @@ static ssize_t proc_set_backop_flags_sta(struct file *file, const char __user *b
 	return count;
 }
 
-#ifdef CONFIG_AP_MODE
 static int proc_get_backop_flags_ap(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -796,7 +616,6 @@ static ssize_t proc_set_backop_flags_ap(struct file *file, const char __user *bu
 
 	return count;
 }
-#endif /* CONFIG_AP_MODE */
 
 #ifdef CONFIG_RTW_MESH
 static int proc_get_backop_flags_mesh(struct seq_file *m, void *v)
@@ -841,18 +660,6 @@ static ssize_t proc_set_backop_flags_mesh(struct file *file, const char __user *
 
 #endif /* CONFIG_SCAN_BACKOP */
 
-#if defined(CONFIG_LPS_PG) && defined(CONFIG_RTL8822C)
-static int proc_get_lps_pg_debug(struct seq_file *m, void *v)
-{
-	struct net_device *dev = m->private;
-	_adapter *adapter = rtw_netdev_priv(dev);
-	struct dm_struct *dm = adapter_to_phydm(adapter);
-
-	rtw_run_in_thread_cmd(adapter, ((void *)(odm_lps_pg_debug_8822c)), dm);
-
-	return 0;
-}
-#endif
 
 /* gpio setting */
 #ifdef CONFIG_GPIO_API
@@ -1821,7 +1628,6 @@ exit:
 #endif /* CONFIG_DFS_SLAVE_WITH_RADAR_DETECT */
 #endif /* CONFIG_DFS_MASTER */
 
-#ifdef CONFIG_80211N_HT
 int proc_get_rx_ampdu_size_limit(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -1868,7 +1674,6 @@ ssize_t proc_set_rx_ampdu_size_limit(struct file *file, const char __user *buffe
 exit:
 	return count;
 }
-#endif /* CONFIG_80211N_HT */
 
 static int proc_get_rx_chk_limit(struct seq_file *m, void *v)
 {
@@ -2435,9 +2240,7 @@ static ssize_t proc_set_tx_power_ext_info(struct file *file, const char __user *
 		if (num < 1)
 			return count;
 
-		#ifdef CONFIG_LOAD_PHY_PARA_FROM_FILE
 		phy_free_filebuf_mask(adapter, LOAD_BB_PG_PARA_FILE | LOAD_RF_TXPWR_LMT_PARA_FILE);
-		#endif
 
 		rtw_ps_deny(adapter, PS_DENY_IOCTL);
 		if (rtw_pwr_wakeup(adapter) == _FALSE)
@@ -2832,7 +2635,6 @@ static ssize_t proc_set_tx_gain_offset(struct file *file, const char __user *buf
 }
 #endif /* CONFIG_RF_POWER_TRIM */
 
-#ifdef CONFIG_BT_COEXIST
 ssize_t proc_set_btinfo_evt(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data)
 {
 	struct net_device *dev = data;
@@ -3173,7 +2975,6 @@ ssize_t proc_set_btc_reduce_wl_txpwr(struct file *file, const char __user *buffe
 	return count;
 }
 
-#endif /* CONFIG_BT_COEXIST */
 
 #ifdef CONFIG_MBSSID_CAM
 int proc_get_mbid_cam_cache(struct seq_file *m, void *v)
@@ -3377,10 +3178,8 @@ static int proc_get_phy_cap(struct seq_file *m, void *v)
 	_adapter *adapter = (_adapter *)rtw_netdev_priv(dev);
 
 	rtw_dump_phy_cap(m, adapter);
-#ifdef CONFIG_80211N_HT
 	rtw_dump_drv_phy_cap(m, adapter);
 	rtw_get_dft_phy_cap(m, adapter);
-#endif /* CONFIG_80211N_HT */
 	return 0;
 }
 
@@ -3499,17 +3298,13 @@ static int proc_get_napi_info(struct seq_file *m, void *v)
 	d = adapter_to_dvobj(adapter);
 
 
-#ifdef CONFIG_RTW_NAPI
 	if (pregistrypriv->en_napi) {
 		napi = 1;
 		weight = RTL_NAPI_WEIGHT;
 	}
 
-#ifdef CONFIG_RTW_GRO
 	if (pregistrypriv->en_gro)
 		gro = 1;
-#endif /* CONFIG_RTW_GRO */
-#endif /* CONFIG_RTW_NAPI */
 
 	if (napi) {
 		RTW_PRINT_SEL(m, "NAPI enable, weight=%d\n", weight);
@@ -4137,9 +3932,7 @@ static void tpt_mode_default(struct _ADAPTER *adapter)
 	dvobj->scan_deny = _FALSE;
 
 	/* 2. back to original LPS mode */
-#ifdef CONFIG_LPS
 	rtw_pm_set_lps(adapter, adapter->registrypriv.power_mgnt);
-#endif
 
 	/* 3. back to original 2.4 tx bw mode */
 	rtw_set_tx_bw_mode(adapter, adapter->registrypriv.tx_bw_mode);
@@ -4157,9 +3950,7 @@ static void rtw_tpt_mode(struct _ADAPTER *adapter)
 
 		dvobj->scan_deny = _TRUE;
 
-#ifdef CONFIG_LPS
 		rtw_pm_set_lps(adapter, PS_MODE_ACTIVE);
-#endif
 
 	}
 
@@ -4327,15 +4118,10 @@ const struct rtw_proc_hdl adapter_proc_hdls[] = {
 	RTW_PROC_HDL_SSEQ("scan_abort", proc_get_scan_abort, NULL),
 #ifdef CONFIG_SCAN_BACKOP
 	RTW_PROC_HDL_SSEQ("backop_flags_sta", proc_get_backop_flags_sta, proc_set_backop_flags_sta),
-	#ifdef CONFIG_AP_MODE
 	RTW_PROC_HDL_SSEQ("backop_flags_ap", proc_get_backop_flags_ap, proc_set_backop_flags_ap),
-	#endif
 	#ifdef CONFIG_RTW_MESH
 	RTW_PROC_HDL_SSEQ("backop_flags_mesh", proc_get_backop_flags_mesh, proc_set_backop_flags_mesh),
 	#endif
-#endif
-#ifdef CONFIG_RTW_REPEATER_SON
-	RTW_PROC_HDL_SSEQ("rson_data", proc_get_rson_data, proc_set_rson_data),
 #endif
 	RTW_PROC_HDL_SSEQ("survey_info", proc_get_survey_info, proc_set_survey_info),
 	RTW_PROC_HDL_SSEQ("ap_info", proc_get_ap_info, NULL),
@@ -4353,52 +4139,33 @@ const struct rtw_proc_hdl adapter_proc_hdls[] = {
 	RTW_PROC_HDL_SSEQ("sec_cam_cache", proc_get_sec_cam_cache, NULL),
 	RTW_PROC_HDL_SSEQ("ps_dbg_info", proc_get_ps_dbg_info, proc_set_ps_dbg_info),
 	RTW_PROC_HDL_SSEQ("wifi_spec", proc_get_wifi_spec, NULL),
-#ifdef CONFIG_LAYER2_ROAMING
 	RTW_PROC_HDL_SSEQ("roam_flags", proc_get_roam_flags, proc_set_roam_flags),
 	RTW_PROC_HDL_SSEQ("roam_param", proc_get_roam_param, proc_set_roam_param),
 	RTW_PROC_HDL_SSEQ("roam_tgt_addr", NULL, proc_set_roam_tgt_addr),
-#endif /* CONFIG_LAYER2_ROAMING */
 
 #ifdef CONFIG_RTW_80211R
 	RTW_PROC_HDL_SSEQ("ft_flags", proc_get_ft_flags, proc_set_ft_flags),
 #endif
 
-#ifdef CONFIG_SDIO_HCI
-	RTW_PROC_HDL_SSEQ("sd_f0_reg_dump", proc_get_sd_f0_reg_dump, NULL),
-	RTW_PROC_HDL_SSEQ("sdio_local_reg_dump", proc_get_sdio_local_reg_dump, NULL),
-	RTW_PROC_HDL_SSEQ("sdio_card_info", proc_get_sdio_card_info, NULL),
-#ifdef DBG_SDIO
-	RTW_PROC_HDL_SSEQ("sdio_dbg", proc_get_sdio_dbg, proc_set_sdio_dbg),
-#endif /* DBG_SDIO */
-#endif /* CONFIG_SDIO_HCI */
 
 	RTW_PROC_HDL_SSEQ("fwdl_test_case", NULL, proc_set_fwdl_test_case),
 	RTW_PROC_HDL_SSEQ("del_rx_ampdu_test_case", NULL, proc_set_del_rx_ampdu_test_case),
 	RTW_PROC_HDL_SSEQ("wait_hiq_empty", NULL, proc_set_wait_hiq_empty),
 	RTW_PROC_HDL_SSEQ("sta_linking_test", NULL, proc_set_sta_linking_test),
-#ifdef CONFIG_AP_MODE
 	RTW_PROC_HDL_SSEQ("ap_linking_test", NULL, proc_set_ap_linking_test),
-#endif
 
 	RTW_PROC_HDL_SSEQ("mac_reg_dump", proc_get_mac_reg_dump, NULL),
 	RTW_PROC_HDL_SSEQ("bb_reg_dump", proc_get_bb_reg_dump, NULL),
 	RTW_PROC_HDL_SSEQ("bb_reg_dump_ex", proc_get_bb_reg_dump_ex, NULL),
 	RTW_PROC_HDL_SSEQ("rf_reg_dump", proc_get_rf_reg_dump, NULL),
 
-#ifdef CONFIG_RTW_LED
 	RTW_PROC_HDL_SSEQ("led_config", proc_get_led_config, proc_set_led_config),
-#endif
 
-#ifdef CONFIG_AP_MODE
 	RTW_PROC_HDL_SSEQ("aid_status", proc_get_aid_status, proc_set_aid_status),
 	RTW_PROC_HDL_SSEQ("ap_isolate", proc_get_ap_isolate, proc_set_ap_isolate),
 	RTW_PROC_HDL_SSEQ("all_sta_info", proc_get_all_sta_info, NULL),
 	RTW_PROC_HDL_SSEQ("bmc_tx_rate", proc_get_bmc_tx_rate, proc_set_bmc_tx_rate),
-#endif /* CONFIG_AP_MODE */
 
-#ifdef DBG_MEMORY_LEAK
-	RTW_PROC_HDL_SSEQ("_malloc_cnt", proc_get_malloc_cnt, NULL),
-#endif /* DBG_MEMORY_LEAK */
 
 #ifdef CONFIG_FIND_BEST_CHANNEL
 	RTW_PROC_HDL_SSEQ("best_channel", proc_get_best_channel, proc_set_best_channel),
@@ -4408,7 +4175,6 @@ const struct rtw_proc_hdl adapter_proc_hdls[] = {
 	RTW_PROC_HDL_SSEQ("rx_chk_limit", proc_get_rx_chk_limit, proc_set_rx_chk_limit),
 	RTW_PROC_HDL_SSEQ("hw_info", proc_get_hw_status, proc_set_hw_status),
 	RTW_PROC_HDL_SSEQ("mac_rptbuf", proc_get_mac_rptbuf, NULL),
-#ifdef CONFIG_80211N_HT
 	RTW_PROC_HDL_SSEQ("ht_enable", proc_get_ht_enable, proc_set_ht_enable),
 	RTW_PROC_HDL_SSEQ("bw_mode", proc_get_bw_mode, proc_set_bw_mode),
 	RTW_PROC_HDL_SSEQ("ampdu_enable", proc_get_ampdu_enable, proc_set_ampdu_enable),
@@ -4422,14 +4188,12 @@ const struct rtw_proc_hdl adapter_proc_hdls[] = {
 	RTW_PROC_HDL_SSEQ("tx_amsdu", proc_get_tx_amsdu, proc_set_tx_amsdu),
 	RTW_PROC_HDL_SSEQ("tx_amsdu_rate", proc_get_tx_amsdu_rate, proc_set_tx_amsdu_rate),
 #endif
-#endif /* CONFIG_80211N_HT */
 
 	RTW_PROC_HDL_SSEQ("en_fwps", proc_get_en_fwps, proc_set_en_fwps),
 
 	/* RTW_PROC_HDL_SSEQ("path_rssi", proc_get_two_path_rssi, NULL),
 	* 	RTW_PROC_HDL_SSEQ("rssi_disp",proc_get_rssi_disp, proc_set_rssi_disp), */
 
-#ifdef CONFIG_BT_COEXIST
 	RTW_PROC_HDL_SSEQ("btcoex_dbg", proc_get_btcoex_dbg, proc_set_btcoex_dbg),
 	RTW_PROC_HDL_SSEQ("btcoex", proc_get_btcoex_info, NULL),
 	RTW_PROC_HDL_SSEQ("btinfo_evt", NULL, proc_set_btinfo_evt),
@@ -4439,11 +4203,8 @@ const struct rtw_proc_hdl adapter_proc_hdls[] = {
 #ifdef CONFIG_RF4CE_COEXIST
 	RTW_PROC_HDL_SSEQ("rf4ce_state", proc_get_rf4ce_state, proc_set_rf4ce_state),
 #endif
-#endif /* CONFIG_BT_COEXIST */
 
-#if defined(DBG_CONFIG_ERROR_DETECT)
 	RTW_PROC_HDL_SSEQ("sreset", proc_get_sreset, proc_set_sreset),
-#endif /* DBG_CONFIG_ERROR_DETECT */
 	RTW_PROC_HDL_SSEQ("trx_info_debug", proc_get_trx_info_debug, NULL),
 
 #ifdef CONFIG_HUAWEI_PROC
@@ -4456,9 +4217,6 @@ const struct rtw_proc_hdl adapter_proc_hdls[] = {
 	RTW_PROC_HDL_SSEQ("tx_info_msg", proc_get_tx_info_msg, NULL),
 	RTW_PROC_HDL_SSEQ("rx_info_msg", proc_get_rx_info_msg, proc_set_rx_info_msg),
 
-#if defined(CONFIG_LPS_PG) && defined(CONFIG_RTL8822C)
-	RTW_PROC_HDL_SSEQ("lps_pg_debug", proc_get_lps_pg_debug, NULL),
-#endif
 
 #ifdef CONFIG_GPIO_API
 	RTW_PROC_HDL_SSEQ("gpio_info", proc_get_gpio, proc_set_gpio),
@@ -4477,33 +4235,8 @@ const struct rtw_proc_hdl adapter_proc_hdls[] = {
 	RTW_PROC_HDL_SSEQ("lck", proc_get_lck_info, proc_set_lck),
 #endif
 
-#ifdef CONFIG_PCI_HCI
-	RTW_PROC_HDL_SSEQ("rx_ring", proc_get_rx_ring, NULL),
-	RTW_PROC_HDL_SSEQ("tx_ring", proc_get_tx_ring, NULL),
-#ifdef DBG_TXBD_DESC_DUMP
-	RTW_PROC_HDL_SSEQ("tx_ring_ext", proc_get_tx_ring_ext, proc_set_tx_ring_ext),
-#endif
-	RTW_PROC_HDL_SSEQ("pci_aspm", proc_get_pci_aspm, NULL),
 
-	RTW_PROC_HDL_SSEQ("pci_conf_space", proc_get_pci_conf_space, proc_set_pci_conf_space),
 
-	RTW_PROC_HDL_SSEQ("pci_bridge_conf_space", proc_get_pci_bridge_conf_space, proc_set_pci_bridge_conf_space),
-
-#endif
-
-#ifdef CONFIG_WOWLAN
-	RTW_PROC_HDL_SSEQ("wow_pattern_info", proc_get_pattern_info, proc_set_pattern_info),
-	RTW_PROC_HDL_SSEQ("wow_wakeup_event", proc_get_wakeup_event,
-			  proc_set_wakeup_event),
-	RTW_PROC_HDL_SSEQ("wowlan_last_wake_reason", proc_get_wakeup_reason, NULL),
-#ifdef CONFIG_WOW_PATTERN_HW_CAM
-	RTW_PROC_HDL_SSEQ("wow_pattern_cam", proc_dump_pattern_cam, NULL),
-#endif
-#endif
-
-#ifdef CONFIG_GPIO_WAKEUP
-	RTW_PROC_HDL_SSEQ("wowlan_gpio_info", proc_get_wowlan_gpio_info, proc_set_wowlan_gpio_info),
-#endif
 #ifdef CONFIG_P2P_WOWLAN
 	RTW_PROC_HDL_SSEQ("p2p_wowlan_info", proc_get_p2p_wowlan_info, NULL),
 #endif
@@ -4554,16 +4287,8 @@ const struct rtw_proc_hdl adapter_proc_hdls[] = {
 	RTW_PROC_HDL_SSEQ("kfree_bb_gain", proc_get_kfree_bb_gain, proc_set_kfree_bb_gain),
 	RTW_PROC_HDL_SSEQ("kfree_thermal", proc_get_kfree_thermal, proc_set_kfree_thermal),
 #endif
-#ifdef CONFIG_POWER_SAVING
 	RTW_PROC_HDL_SSEQ("ps_info", proc_get_ps_info, proc_set_ps_info),
-#ifdef CONFIG_WMMPS_STA
 	RTW_PROC_HDL_SSEQ("wmmps_info", proc_get_wmmps_info, proc_set_wmmps_info),
-#endif /* CONFIG_WMMPS_STA */
-#endif
-#ifdef CONFIG_TDLS
-	RTW_PROC_HDL_SSEQ("tdls_info", proc_get_tdls_info, NULL),
-	RTW_PROC_HDL_SSEQ("tdls_enable", proc_get_tdls_enable, proc_set_tdls_enable),
-#endif
 	RTW_PROC_HDL_SSEQ("monitor", proc_get_monitor, proc_set_monitor),
 
 #ifdef CONFIG_RTW_ACS
@@ -4579,15 +4304,10 @@ const struct rtw_proc_hdl adapter_proc_hdls[] = {
 	RTW_PROC_HDL_SSEQ("rtkm_info", proc_get_rtkm_info, NULL),
 #endif
 	RTW_PROC_HDL_SSEQ("efuse_map", proc_get_efuse_map, NULL),
-#ifdef CONFIG_IEEE80211W
 	RTW_PROC_HDL_SSEQ("11w_tx_sa_query", proc_get_tx_sa_query, proc_set_tx_sa_query),
 	RTW_PROC_HDL_SSEQ("11w_tx_deauth", proc_get_tx_deauth, proc_set_tx_deauth),
 	RTW_PROC_HDL_SSEQ("11w_tx_auth", proc_get_tx_auth, proc_set_tx_auth),
-#endif /* CONFIG_IEEE80211W */
 
-#ifdef CONFIG_CUSTOMER01_SMART_ANTENNA
-	RTW_PROC_HDL_SSEQ("pathb_phase", proc_get_pathb_phase, proc_set_pathb_phase),
-#endif
 
 #ifdef CONFIG_MBSSID_CAM
 	RTW_PROC_HDL_SSEQ("mbid_cam", proc_get_mbid_cam_cache, NULL),
@@ -4602,14 +4322,10 @@ const struct rtw_proc_hdl adapter_proc_hdls[] = {
 	RTW_PROC_HDL_SSEQ("tx_stat", proc_get_tx_stat, NULL),
 	/**** PHY Capability ****/
 	RTW_PROC_HDL_SSEQ("phy_cap", proc_get_phy_cap, NULL),
-#ifdef CONFIG_80211N_HT
 	RTW_PROC_HDL_SSEQ("rx_stbc", proc_get_rx_stbc, proc_set_rx_stbc),
 	RTW_PROC_HDL_SSEQ("stbc_cap", proc_get_stbc_cap, proc_set_stbc_cap),
 	RTW_PROC_HDL_SSEQ("ldpc_cap", proc_get_ldpc_cap, proc_set_ldpc_cap),
-#endif /* CONFIG_80211N_HT */
-#ifdef CONFIG_BEAMFORMING
 	RTW_PROC_HDL_SSEQ("txbf_cap", proc_get_txbf_cap, proc_set_txbf_cap),
-#endif
 
 #ifdef CONFIG_SUPPORT_TRX_SHARED
 	RTW_PROC_HDL_SSEQ("trx_share_mode", proc_get_trx_share_mode, NULL),
@@ -4986,148 +4702,6 @@ void rtw_odm_proc_deinit(_adapter	*adapter)
 	}
 }
 
-#ifdef CONFIG_MCC_MODE
-/*
-* rtw_mcc_proc:
-* init/deinit when register/unregister net_device, along with rtw_adapter_proc
-*/
-const struct rtw_proc_hdl mcc_proc_hdls[] = {
-	RTW_PROC_HDL_SSEQ("mcc_info", proc_get_mcc_info, NULL),
-	RTW_PROC_HDL_SSEQ("mcc_enable", proc_get_mcc_info, proc_set_mcc_enable),
-	RTW_PROC_HDL_SSEQ("mcc_duration", proc_get_mcc_info, proc_set_mcc_duration),
-	#ifdef CONFIG_MCC_PHYDM_OFFLOAD
-	RTW_PROC_HDL_SSEQ("mcc_phydm_offload", proc_get_mcc_info, proc_set_mcc_phydm_offload_enable),
-	#endif
-	RTW_PROC_HDL_SSEQ("mcc_single_tx_criteria", proc_get_mcc_info, proc_set_mcc_single_tx_criteria),
-	RTW_PROC_HDL_SSEQ("mcc_ap_bw20_target_tp", proc_get_mcc_info, proc_set_mcc_ap_bw20_target_tp),
-	RTW_PROC_HDL_SSEQ("mcc_ap_bw40_target_tp", proc_get_mcc_info, proc_set_mcc_ap_bw40_target_tp),
-	RTW_PROC_HDL_SSEQ("mcc_ap_bw80_target_tp", proc_get_mcc_info, proc_set_mcc_ap_bw80_target_tp),
-	RTW_PROC_HDL_SSEQ("mcc_sta_bw20_target_tp", proc_get_mcc_info, proc_set_mcc_sta_bw20_target_tp),
-	RTW_PROC_HDL_SSEQ("mcc_sta_bw40_target_tp", proc_get_mcc_info, proc_set_mcc_sta_bw40_target_tp),
-	RTW_PROC_HDL_SSEQ("mcc_sta_bw80_target_tp", proc_get_mcc_info, proc_set_mcc_sta_bw80_target_tp),
-	RTW_PROC_HDL_SSEQ("mcc_policy_table", proc_get_mcc_policy_table, NULL),
-};
-
-const int mcc_proc_hdls_num = sizeof(mcc_proc_hdls) / sizeof(struct rtw_proc_hdl);
-
-static int rtw_mcc_proc_open(struct inode *inode, struct file *file)
-{
-	ssize_t index = (ssize_t)PDE_DATA(inode);
-	const struct rtw_proc_hdl *hdl = mcc_proc_hdls + index;
-	void *private = proc_get_parent_data(inode);
-
-	if (hdl->type == RTW_PROC_HDL_TYPE_SEQ) {
-		int res = seq_open(file, hdl->u.seq_op);
-
-		if (res == 0)
-			((struct seq_file *)file->private_data)->private = private;
-
-		return res;
-	} else if (hdl->type == RTW_PROC_HDL_TYPE_SSEQ) {
-		int (*show)(struct seq_file *, void *) = hdl->u.show ? hdl->u.show : proc_get_dummy;
-
-		return single_open(file, show, private);
-	} else if (hdl->type == RTW_PROC_HDL_TYPE_SZSEQ) {
-		int (*show)(struct seq_file *, void *) = hdl->u.sz.show ? hdl->u.sz.show : proc_get_dummy;
-
-		return single_open_size(file, show, private, hdl->u.sz.size);
-	} else {
-		return -EROFS;
-	}
-}
-
-static ssize_t rtw_mcc_proc_write(struct file *file, const char __user *buffer, size_t count, loff_t *pos)
-{
-	ssize_t index = (ssize_t)PDE_DATA(file_inode(file));
-	const struct rtw_proc_hdl *hdl = mcc_proc_hdls + index;
-	ssize_t (*write)(struct file *, const char __user *, size_t, loff_t *, void *) = hdl->write;
-
-	if (write)
-		return write(file, buffer, count, pos, ((struct seq_file *)file->private_data)->private);
-
-	return -EROFS;
-}
-
-static const struct rtw_proc_ops rtw_mcc_proc_seq_fops = {
-	.proc_open = rtw_mcc_proc_open,
-	.proc_read = seq_read,
-	.proc_lseek = seq_lseek,
-	.proc_release = seq_release,
-	.proc_write = rtw_mcc_proc_write,
-};
-
-static const struct rtw_proc_ops rtw_mcc_proc_sseq_fops = {
-	.proc_open = rtw_mcc_proc_open,
-	.proc_read = seq_read,
-	.proc_lseek = seq_lseek,
-	.proc_release = single_release,
-	.proc_write = rtw_mcc_proc_write,
-};
-
-struct proc_dir_entry *rtw_mcc_proc_init(struct net_device *dev)
-{
-	struct proc_dir_entry *dir_mcc = NULL;
-	struct proc_dir_entry *entry = NULL;
-	_adapter	*adapter = rtw_netdev_priv(dev);
-	ssize_t i;
-
-	if (adapter->dir_dev == NULL) {
-		rtw_warn_on(1);
-		goto exit;
-	}
-
-	if (adapter->dir_mcc != NULL) {
-		rtw_warn_on(1);
-		goto exit;
-	}
-
-	dir_mcc = rtw_proc_create_dir("mcc", adapter->dir_dev, dev);
-	if (dir_mcc == NULL) {
-		rtw_warn_on(1);
-		goto exit;
-	}
-
-	adapter->dir_mcc = dir_mcc;
-
-	for (i = 0; i < mcc_proc_hdls_num; i++) {
-		if (mcc_proc_hdls[i].type == RTW_PROC_HDL_TYPE_SEQ)
-			entry = rtw_proc_create_entry(mcc_proc_hdls[i].name, dir_mcc, &rtw_mcc_proc_seq_fops, (void *)i);
-		else if (mcc_proc_hdls[i].type == RTW_PROC_HDL_TYPE_SSEQ ||
-			 mcc_proc_hdls[i].type == RTW_PROC_HDL_TYPE_SZSEQ)
-			entry = rtw_proc_create_entry(mcc_proc_hdls[i].name, dir_mcc, &rtw_mcc_proc_sseq_fops, (void *)i);
-		else
-			entry = NULL;
-
-		if (!entry) {
-			rtw_warn_on(1);
-			goto exit;
-		}
-	}
-
-exit:
-	return dir_mcc;
-}
-
-void rtw_mcc_proc_deinit(_adapter	*adapter)
-{
-	struct proc_dir_entry *dir_mcc = NULL;
-	int i;
-
-	dir_mcc = adapter->dir_mcc;
-
-	if (dir_mcc == NULL) {
-		rtw_warn_on(1);
-		return;
-	}
-
-	for (i = 0; i < mcc_proc_hdls_num; i++)
-		remove_proc_entry(mcc_proc_hdls[i].name, dir_mcc);
-
-	remove_proc_entry("mcc", adapter->dir_dev);
-
-	adapter->dir_mcc = NULL;
-}
-#endif /* CONFIG_MCC_MODE */
 
 struct proc_dir_entry *rtw_adapter_proc_init(struct net_device *dev)
 {
@@ -5172,9 +4746,6 @@ struct proc_dir_entry *rtw_adapter_proc_init(struct net_device *dev)
 
 	rtw_odm_proc_init(dev);
 
-#ifdef CONFIG_MCC_MODE
-	rtw_mcc_proc_init(dev);
-#endif /* CONFIG_MCC_MODE */
 
 exit:
 	return dir_dev;
@@ -5199,9 +4770,6 @@ void rtw_adapter_proc_deinit(struct net_device *dev)
 
 	rtw_odm_proc_deinit(adapter);
 
-#ifdef CONFIG_MCC_MODE
-	rtw_mcc_proc_deinit(adapter);
-#endif /* CONFIG_MCC_MODE */
 
 	remove_proc_entry(dev->name, drv_proc);
 
@@ -5227,9 +4795,6 @@ void rtw_adapter_proc_replace(struct net_device *dev)
 
 	rtw_odm_proc_deinit(adapter);
 
-#ifdef CONFIG_MCC_MODE
-	rtw_mcc_proc_deinit(adapter);
-#endif /* CONIG_MCC_MODE */
 
 	remove_proc_entry(adapter->old_ifname, drv_proc);
 
@@ -5239,4 +4804,3 @@ void rtw_adapter_proc_replace(struct net_device *dev)
 
 }
 
-#endif /* CONFIG_PROC_DEBUG */

@@ -12,16 +12,12 @@
  * more details.
  *
  *****************************************************************************/
-#if defined(CONFIG_MP_INCLUDED)
 
 #include <drv_types.h>
 #include <rtw_mp.h>
 #include "../../hal/phydm/phydm_precomp.h"
 
 
-#if defined(CONFIG_RTL8723B)
-	#include <rtw_bt_mp.h>
-#endif
 
 #define RTW_IWD_MAX_LEN	128
 inline u8 rtw_do_mp_iwdata_len_chk(const char *caller, u32 len)
@@ -1091,10 +1087,8 @@ int rtw_mp_disable_bt_coexist(struct net_device *dev,
 			      struct iw_request_info *info,
 			      union iwreq_data *wrqu, char *extra)
 {
-#ifdef CONFIG_BT_COEXIST
 	PADAPTER padapter = (PADAPTER)rtw_netdev_priv(dev);
 
-#endif
 	u8 input[RTW_IWD_MAX_LEN];
 	u32 bt_coexist;
 	int ret = 0;
@@ -1115,18 +1109,14 @@ int rtw_mp_disable_bt_coexist(struct net_device *dev,
 
 	if (bt_coexist == 0) {
 		RTW_INFO("Set OID_RT_SET_DISABLE_BT_COEXIST: disable BT_COEXIST\n");
-#ifdef CONFIG_BT_COEXIST
 		rtw_btcoex_HaltNotify(padapter);
 		rtw_btcoex_SetManualControl(padapter, _TRUE);
 		/* Force to switch Antenna to WiFi*/
 		rtw_write16(padapter, 0x870, 0x300);
 		rtw_write16(padapter, 0x860, 0x110);
-#endif
 		/* CONFIG_BT_COEXIST */
 	} else {
-#ifdef CONFIG_BT_COEXIST
 		rtw_btcoex_SetManualControl(padapter, _FALSE);
-#endif
 	}
 
 exit:
@@ -1291,12 +1281,7 @@ int rtw_mp_arx(struct net_device *dev,
 
 	if (pmppriv->bloopback == _TRUE) {
 		sprintf(extra , "Enter MAC LoopBack mode\n");
-#if defined(CONFIG_RTL8814B)
-		/* 1. No adhoc, 2. Enable short cut */
-		rtw_write32(padapter, 0x100, 0x0B000EFF);
-#else
 		rtw_write32(padapter, 0x100, 0x0B0106FF);
-#endif
 		RTW_INFO("0x100 :0x%x", rtw_read32(padapter, 0x100));
 		rtw_write16(padapter, 0x608, 0x30c);
 		RTW_INFO("0x608 :0x%x", rtw_read32(padapter, 0x608));
@@ -1439,49 +1424,10 @@ int rtw_mp_thermal(struct net_device *dev,
 	PADAPTER padapter = rtw_netdev_priv(dev);
 	int rfpath = RF_PATH_A;
 
-#ifdef CONFIG_RTL8188E
-	ther_path_addr[0] = EEPROM_THERMAL_METER_88E;
-#endif
-#if defined(CONFIG_RTL8812A) || defined(CONFIG_RTL8821A) || defined(CONFIG_RTL8814A)
-	ther_path_addr[0] = EEPROM_THERMAL_METER_8812;
-#endif
-#ifdef CONFIG_RTL8192E
-	ther_path_addr[0] = EEPROM_THERMAL_METER_8192E;
-#endif
-#ifdef CONFIG_RTL8192F
-	ther_path_addr[0] = EEPROM_THERMAL_METER_8192F;
-#endif
-#ifdef CONFIG_RTL8723B
-	ther_path_addr[0] = EEPROM_THERMAL_METER_8723B;
-#endif
 #ifdef CONFIG_RTL8703B
 	ther_path_addr[0] = EEPROM_THERMAL_METER_8703B;
 #endif
-#ifdef CONFIG_RTL8723D
-	ther_path_addr[0] = EEPROM_THERMAL_METER_8723D;
-#endif
-#ifdef CONFIG_RTL8188F
-	ther_path_addr[0] = EEPROM_THERMAL_METER_8188F;
-#endif
-#ifdef CONFIG_RTL8188GTV
-	ther_path_addr[0] = EEPROM_THERMAL_METER_8188GTV;
-#endif
-#ifdef CONFIG_RTL8822B
 	ther_path_addr[0] = EEPROM_THERMAL_METER_8822B;
-#endif
-#ifdef CONFIG_RTL8821C
-	ther_path_addr[0] = EEPROM_THERMAL_METER_8821C;
-#endif
-#ifdef CONFIG_RTL8710B
-	ther_path_addr[0] = EEPROM_THERMAL_METER_8710B;
-#endif
-#ifdef CONFIG_RTL8822C
-	ther_path_addr[0]  = EEPROM_THERMAL_METER_A_8822C;
-	ther_path_addr[1]  = EEPROM_THERMAL_METER_B_8822C;
-#endif
-#ifdef CONFIG_RTL8814B
-	ther_path_addr[0] = EEPROM_THERMAL_METER_8814B;
-#endif
 
 	if (copy_from_user(extra, wrqu->pointer, wrqu->length))
 		return -EFAULT;
@@ -1489,12 +1435,7 @@ int rtw_mp_thermal(struct net_device *dev,
 	if ((strncmp(extra, "write", 6) == 0)) {
 		int i;
 		u16 raw_cursize = 0, raw_maxsize = 0;
-#ifdef RTW_HALMAC
 		raw_maxsize = efuse_GetavailableSize(padapter);
-#else
-		efuse_GetCurrentSize(padapter, &raw_cursize);
-		raw_maxsize = efuse_GetMaxSize(padapter);
-#endif
 		RTW_INFO("[eFuse available raw size]= %d bytes\n", raw_maxsize - raw_cursize);
 		if (2 > raw_maxsize - raw_cursize) {
 			RTW_INFO("no available efuse!\n");
@@ -1673,9 +1614,6 @@ int rtw_mp_SetRFPath(struct net_device *dev,
 	char input[RTW_IWD_MAX_LEN];
 	int		bMain = 1, bTurnoff = 1;
 	int ret = 0;
-#ifdef CONFIG_ANTENNA_DIVERSITY
-	u8 res = _TRUE;
-#endif
 
 	if (rtw_do_mp_iwdata_len_chk(__func__, wrqu->length))
 		return -EFAULT;
@@ -1692,14 +1630,6 @@ int rtw_mp_SetRFPath(struct net_device *dev,
 	bTurnoff = strncmp(input, "0", 3); /* strncmp TRUE is 0*/
 
 	_rtw_memset(extra, 0, wrqu->length);
-#ifdef CONFIG_ANTENNA_DIVERSITY
-	if (bMain == 0)
-		res = rtw_mp_set_antdiv(padapter, _TRUE);
-	else
-		res = rtw_mp_set_antdiv(padapter, _FALSE);
-	if (res == _FALSE)
-		RTW_INFO("%s:ANTENNA_DIVERSITY FAIL\n", __func__);
-#endif
 
 	if (bMain == 0) {
 		MP_PHY_SetRFPathSwitch(padapter, _TRUE);
@@ -1755,27 +1685,6 @@ int rtw_mp_switch_rf_path(struct net_device *dev,
 	bbt = strncmp(input, "BT", 3); /* strncmp TRUE is 0*/
 
 	_rtw_memset(extra, 0, wrqu->length);
-#ifdef CONFIG_RTL8821C /* only support for 8821c wlg/wla/btg/bt RF switch path */
-	if (bwlg == 0) {
-		pmp_priv->rf_path_cfg = SWITCH_TO_WLG;
-		sprintf(extra, "switch rf path WLG\n");
-	} else if (bwla == 0) {
-		pmp_priv->rf_path_cfg = SWITCH_TO_WLA;
-		sprintf(extra, "switch rf path WLA\n");
-	} else if (btg == 0) {
-		pmp_priv->rf_path_cfg = SWITCH_TO_BTG;
-		sprintf(extra, "switch rf path BTG\n");
-	} else if (bbt == 0) {
-		pmp_priv->rf_path_cfg = SWITCH_TO_BT;
-		sprintf(extra, "switch rf path BG\n");
-	} else {
-		sprintf(extra, "Error set %s\n", __func__);
-		ret = -EFAULT;
-		goto exit;
-	}
-
-	mp_phy_switch_rf_path_set(padapter, &pmp_priv->rf_path_cfg);
-#endif
 
 	wrqu->length = strlen(extra);
 
@@ -1945,23 +1854,15 @@ int rtw_mp_dpk(struct net_device *dev,
 			halrf_dpk_enable_disable(pDM_Odm);
 			sprintf(extra, "set dpk on\n");
 	} else	{
-#ifdef CONFIG_LPS
 			lps_mode = pwrctrlpriv->power_mgnt;/* keep org value */
 			rtw_pm_set_lps(padapter, PS_MODE_ACTIVE);
-#endif
-#ifdef CONFIG_IPS
 			ips_mode = pwrctrlpriv->ips_mode;/* keep org value */
 			rtw_pm_set_ips(padapter, IPS_NONE);
-#endif
 			rtw_mp_trigger_dpk(padapter);
 	if (padapter->registrypriv.mp_mode == 0) {
-#ifdef CONFIG_IPS
 			rtw_pm_set_ips(padapter, ips_mode);
-#endif /* CONFIG_IPS */
 
-#ifdef CONFIG_LPS
 			rtw_pm_set_lps(padapter, lps_mode);
-#endif /* CONFIG_LPS */
 	}
 			sprintf(extra, "set dpk trigger\n");
 	}
@@ -2008,7 +1909,6 @@ int rtw_mp_mon(struct net_device *dev,
 	rtw_pm_set_ips(padapter, IPS_NONE);
 	LeaveAllPowerSaveMode(padapter);
 
-#ifdef CONFIG_MP_INCLUDED
 	if (init_mp_priv(padapter) == _FAIL)
 		RTW_INFO("%s: initialize MP private data Fail!\n", __func__);
 	padapter->mppriv.channel = 6;
@@ -2039,7 +1939,6 @@ int rtw_mp_mon(struct net_device *dev,
 		rtw_pm_set_ips(padapter, IPS_NORMAL);
 		sprintf(extra, "monitor mode Stop\n");
 	}
-#endif
 	wrqu->data.length = strlen(extra);
 	return 0;
 }
@@ -2055,17 +1954,13 @@ int rtw_mp_pretx_proc(PADAPTER padapter, u8 bStartTest, char *extra)
 		if (bStartTest == 0) {
 			pmp_priv->tx.stop = 1;
 			pmp_priv->mode = MP_ON;
-			#ifdef CONFIG_RTL8822B
 			rtw_write8(padapter, 0x838, 0x61);
-			#endif
 			sprintf(extra, "Stop continuous Tx");
 		} else if (pmp_priv->tx.stop == 1) {
 			pextra = extra + strlen(extra);
 			pextra += sprintf(pextra, "\nStart continuous DA=ffffffffffff len=1500 count=%u\n", pmp_priv->tx.count);
 			pmp_priv->tx.stop = 0;
-			#ifdef CONFIG_RTL8822B
 			rtw_write8(padapter, 0x838, 0x6d);
-			#endif
 			SetPacketTx(padapter);
 		} else
 			return -EFAULT;
@@ -2107,26 +2002,15 @@ int rtw_mp_pretx_proc(PADAPTER padapter, u8 bStartTest, char *extra)
 			pmp_priv->tx.stop = 1;
 			rtw_msleep_os(5);
 		}
-#ifdef CONFIG_80211N_HT
 		if(padapter->registrypriv.ht_enable &&
 			is_supported_ht(padapter->registrypriv.wireless_mode))
 			pmp_priv->tx.attrib.ht_en = 1;
-#endif
 		pmp_priv->tx.stop = 0;
 		pmp_priv->tx.count = 1;
 		SetPacketTx(padapter);
 	} else
 		pmp_priv->mode = MP_ON;
 
-#if defined(CONFIG_RTL8812A)
-	if (IS_HARDWARE_TYPE_8812AU(padapter)) {
-		/* <20130425, Kordan> Turn off OFDM Rx to prevent from CCA causing Tx hang.*/
-		if (pmp_priv->mode == MP_PACKET_TX)
-			phy_set_bb_reg(padapter, rCCAonSec_Jaguar, BIT3, 1);
-		else
-			phy_set_bb_reg(padapter, rCCAonSec_Jaguar, BIT3, 0);
-	}
-#endif
 
 	return 0;
 }
@@ -2143,9 +2027,6 @@ int rtw_mp_tx(struct net_device *dev,
 	char *pextra = extra;
 	u32 bandwidth = 0, sg = 0, channel = 6, txpower = 40, rate = 108, ant = 0, txmode = 1, count = 0;
 	u8 bStartTest = 1, status = 0;
-#ifdef CONFIG_MP_VHT_HW_TX_MODE
-	u8 Idx = 0, tmpU1B;
-#endif
 	u16 antenna = 0;
 
 	if (copy_from_user(extra, wrqu->data.pointer, wrqu->data.length))
@@ -2182,136 +2063,6 @@ int rtw_mp_tx(struct net_device *dev,
 		pextra += sprintf(pextra, "\n MP Mode:%d", pmp_priv->mode);
 		wrqu->data.length = strlen(extra);
 		return 0;
-#ifdef CONFIG_MP_VHT_HW_TX_MODE
-	} else if (strncmp(extra, "pmact", 5) == 0) {
-		if (strncmp(extra, "pmact=", 6) == 0) {
-			_rtw_memset(&pMptCtx->PMacTxInfo, 0, sizeof(pMptCtx->PMacTxInfo));
-			if (strncmp(extra, "pmact=start", 11) == 0) {
-				pMptCtx->PMacTxInfo.bEnPMacTx = _TRUE;
-				sprintf(extra, "Set PMac Tx Mode start\n");
-			} else {
-				pMptCtx->PMacTxInfo.bEnPMacTx = _FALSE;
-				sprintf(extra, "Set PMac Tx Mode Stop\n");
-			}
-			if (pMptCtx->bldpc == TRUE)
-				pMptCtx->PMacTxInfo.bLDPC = _TRUE;
-
-			if (pMptCtx->bstbc == TRUE)
-				pMptCtx->PMacTxInfo.bSTBC = _TRUE;
-
-			pMptCtx->PMacTxInfo.bSPreamble = pmp_priv->preamble;
-			pMptCtx->PMacTxInfo.bSGI = pmp_priv->preamble;
-			pMptCtx->PMacTxInfo.BandWidth = pmp_priv->bandwidth;
-			pMptCtx->PMacTxInfo.TX_RATE = HwRateToMPTRate(pmp_priv->rateidx);
-
-			pMptCtx->PMacTxInfo.Mode = pMptCtx->HWTxmode;
-
-			pMptCtx->PMacTxInfo.NDP_sound = FALSE;/*(Adapter.PacketType == NDP_PKT)?TRUE:FALSE;*/
-
-			if (padapter->mppriv.pktInterval == 0)
-				pMptCtx->PMacTxInfo.PacketPeriod = 100;
-			else
-				pMptCtx->PMacTxInfo.PacketPeriod = padapter->mppriv.pktInterval;
-
-			if (padapter->mppriv.pktLength < 1000)
-				pMptCtx->PMacTxInfo.PacketLength = 1000;
-			else
-				pMptCtx->PMacTxInfo.PacketLength = padapter->mppriv.pktLength;
-
-			pMptCtx->PMacTxInfo.PacketPattern  = rtw_random32() % 0xFF;
-
-			if (padapter->mppriv.tx_pktcount != 0)
-				pMptCtx->PMacTxInfo.PacketCount = padapter->mppriv.tx_pktcount;
-
-			pMptCtx->PMacTxInfo.Ntx = 0;
-			for (Idx = 16; Idx < 20; Idx++) {
-				tmpU1B = (padapter->mppriv.antenna_tx >> Idx) & 1;
-				if (tmpU1B)
-					pMptCtx->PMacTxInfo.Ntx++;
-			}
-
-			_rtw_memset(pMptCtx->PMacTxInfo.MacAddress, 0xFF, ETH_ALEN);
-
-			PMAC_Get_Pkt_Param(&pMptCtx->PMacTxInfo, &pMptCtx->PMacPktInfo);
-
-			if (MPT_IS_CCK_RATE(pMptCtx->PMacTxInfo.TX_RATE))
-
-				CCK_generator(&pMptCtx->PMacTxInfo, &pMptCtx->PMacPktInfo);
-			else {
-				PMAC_Nsym_generator(&pMptCtx->PMacTxInfo, &pMptCtx->PMacPktInfo);
-				/* 24 BIT*/
-				L_SIG_generator(pMptCtx->PMacPktInfo.N_sym, &pMptCtx->PMacTxInfo, &pMptCtx->PMacPktInfo);
-			}
-			/*	48BIT*/
-			if (MPT_IS_HT_RATE(pMptCtx->PMacTxInfo.TX_RATE))
-				HT_SIG_generator(&pMptCtx->PMacTxInfo, &pMptCtx->PMacPktInfo);
-			else if (MPT_IS_VHT_RATE(pMptCtx->PMacTxInfo.TX_RATE)) {
-				/*	48BIT*/
-				VHT_SIG_A_generator(&pMptCtx->PMacTxInfo, &pMptCtx->PMacPktInfo);
-
-				/*	26/27/29 BIT  & CRC 8 BIT*/
-				VHT_SIG_B_generator(&pMptCtx->PMacTxInfo);
-
-				/* 32 BIT*/
-				VHT_Delimiter_generator(&pMptCtx->PMacTxInfo);
-			}
-
-			mpt_ProSetPMacTx(padapter);
-
-		} else if (strncmp(extra, "pmact,mode=", 11) == 0) {
-			int txmode = 0;
-
-			if (sscanf(extra, "pmact,mode=%d", &txmode) > 0) {
-				if (txmode == 1) {
-					pMptCtx->HWTxmode = CONTINUOUS_TX;
-					sprintf(extra, "\t Config HW Tx mode = CONTINUOUS_TX\n");
-				} else if (txmode == 2) {
-					pMptCtx->HWTxmode = OFDM_Single_Tone_TX;
-					sprintf(extra, "\t Config HW Tx mode = OFDM_Single_Tone_TX\n");
-				} else {
-					pMptCtx->HWTxmode = PACKETS_TX;
-					sprintf(extra, "\t Config HW Tx mode = PACKETS_TX\n");
-				}
-			} else {
-				pMptCtx->HWTxmode = PACKETS_TX;
-				sprintf(extra, "\t Config HW Tx mode=\n 0 = PACKETS_TX\n 1 = CONTINUOUS_TX\n 2 = OFDM_Single_Tone_TX");
-			}
-		} else if (strncmp(extra, "pmact,", 6) == 0) {
-			int PacketPeriod = 0, PacketLength = 0, PacketCout = 0;
-			int bldpc = 0, bstbc = 0;
-
-			if (sscanf(extra, "pmact,period=%d", &PacketPeriod) > 0) {
-				padapter->mppriv.pktInterval = PacketPeriod;
-				RTW_INFO("PacketPeriod=%d\n", padapter->mppriv.pktInterval);
-				sprintf(extra, "PacketPeriod [1~255]= %d\n", padapter->mppriv.pktInterval);
-
-			} else if (sscanf(extra, "pmact,length=%d", &PacketLength) > 0) {
-				padapter->mppriv.pktLength = PacketLength;
-				RTW_INFO("PacketPeriod=%d\n", padapter->mppriv.pktLength);
-				sprintf(extra, "PacketLength[~65535]=%d\n", padapter->mppriv.pktLength);
-
-			} else if (sscanf(extra, "pmact,count=%d", &PacketCout) > 0) {
-				padapter->mppriv.tx_pktcount = PacketCout;
-				RTW_INFO("Packet Cout =%d\n", padapter->mppriv.tx_pktcount);
-				sprintf(extra, "Packet Cout =%d\n", padapter->mppriv.tx_pktcount);
-
-			} else if (sscanf(extra, "pmact,ldpc=%d", &bldpc) > 0) {
-				pMptCtx->bldpc = bldpc;
-				RTW_INFO("Set LDPC =%d\n", pMptCtx->bldpc);
-				sprintf(extra, "Set LDPC =%d\n", pMptCtx->bldpc);
-
-			} else if (sscanf(extra, "pmact,stbc=%d", &bstbc) > 0) {
-				pMptCtx->bstbc = bstbc;
-				RTW_INFO("Set STBC =%d\n", pMptCtx->bstbc);
-				sprintf(extra, "Set STBC =%d\n", pMptCtx->bstbc);
-			} else
-				sprintf(extra, "\n period={1~255}\n length={1000~65535}\n count={0~}\n ldpc={0/1}\n stbc={0/1}");
-
-		}
-
-		wrqu->data.length = strlen(extra);
-		return 0;
-#endif
 	} else {
 
 		if (sscanf(extra, "ch=%d,bw=%d,rate=%d,pwr=%d,ant=%d,tx=%d", &channel, &bandwidth, &rate, &txpower, &ant, &txmode) < 6) {
@@ -2585,7 +2336,6 @@ int rtw_mp_hwtx(struct net_device *dev,
 	struct mp_priv *pmp_priv = &padapter->mppriv;
 	PMPT_CONTEXT		pMptCtx = &(padapter->mppriv.mpt_ctx);
 
-#if defined(CONFIG_RTL8814A) || defined(CONFIG_RTL8821B) || defined(CONFIG_RTL8822B) || defined(CONFIG_RTL8821C) || defined(CONFIG_RTL8822C)
 	if (copy_from_user(extra, wrqu->data.pointer, wrqu->data.length))
 		return -EFAULT;
 	*(extra + wrqu->data.length) = '\0';
@@ -2603,7 +2353,6 @@ int rtw_mp_hwtx(struct net_device *dev,
 		sprintf(extra, "Set PMac Tx Mode OK\n");
 	}
 	wrqu->data.length = strlen(extra);
-#endif
 	return 0;
 
 }
@@ -3062,7 +2811,6 @@ int rtw_mp_link(struct net_device *dev,
 
 	} else if (bsetbt) {
 
-#ifdef CONFIG_BT_COEXIST
 		pch = input;
 		i = 0;
 
@@ -3126,7 +2874,6 @@ int rtw_mp_link(struct net_device *dev,
 			}
 
 		}
-#endif /* CONFIG_BT_COEXIST */
 	}
 
 exit:
@@ -3140,347 +2887,4 @@ exit:
 	return ret;
 }
 
-#if defined(CONFIG_RTL8723B)
-int rtw_mp_SetBT(struct net_device *dev,
-		 struct iw_request_info *info,
-		 union iwreq_data *wrqu, char *extra)
-{
-	PADAPTER padapter = rtw_netdev_priv(dev);
-	struct hal_ops *pHalFunc = &padapter->hal_func;
-	HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(padapter);
 
-	BT_REQ_CMD	BtReq;
-	PMPT_CONTEXT	pMptCtx = &(padapter->mppriv.mpt_ctx);
-	PBT_RSP_CMD	pBtRsp = (PBT_RSP_CMD)&pMptCtx->mptOutBuf[0];
-	char	input[128];
-	char *pch, *ptmp, *token, *tmp[2] = {0x00, 0x00};
-	u8 setdata[100];
-	u8 resetbt = 0x00;
-	u8 tempval, BTStatus;
-	u8 H2cSetbtmac[6];
-	u8 u1H2CBtMpOperParm[4] = {0x01};
-	int testmode = 1, ready = 1, trxparam = 1, setgen = 1, getgen = 1, testctrl = 1, testbt = 1, readtherm = 1, setbtmac = 1;
-	u32 i = 0, ii = 0, jj = 0, kk = 0, cnts = 0, status = 0;
-	PRT_MP_FIRMWARE pBTFirmware = NULL;
-
-	if (copy_from_user(extra, wrqu->data.pointer, wrqu->data.length))
-		return -EFAULT;
-
-	*(extra + wrqu->data.length) = '\0';
-
-	if (strlen(extra) < 1)
-		return -EFAULT;
-
-	RTW_INFO("%s:iwpriv in=%s\n", __func__, extra);
-	ready = strncmp(extra, "ready", 5);
-	testmode = strncmp(extra, "testmode", 8); /* strncmp TRUE is 0*/
-	trxparam = strncmp(extra, "trxparam", 8);
-	setgen = strncmp(extra, "setgen", 6);
-	getgen = strncmp(extra, "getgen", 6);
-	testctrl = strncmp(extra, "testctrl", 8);
-	testbt = strncmp(extra, "testbt", 6);
-	readtherm = strncmp(extra, "readtherm", 9);
-	setbtmac = strncmp(extra, "setbtmac", 8);
-
-	if (strncmp(extra, "dlbt", 4) == 0) {
-		pHalData->LastHMEBoxNum = 0;
-		pHalData->bBTFWReady = _FALSE;
-		rtw_write8(padapter, 0xa3, 0x05);
-		BTStatus = rtw_read8(padapter, 0xa0);
-		RTW_INFO("%s: btwmap before read 0xa0 BT Status =0x%x\n", __func__, BTStatus);
-		if (BTStatus != 0x04) {
-			sprintf(extra, "BT Status not Active DLFW FAIL\n");
-			goto exit;
-		}
-
-		tempval = rtw_read8(padapter, 0x6B);
-		tempval |= BIT7;
-		rtw_write8(padapter, 0x6B, tempval);
-
-		/* Attention!! Between 0x6A[14] and 0x6A[15] setting need 100us delay*/
-		/* So don't write 0x6A[14]=1 and 0x6A[15]=0 together!*/
-		rtw_usleep_os(100);
-		/* disable BT power cut*/
-		/* 0x6A[14] = 0*/
-		tempval = rtw_read8(padapter, 0x6B);
-		tempval &= ~BIT6;
-		rtw_write8(padapter, 0x6B, tempval);
-		rtw_usleep_os(100);
-		MPT_PwrCtlDM(padapter, 0);
-		rtw_write32(padapter, 0xcc, (rtw_read32(padapter, 0xcc) | 0x00000004));
-		rtw_write32(padapter, 0x6b, (rtw_read32(padapter, 0x6b) & 0xFFFFFFEF));
-		rtw_msleep_os(600);
-		rtw_write32(padapter, 0x6b, (rtw_read32(padapter, 0x6b) | 0x00000010));
-		rtw_write32(padapter, 0xcc, (rtw_read32(padapter, 0xcc) & 0xFFFFFFFB));
-		rtw_msleep_os(1200);
-		pBTFirmware = (PRT_MP_FIRMWARE)rtw_zmalloc(sizeof(RT_MP_FIRMWARE));
-		if (pBTFirmware == NULL)
-			goto exit;
-		pHalData->bBTFWReady = _FALSE;
-		FirmwareDownloadBT(padapter, pBTFirmware);
-		if (pBTFirmware)
-			rtw_mfree((u8 *)pBTFirmware, sizeof(RT_MP_FIRMWARE));
-
-		RTW_INFO("Wait for FirmwareDownloadBT fw boot!\n");
-		rtw_msleep_os(2000);
-		_rtw_memset(extra, '\0', wrqu->data.length);
-		BtReq.opCodeVer = 1;
-		BtReq.OpCode = 0;
-		BtReq.paraLength = 0;
-		mptbt_BtControlProcess(padapter, &BtReq);
-		rtw_msleep_os(100);
-
-		RTW_INFO("FirmwareDownloadBT ready = 0x%x 0x%x", pMptCtx->mptOutBuf[4], pMptCtx->mptOutBuf[5]);
-		if ((pMptCtx->mptOutBuf[4] == 0x00) && (pMptCtx->mptOutBuf[5] == 0x00)) {
-
-			if (padapter->mppriv.bTxBufCkFail == _TRUE)
-				sprintf(extra, "check TxBuf Fail.\n");
-			else
-				sprintf(extra, "download FW Fail.\n");
-		} else {
-			sprintf(extra, "download FW OK.\n");
-			goto exit;
-		}
-		goto exit;
-	}
-	if (strncmp(extra, "dlfw", 4) == 0) {
-		pHalData->LastHMEBoxNum = 0;
-		pHalData->bBTFWReady = _FALSE;
-		rtw_write8(padapter, 0xa3, 0x05);
-		BTStatus = rtw_read8(padapter, 0xa0);
-		RTW_INFO("%s: btwmap before read 0xa0 BT Status =0x%x\n", __func__, BTStatus);
-		if (BTStatus != 0x04) {
-			sprintf(extra, "BT Status not Active DLFW FAIL\n");
-			goto exit;
-		}
-
-		tempval = rtw_read8(padapter, 0x6B);
-		tempval |= BIT7;
-		rtw_write8(padapter, 0x6B, tempval);
-
-		/* Attention!! Between 0x6A[14] and 0x6A[15] setting need 100us delay*/
-		/* So don't write 0x6A[14]=1 and 0x6A[15]=0 together!*/
-		rtw_usleep_os(100);
-		/* disable BT power cut*/
-		/* 0x6A[14] = 0*/
-		tempval = rtw_read8(padapter, 0x6B);
-		tempval &= ~BIT6;
-		rtw_write8(padapter, 0x6B, tempval);
-		rtw_usleep_os(100);
-
-		MPT_PwrCtlDM(padapter, 0);
-		rtw_write32(padapter, 0xcc, (rtw_read32(padapter, 0xcc) | 0x00000004));
-		rtw_write32(padapter, 0x6b, (rtw_read32(padapter, 0x6b) & 0xFFFFFFEF));
-		rtw_msleep_os(600);
-		rtw_write32(padapter, 0x6b, (rtw_read32(padapter, 0x6b) | 0x00000010));
-		rtw_write32(padapter, 0xcc, (rtw_read32(padapter, 0xcc) & 0xFFFFFFFB));
-		rtw_msleep_os(1200);
-
-#if defined(CONFIG_PLATFORM_SPRD) && (MP_DRIVER == 1)
-		/* Pull up BT reset pin.*/
-		RTW_INFO("%s: pull up BT reset pin when bt start mp test\n", __func__);
-		rtw_wifi_gpio_wlan_ctrl(WLAN_BT_PWDN_ON);
-#endif
-		RTW_INFO(" FirmwareDownload!\n");
-
-#if defined(CONFIG_RTL8723B)
-		status = rtl8723b_FirmwareDownload(padapter, _FALSE);
-#endif
-		RTW_INFO("Wait for FirmwareDownloadBT fw boot!\n");
-		rtw_msleep_os(1000);
-#ifdef CONFIG_BT_COEXIST
-		rtw_btcoex_HaltNotify(padapter);
-		RTW_INFO("SetBT btcoex HaltNotify !\n");
-		/*hal_btcoex1ant_SetAntPath(padapter);*/
-		rtw_btcoex_SetManualControl(padapter, _TRUE);
-#endif
-		_rtw_memset(extra, '\0', wrqu->data.length);
-		BtReq.opCodeVer = 1;
-		BtReq.OpCode = 0;
-		BtReq.paraLength = 0;
-		mptbt_BtControlProcess(padapter, &BtReq);
-		rtw_msleep_os(200);
-
-		RTW_INFO("FirmwareDownloadBT ready = 0x%x 0x%x", pMptCtx->mptOutBuf[4], pMptCtx->mptOutBuf[5]);
-		if ((pMptCtx->mptOutBuf[4] == 0x00) && (pMptCtx->mptOutBuf[5] == 0x00)) {
-			if (padapter->mppriv.bTxBufCkFail == _TRUE)
-				sprintf(extra, "check TxBuf Fail.\n");
-			else
-				sprintf(extra, "download FW Fail.\n");
-		} else {
-#ifdef CONFIG_BT_COEXIST
-			rtw_btcoex_SwitchBtTRxMask(padapter);
-#endif
-			rtw_msleep_os(200);
-			sprintf(extra, "download FW OK.\n");
-			goto exit;
-		}
-		goto exit;
-	}
-
-	if (strncmp(extra, "down", 4) == 0) {
-		RTW_INFO("SetBT down for to hal_init !\n");
-#ifdef CONFIG_BT_COEXIST
-		rtw_btcoex_SetManualControl(padapter, _FALSE);
-		rtw_btcoex_Initialize(padapter);
-#endif
-		pHalFunc->read_adapter_info(padapter);
-		pHalFunc->hal_deinit(padapter);
-		pHalFunc->hal_init(padapter);
-		rtw_pm_set_ips(padapter, IPS_NONE);
-		LeaveAllPowerSaveMode(padapter);
-		MPT_PwrCtlDM(padapter, 0);
-		rtw_write32(padapter, 0xcc, (rtw_read32(padapter, 0xcc) | 0x00000004));
-		rtw_write32(padapter, 0x6b, (rtw_read32(padapter, 0x6b) & 0xFFFFFFEF));
-		rtw_msleep_os(600);
-		/*rtw_write32(padapter, 0x6a, (rtw_read32(padapter, 0x6a)& 0xFFFFFFFE));*/
-		rtw_write32(padapter, 0x6b, (rtw_read32(padapter, 0x6b) | 0x00000010));
-		rtw_write32(padapter, 0xcc, (rtw_read32(padapter, 0xcc) & 0xFFFFFFFB));
-		rtw_msleep_os(1200);
-		goto exit;
-	}
-	if (strncmp(extra, "disable", 7) == 0) {
-		RTW_INFO("SetBT disable !\n");
-		rtw_write32(padapter, 0x6a, (rtw_read32(padapter, 0x6a) & 0xFFFFFFFB));
-		rtw_msleep_os(500);
-		goto exit;
-	}
-	if (strncmp(extra, "enable", 6) == 0) {
-		RTW_INFO("SetBT enable !\n");
-		rtw_write32(padapter, 0x6a, (rtw_read32(padapter, 0x6a) | 0x00000004));
-		rtw_msleep_os(500);
-		goto exit;
-	}
-	if (strncmp(extra, "h2c", 3) == 0) {
-		RTW_INFO("SetBT h2c !\n");
-		pHalData->bBTFWReady = _TRUE;
-		rtw_hal_fill_h2c_cmd(padapter, 0x63, 1, u1H2CBtMpOperParm);
-		goto exit;
-	}
-	if (strncmp(extra, "2ant", 4) == 0) {
-		RTW_INFO("Set BT 2ant use!\n");
-		phy_set_mac_reg(padapter, 0x67, BIT5, 0x1);
-		rtw_write32(padapter, 0x948, 0000);
-
-		goto exit;
-	}
-
-	if (ready != 0 && testmode != 0 && trxparam != 0 && setgen != 0 && getgen != 0 && testctrl != 0 && testbt != 0 && readtherm != 0 && setbtmac != 0)
-		return -EFAULT;
-
-	if (testbt == 0) {
-		BtReq.opCodeVer = 1;
-		BtReq.OpCode = 6;
-		BtReq.paraLength = cnts / 2;
-		goto todo;
-	}
-	if (ready == 0) {
-		BtReq.opCodeVer = 1;
-		BtReq.OpCode = 0;
-		BtReq.paraLength = 0;
-		goto todo;
-	}
-
-	pch = extra;
-	i = 0;
-	while ((token = strsep(&pch, ",")) != NULL) {
-		if (i > 1)
-			break;
-		tmp[i] = token;
-		i++;
-	}
-
-	if ((tmp[0] != NULL) && (tmp[1] != NULL)) {
-		cnts = strlen(tmp[1]);
-		if (cnts < 1)
-			return -EFAULT;
-
-		RTW_INFO("%s: cnts=%d\n", __func__, cnts);
-		RTW_INFO("%s: data=%s\n", __func__, tmp[1]);
-
-		for (jj = 0, kk = 0; jj < cnts; jj++, kk += 2) {
-			BtReq.pParamStart[jj] = key_2char2num(tmp[1][kk], tmp[1][kk + 1]);
-			/*			RTW_INFO("BtReq.pParamStart[%d]=0x%02x\n", jj, BtReq.pParamStart[jj]);*/
-		}
-	} else
-		return -EFAULT;
-
-	if (testmode == 0) {
-		BtReq.opCodeVer = 1;
-		BtReq.OpCode = 1;
-		BtReq.paraLength = 1;
-	}
-	if (trxparam == 0) {
-		BtReq.opCodeVer = 1;
-		BtReq.OpCode = 2;
-		BtReq.paraLength = cnts / 2;
-	}
-	if (setgen == 0) {
-		RTW_INFO("%s: BT_SET_GENERAL\n", __func__);
-		BtReq.opCodeVer = 1;
-		BtReq.OpCode = 3;/*BT_SET_GENERAL	3*/
-		BtReq.paraLength = cnts / 2;
-	}
-	if (getgen == 0) {
-		RTW_INFO("%s: BT_GET_GENERAL\n", __func__);
-		BtReq.opCodeVer = 1;
-		BtReq.OpCode = 4;/*BT_GET_GENERAL	4*/
-		BtReq.paraLength = cnts / 2;
-	}
-	if (readtherm == 0) {
-		RTW_INFO("%s: BT_GET_GENERAL\n", __func__);
-		BtReq.opCodeVer = 1;
-		BtReq.OpCode = 4;/*BT_GET_GENERAL	4*/
-		BtReq.paraLength = cnts / 2;
-	}
-
-	if (testctrl == 0) {
-		RTW_INFO("%s: BT_TEST_CTRL\n", __func__);
-		BtReq.opCodeVer = 1;
-		BtReq.OpCode = 5;/*BT_TEST_CTRL	5*/
-		BtReq.paraLength = cnts / 2;
-	}
-
-	RTW_INFO("%s: Req opCodeVer=%d OpCode=%d paraLength=%d\n",
-		 __func__, BtReq.opCodeVer, BtReq.OpCode, BtReq.paraLength);
-
-	if (BtReq.paraLength < 1)
-		goto todo;
-	for (i = 0; i < BtReq.paraLength; i++) {
-		RTW_INFO("%s: BtReq.pParamStart[%d] = 0x%02x\n",
-			 __func__, i, BtReq.pParamStart[i]);
-	}
-
-todo:
-	_rtw_memset(extra, '\0', wrqu->data.length);
-
-	if (pHalData->bBTFWReady == _FALSE) {
-		sprintf(extra, "BTFWReady = FALSE.\n");
-		goto exit;
-	}
-
-	mptbt_BtControlProcess(padapter, &BtReq);
-
-	if (readtherm == 0) {
-		sprintf(extra, "BT thermal=");
-		for (i = 4; i < pMptCtx->mptOutLen; i++) {
-			if ((pMptCtx->mptOutBuf[i] == 0x00) && (pMptCtx->mptOutBuf[i + 1] == 0x00))
-				goto exit;
-
-			sprintf(extra, "%s %d ", extra, (pMptCtx->mptOutBuf[i] & 0x1f));
-		}
-	} else {
-		for (i = 4; i < pMptCtx->mptOutLen; i++)
-			sprintf(extra, "%s 0x%x ", extra, pMptCtx->mptOutBuf[i]);
-	}
-
-exit:
-	wrqu->data.length = strlen(extra) + 1;
-	RTW_INFO("-%s: output len=%d data=%s\n", __func__, wrqu->data.length, extra);
-
-	return status;
-}
-
-#endif /*#ifdef CONFIG_RTL8723B*/
-
-#endif

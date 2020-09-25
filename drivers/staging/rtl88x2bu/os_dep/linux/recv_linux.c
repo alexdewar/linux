@@ -169,9 +169,7 @@ int rtw_os_recv_resource_init(struct recv_priv *precvpriv, _adapter *padapter)
 	int	res = _SUCCESS;
 
 
-#ifdef CONFIG_RTW_NAPI
 	skb_queue_head_init(&precvpriv->rx_napi_skb_queue);
-#endif /* CONFIG_RTW_NAPI */
 
 	return res;
 }
@@ -194,11 +192,9 @@ void rtw_os_recv_resource_free(struct recv_priv *precvpriv)
 	precvframe = (union recv_frame *) precvpriv->precv_frame_buf;
 
 
-#ifdef CONFIG_RTW_NAPI
 	if (skb_queue_len(&precvpriv->rx_napi_skb_queue))
 		RTW_WARN("rx_napi_skb_queue not empty\n");
 	rtw_skb_queue_purge(&precvpriv->rx_napi_skb_queue);
-#endif /* CONFIG_RTW_NAPI */
 
 	for (i = 0; i < NR_RECVFRAME; i++) {
 		rtw_os_free_recvframe(precvframe);
@@ -211,7 +207,6 @@ int rtw_os_recvbuf_resource_alloc(_adapter *padapter, struct recv_buf *precvbuf)
 {
 	int res = _SUCCESS;
 
-#ifdef CONFIG_USB_HCI
 #ifdef CONFIG_USE_USB_BUFFER_ALLOC_RX
 	struct dvobj_priv	*pdvobjpriv = adapter_to_dvobj(padapter);
 	struct usb_device	*pusbd = pdvobjpriv->pusbdev;
@@ -239,7 +234,6 @@ int rtw_os_recvbuf_resource_alloc(_adapter *padapter, struct recv_buf *precvbuf)
 		return _FAIL;
 #endif /* CONFIG_USE_USB_BUFFER_ALLOC_RX */
 
-#endif /* CONFIG_USB_HCI */
 
 	return res;
 }
@@ -249,7 +243,6 @@ int rtw_os_recvbuf_resource_free(_adapter *padapter, struct recv_buf *precvbuf)
 {
 	int ret = _SUCCESS;
 
-#ifdef CONFIG_USB_HCI
 
 #ifdef CONFIG_USE_USB_BUFFER_ALLOC_RX
 
@@ -267,7 +260,6 @@ int rtw_os_recvbuf_resource_free(_adapter *padapter, struct recv_buf *precvbuf)
 		usb_free_urb(precvbuf->purb);
 	}
 
-#endif /* CONFIG_USB_HCI */
 
 
 	if (precvbuf->pskb) {
@@ -289,14 +281,12 @@ _pkt *rtw_os_alloc_msdu_pkt(union recv_frame *prframe, const u8 *da, const u8 *s
 
 	pattrib = &prframe->u.hdr.attrib;
 
-#ifdef CONFIG_SKB_COPY
 	sub_skb = rtw_skb_alloc(msdu_len + 14);
 	if (sub_skb) {
 		skb_reserve(sub_skb, 14);
 		data_ptr = (u8 *)skb_put(sub_skb, msdu_len);
 		_rtw_memcpy(data_ptr, msdu, msdu_len);
 	} else
-#endif /* CONFIG_SKB_COPY */
 	{
 		sub_skb = rtw_skb_clone(prframe->u.hdr.pkt);
 		if (sub_skb) {
@@ -333,7 +323,6 @@ _pkt *rtw_os_alloc_msdu_pkt(union recv_frame *prframe, const u8 *da, const u8 *s
 	return sub_skb;
 }
 
-#ifdef CONFIG_RTW_NAPI
 static int napi_recv(_adapter *padapter, int budget)
 {
 	_pkt *pskb;
@@ -351,13 +340,11 @@ static int napi_recv(_adapter *padapter, int budget)
 
 		rx_ok = _FALSE;
 
-#ifdef CONFIG_RTW_GRO
 		if (pregistrypriv->en_gro) {
 			if (rtw_napi_gro_receive(&padapter->napi, pskb) != GRO_DROP)
 				rx_ok = _TRUE;
 			goto next;
 		}
-#endif /* CONFIG_RTW_GRO */
 
 		if (rtw_netif_receive_skb(padapter->pnetdev, pskb) == NET_RX_SUCCESS)
 			rx_ok = _TRUE;
@@ -383,11 +370,7 @@ int rtw_recv_napi_poll(struct napi_struct *napi, int budget)
 
 	work_done = napi_recv(padapter, budget);
 	if (work_done < budget) {
-#if (KERNEL_NEW) && defined(CONFIG_PCI_HCI)
-		napi_complete_done(napi, work_done);
-#else
 		napi_complete(napi);
-#endif
 		if (!skb_queue_empty(&precvpriv->rx_napi_skb_queue))
 			napi_schedule(napi);
 	}
@@ -413,16 +396,13 @@ void dynamic_napi_th_chk (_adapter *adapter)
 
 }
 #endif /* CONFIG_RTW_NAPI_DYNAMIC */
-#endif /* CONFIG_RTW_NAPI */
 
 void rtw_os_recv_indicate_pkt(_adapter *padapter, _pkt *pkt, union recv_frame *rframe)
 {
 	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
 	struct recv_priv *precvpriv = &(padapter->recvpriv);
 	struct registry_priv	*pregistrypriv = &padapter->registrypriv;
-#ifdef CONFIG_BR_EXT
 	void *br_port = NULL;
-#endif
 	int ret;
 
 	/* Indicat the packets to upper layer */
@@ -473,7 +453,6 @@ void rtw_os_recv_indicate_pkt(_adapter *padapter, _pkt *pkt, union recv_frame *r
 			}
 		}
 
-#ifdef CONFIG_BR_EXT
 		if (check_fwstate(pmlmepriv, WIFI_STATION_STATE | WIFI_ADHOC_STATE) == _TRUE) {
 			/* Insert NAT2.5 RX here! */
 			rcu_read_lock();
@@ -497,7 +476,6 @@ void rtw_os_recv_indicate_pkt(_adapter *padapter, _pkt *pkt, union recv_frame *r
 				}
 			}
 		}
-#endif /* CONFIG_BR_EXT */
 
 		/* After eth_type_trans process , pkt->data pointer will move from ethrnet header to ip header */
 		pkt->protocol = eth_type_trans(pkt, padapter->pnetdev);
@@ -509,7 +487,6 @@ void rtw_os_recv_indicate_pkt(_adapter *padapter, _pkt *pkt, union recv_frame *r
 			pkt->ip_summed = CHECKSUM_UNNECESSARY;
 #endif /* CONFIG_TCP_CSUM_OFFLOAD_RX */
 
-#ifdef CONFIG_RTW_NAPI
 #ifdef CONFIG_RTW_NAPI_DYNAMIC
 		if (!skb_queue_empty(&precvpriv->rx_napi_skb_queue)
 			&& !adapter_to_dvobj(padapter)->en_napi_dynamic			
@@ -528,7 +505,6 @@ void rtw_os_recv_indicate_pkt(_adapter *padapter, _pkt *pkt, union recv_frame *r
 			#endif
 			return;
 		}
-#endif /* CONFIG_RTW_NAPI */
 
 		ret = rtw_netif_rx(padapter->pnetdev, pkt);
 		if (ret == NET_RX_SUCCESS)
@@ -540,9 +516,7 @@ void rtw_os_recv_indicate_pkt(_adapter *padapter, _pkt *pkt, union recv_frame *r
 
 void rtw_handle_tkip_mic_err(_adapter *padapter, struct sta_info *sta, u8 bgroup)
 {
-#ifdef CONFIG_IOCTL_CFG80211
 	enum nl80211_key_type key_type = 0;
-#endif
 	union iwreq_data wrqu;
 	struct iw_michaelmicfailure    ev;
 	struct security_priv	*psecuritypriv = &padapter->securitypriv;
@@ -561,14 +535,12 @@ void rtw_handle_tkip_mic_err(_adapter *padapter, struct sta_info *sta, u8 bgroup
 			psecuritypriv->last_mic_err_time = rtw_get_current_time();
 	}
 
-#ifdef CONFIG_IOCTL_CFG80211
 	if (bgroup)
 		key_type |= NL80211_KEYTYPE_GROUP;
 	else
 		key_type |= NL80211_KEYTYPE_PAIRWISE;
 
 	cfg80211_michael_mic_failure(padapter->pnetdev, sta->cmn.mac_addr, key_type, -1, NULL, GFP_ATOMIC);
-#endif
 
 	_rtw_memset(&ev, 0x00, sizeof(ev));
 	if (bgroup)
@@ -582,9 +554,6 @@ void rtw_handle_tkip_mic_err(_adapter *padapter, struct sta_info *sta, u8 bgroup
 	_rtw_memset(&wrqu, 0x00, sizeof(wrqu));
 	wrqu.data.length = sizeof(ev);
 
-#ifndef CONFIG_IOCTL_CFG80211
-	wireless_send_event(padapter->pnetdev, IWEVMICHAELMICFAILURE, &wrqu, (char *) &ev);
-#endif
 }
 
 #ifdef CONFIG_HOSTAPD_MLME
@@ -706,7 +675,6 @@ _recv_indicatepkt_drop:
 
 void rtw_os_read_port(_adapter *padapter, struct recv_buf *precvbuf)
 {
-#ifdef CONFIG_USB_HCI
 	struct recv_priv *precvpriv = &padapter->recvpriv;
 
 	precvbuf->ref_cnt--;
@@ -720,10 +688,6 @@ void rtw_os_read_port(_adapter *padapter, struct recv_buf *precvbuf)
 		rtw_read_port(padapter, precvpriv->ff_hwaddr, 0, (unsigned char *)precvbuf);
 
 
-#endif
-#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
-	precvbuf->pskb = NULL;
-#endif
 
 }
 

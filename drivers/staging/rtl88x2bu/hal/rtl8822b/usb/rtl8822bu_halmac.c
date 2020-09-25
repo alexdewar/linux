@@ -94,13 +94,11 @@ static u32 usb_write_port_not_xmitframe(struct dvobj_priv *d, u8 addr, u32 cnt, 
 
 	status = usb_submit_urb(purb, GFP_ATOMIC);
 	if (!status) {
-		#ifdef DBG_CONFIG_ERROR_DETECT
 		{
 			HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(padapter);
 
 			pHalData->srestpriv.last_tx_time = rtw_get_current_time();
 		}
-		#endif
 	} else {
 		RTW_INFO("usb_write_port, status=%d\n", status);
 

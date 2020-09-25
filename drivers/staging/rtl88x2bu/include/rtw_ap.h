@@ -16,7 +16,6 @@
 #define __RTW_AP_H_
 
 
-#ifdef CONFIG_AP_MODE
 
 /* external function */
 extern void rtw_indicate_sta_assoc_event(_adapter *padapter, struct sta_info *psta);
@@ -95,9 +94,7 @@ void rtw_update_bmc_sta_tx_rate(_adapter *adapter);
 
 void rtw_process_ht_action_smps(_adapter *padapter, u8 *ta, u8 ctrl_field);
 void rtw_process_public_act_bsscoex(_adapter *padapter, u8 *pframe, uint frame_len);
-#ifdef CONFIG_80211N_HT
 int rtw_ht_operation_update(_adapter *padapter);
-#endif /* CONFIG_80211N_HT */
 u8 rtw_ap_sta_states_check(_adapter *adapter);
 
 #ifdef CONFIG_FW_HANDLE_TXBCN
@@ -110,5 +107,4 @@ void tx_beacon_handlder(struct dvobj_priv *pdvobj);
 void tx_beacon_timer_handlder(void *ctx);
 #endif /*CONFIG_SWTIMER_BASED_TXBCN*/
 
-#endif /* end of CONFIG_AP_MODE */
 #endif /*__RTW_AP_H_*/

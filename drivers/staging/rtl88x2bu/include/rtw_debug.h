@@ -61,7 +61,6 @@ enum {
 void RTW_BUF_DUMP_SEL(uint _loglevel, void *sel, u8 *_titlestring,
 								bool _idx_show, const u8 *_hexdata, int _hexdatalen);
 
-#ifdef CONFIG_RTW_DEBUG
 
 #ifndef _OS_INTFS_C_
 extern uint rtw_drv_log_level;
@@ -198,7 +197,6 @@ extern uint rtw_drv_log_level;
 #define RTW_DBG_EXPR(EXPR) do { if (_DRV_DEBUG_ <= rtw_drv_log_level) EXPR; } while (0)
 
 #endif /* defined(_dbgdump) */
-#endif /* CONFIG_RTW_DEBUG */
 
 
 #if defined(_seqdump)
@@ -244,10 +242,6 @@ void dump_drv_version(void *sel);
 void dump_log_level(void *sel);
 void dump_drv_cfg(void *sel);
 
-#ifdef CONFIG_SDIO_HCI
-void sd_f0_reg_dump(void *sel, _adapter *adapter);
-void sdio_local_reg_dump(void *sel, _adapter *adapter);
-#endif /* CONFIG_SDIO_HCI */
 
 void mac_reg_dump(void *sel, _adapter *adapter);
 void bb_reg_dump(void *sel, _adapter *adapter);
@@ -276,12 +270,9 @@ u32 rtw_get_wait_hiq_empty_ms(void);
 void rtw_sta_linking_test_set_start(void);
 bool rtw_sta_linking_test_wait_done(void);
 bool rtw_sta_linking_test_force_fail(void);
-#ifdef CONFIG_AP_MODE
 u16 rtw_ap_linking_test_force_auth_fail(void);
 u16 rtw_ap_linking_test_force_asoc_fail(void);
-#endif
 
-#ifdef CONFIG_PROC_DEBUG
 ssize_t proc_set_write_reg(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
 int proc_get_read_reg(struct seq_file *m, void *v);
 ssize_t proc_set_read_reg(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
@@ -289,13 +280,11 @@ ssize_t proc_set_read_reg(struct file *file, const char __user *buffer, size_t c
 int proc_get_fwstate(struct seq_file *m, void *v);
 int proc_get_sec_info(struct seq_file *m, void *v);
 int proc_get_mlmext_state(struct seq_file *m, void *v);
-#ifdef CONFIG_LAYER2_ROAMING
 int proc_get_roam_flags(struct seq_file *m, void *v);
 ssize_t proc_set_roam_flags(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
 int proc_get_roam_param(struct seq_file *m, void *v);
 ssize_t proc_set_roam_param(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
 ssize_t proc_set_roam_tgt_addr(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
-#endif /* CONFIG_LAYER2_ROAMING */
 #ifdef CONFIG_RTW_80211R
 int proc_get_ft_flags(struct seq_file *m, void *v);
 ssize_t proc_set_ft_flags(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
@@ -306,10 +295,6 @@ int proc_get_rf_info(struct seq_file *m, void *v);
 int proc_get_scan_param(struct seq_file *m, void *v);
 ssize_t proc_set_scan_param(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
 int proc_get_scan_abort(struct seq_file *m, void *v);
-#ifdef CONFIG_RTW_REPEATER_SON
-int proc_get_rson_data(struct seq_file *m, void *v);
-ssize_t proc_set_rson_data(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
-#endif
 int proc_get_survey_info(struct seq_file *m, void *v);
 ssize_t proc_set_survey_info(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
 int proc_get_ap_info(struct seq_file *m, void *v);
@@ -330,10 +315,8 @@ int proc_get_rx_cnt_dump(struct seq_file *m, void *v);
 ssize_t proc_set_rx_cnt_dump(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
 #endif
 
-#ifdef CONFIG_AP_MODE
 int proc_get_bmc_tx_rate(struct seq_file *m, void *v);
 ssize_t proc_set_bmc_tx_rate(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
-#endif /*CONFIG_AP_MODE*/
 
 int proc_get_ps_dbg_info(struct seq_file *m, void *v);
 ssize_t proc_set_ps_dbg_info(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
@@ -342,19 +325,12 @@ ssize_t proc_set_fwdl_test_case(struct file *file, const char __user *buffer, si
 ssize_t proc_set_del_rx_ampdu_test_case(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
 ssize_t proc_set_wait_hiq_empty(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
 ssize_t proc_set_sta_linking_test(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
-#ifdef CONFIG_AP_MODE
 ssize_t proc_set_ap_linking_test(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
-#endif
 
 int proc_get_rx_stat(struct seq_file *m, void *v);
 int proc_get_tx_stat(struct seq_file *m, void *v);
-#ifdef CONFIG_AP_MODE
 int proc_get_all_sta_info(struct seq_file *m, void *v);
-#endif /* CONFIG_AP_MODE */
 
-#ifdef DBG_MEMORY_LEAK
-int proc_get_malloc_cnt(struct seq_file *m, void *v);
-#endif /* DBG_MEMORY_LEAK */
 
 #ifdef CONFIG_FIND_BEST_CHANNEL
 int proc_get_best_channel(struct seq_file *m, void *v);
@@ -373,7 +349,6 @@ int proc_get_hw_status(struct seq_file *m, void *v);
 ssize_t proc_set_hw_status(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
 int proc_get_mac_rptbuf(struct seq_file *m, void *v);
 
-#ifdef CONFIG_80211N_HT
 int proc_get_ht_enable(struct seq_file *m, void *v);
 ssize_t proc_set_ht_enable(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
 
@@ -397,10 +372,8 @@ int proc_get_stbc_cap(struct seq_file *m, void *v);
 ssize_t proc_set_stbc_cap(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
 int proc_get_ldpc_cap(struct seq_file *m, void *v);
 ssize_t proc_set_ldpc_cap(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
-#ifdef CONFIG_BEAMFORMING
 int proc_get_txbf_cap(struct seq_file *m, void *v);
 ssize_t proc_set_txbf_cap(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
-#endif
 int proc_get_rx_ampdu_factor(struct seq_file *m, void *v);
 ssize_t proc_set_rx_ampdu_factor(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
 
@@ -419,7 +392,6 @@ ssize_t proc_set_tx_amsdu(struct file *file, const char __user *buffer, size_t c
 int proc_get_tx_amsdu_rate(struct seq_file *m, void *v);
 ssize_t proc_set_tx_amsdu_rate(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
 #endif
-#endif /* CONFIG_80211N_HT */
 
 int proc_get_en_fwps(struct seq_file *m, void *v);
 ssize_t proc_set_en_fwps(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
@@ -430,7 +402,6 @@ int proc_get_rssi_disp(struct seq_file *m, void *v);
 ssize_t proc_set_rssi_disp(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
 #endif
 
-#ifdef CONFIG_BT_COEXIST
 int proc_get_btcoex_dbg(struct seq_file *m, void *v);
 ssize_t proc_set_btcoex_dbg(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
 int proc_get_btcoex_info(struct seq_file *m, void *v);
@@ -438,12 +409,9 @@ int proc_get_btcoex_info(struct seq_file *m, void *v);
 int proc_get_rf4ce_state(struct seq_file *m, void *v);
 ssize_t proc_set_rf4ce_state(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
 #endif
-#endif /* CONFIG_BT_COEXIST */
 
-#if defined(DBG_CONFIG_ERROR_DETECT)
 int proc_get_sreset(struct seq_file *m, void *v);
 ssize_t proc_set_sreset(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
-#endif /* DBG_CONFIG_ERROR_DETECT */
 
 int proc_get_odm_adaptivity(struct seq_file *m, void *v);
 ssize_t proc_set_odm_adaptivity(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
@@ -454,38 +422,8 @@ int proc_get_tx_logs(struct seq_file *m, void *v);
 int proc_get_int_logs(struct seq_file *m, void *v);
 #endif
 
-#ifdef CONFIG_PCI_HCI
-int proc_get_rx_ring(struct seq_file *m, void *v);
-int proc_get_tx_ring(struct seq_file *m, void *v);
-int proc_get_pci_aspm(struct seq_file *m, void *v);
-int proc_get_pci_conf_space(struct seq_file *m, void *v);
-ssize_t proc_set_pci_conf_space(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
-
-int proc_get_pci_bridge_conf_space(struct seq_file *m, void *v);
-ssize_t proc_set_pci_bridge_conf_space(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
 
 
-#ifdef DBG_TXBD_DESC_DUMP
-int proc_get_tx_ring_ext(struct seq_file *m, void *v);
-ssize_t proc_set_tx_ring_ext(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
-#endif
-#endif
-
-#ifdef CONFIG_WOWLAN
-int proc_get_pattern_info(struct seq_file *m, void *v);
-ssize_t proc_set_pattern_info(struct file *file, const char __user *buffer,
-		size_t count, loff_t *pos, void *data);
-int proc_get_wakeup_event(struct seq_file *m, void *v);
-ssize_t proc_set_wakeup_event(struct file *file, const char __user *buffer,
-		size_t count, loff_t *pos, void *data);
-int proc_get_wakeup_reason(struct seq_file *m, void *v);
-#endif
-
-#ifdef CONFIG_GPIO_WAKEUP
-int proc_get_wowlan_gpio_info(struct seq_file *m, void *v);
-ssize_t proc_set_wowlan_gpio_info(struct file *file, const char __user *buffer,
-		size_t count, loff_t *pos, void *data);
-#endif /*CONFIG_GPIO_WAKEUP*/
 
 #ifdef CONFIG_P2P_WOWLAN
 int proc_get_p2p_wowlan_info(struct seq_file *m, void *v);
@@ -494,20 +432,11 @@ int proc_get_p2p_wowlan_info(struct seq_file *m, void *v);
 int proc_get_new_bcn_max(struct seq_file *m, void *v);
 ssize_t proc_set_new_bcn_max(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
 
-#ifdef CONFIG_POWER_SAVING
 int proc_get_ps_info(struct seq_file *m, void *v);
 ssize_t proc_set_ps_info(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
-#ifdef CONFIG_WMMPS_STA	
 int proc_get_wmmps_info(struct seq_file *m, void *v);
 ssize_t proc_set_wmmps_info(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
-#endif /* CONFIG_WMMPS_STA */
-#endif /* CONFIG_POWER_SAVING */
 
-#ifdef CONFIG_TDLS
-int proc_get_tdls_enable(struct seq_file *m, void *v);
-ssize_t proc_set_tdls_enable(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
-int proc_get_tdls_info(struct seq_file *m, void *v);
-#endif
 
 int proc_get_monitor(struct seq_file *m, void *v);
 ssize_t proc_set_monitor(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
@@ -521,41 +450,18 @@ ssize_t proc_set_xmit_block(struct file *file, const char __user *buffer, size_t
 int proc_get_rtkm_info(struct seq_file *m, void *v);
 #endif /* CONFIG_PREALLOC_RX_SKB_BUFFER */
 
-#ifdef CONFIG_IEEE80211W
 ssize_t proc_set_tx_sa_query(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
 int proc_get_tx_sa_query(struct seq_file *m, void *v);
 ssize_t proc_set_tx_deauth(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
 int proc_get_tx_deauth(struct seq_file *m, void *v);
 ssize_t proc_set_tx_auth(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
 int proc_get_tx_auth(struct seq_file *m, void *v);
-#endif /* CONFIG_IEEE80211W */
 
-#endif /* CONFIG_PROC_DEBUG */
 
 int proc_get_efuse_map(struct seq_file *m, void *v);
 ssize_t proc_set_efuse_map(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
 
-#ifdef CONFIG_CUSTOMER01_SMART_ANTENNA
-int proc_get_pathb_phase(struct seq_file *m, void *v);
-ssize_t proc_set_pathb_phase(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
-#endif
 
-#ifdef CONFIG_MCC_MODE
-int proc_get_mcc_info(struct seq_file *m, void *v);
-ssize_t proc_set_mcc_enable(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
-ssize_t proc_set_mcc_duration(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
-#ifdef CONFIG_MCC_PHYDM_OFFLOAD
-ssize_t proc_set_mcc_phydm_offload_enable(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
-#endif
-ssize_t proc_set_mcc_single_tx_criteria(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
-ssize_t proc_set_mcc_ap_bw20_target_tp(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
-ssize_t proc_set_mcc_ap_bw40_target_tp(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
-ssize_t proc_set_mcc_ap_bw80_target_tp(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
-ssize_t proc_set_mcc_sta_bw20_target_tp(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
-ssize_t proc_set_mcc_sta_bw40_target_tp(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
-ssize_t proc_set_mcc_sta_bw80_target_tp(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
-int proc_get_mcc_policy_table(struct seq_file *m, void *v);
-#endif /* CONFIG_MCC_MODE */
 
 int proc_get_ack_timeout(struct seq_file *m, void *v);
 ssize_t proc_set_ack_timeout(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);

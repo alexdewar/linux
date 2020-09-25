@@ -701,9 +701,7 @@ void phydm_show_sta_info(void *dm_void, char input[][16], u32 *_used,
 	struct dm_struct *dm = (struct dm_struct *)dm_void;
 	struct cmn_sta_info *sta = NULL;
 	struct ra_sta_info *ra = NULL;
-#ifdef CONFIG_BEAMFORMING
 	struct bf_cmn_info *bf = NULL;
-#endif
 	char help[] = "-h";
 	u32 var[10] = {0};
 	u32 used = *_used;
@@ -738,9 +736,7 @@ void phydm_show_sta_info(void *dm_void, char input[][16], u32 *_used,
 			continue;
 
 		ra = &sta->ra_info;
-		#ifdef CONFIG_BEAMFORMING
 		bf = &sta->bf_info;
-		#endif
 
 		tatal_sta_num++;
 
@@ -796,7 +792,6 @@ void phydm_show_sta_info(void *dm_void, char input[][16], u32 *_used,
 			 "TP{TX,RX}={%d, %d}\n", sta->tx_moving_average_tp,
 			 sta->rx_moving_average_tp);
 
-#ifdef CONFIG_BEAMFORMING
 		/*@[Beamforming]*/
 		PDM_SNPF(out_len, used, output + used, out_len - used,
 			 "BF CAP{HT,VHT}={0x%x, 0x%x}\n", bf->ht_beamform_cap,
@@ -804,7 +799,6 @@ void phydm_show_sta_info(void *dm_void, char input[][16], u32 *_used,
 		PDM_SNPF(out_len, used, output + used, out_len - used,
 			 "BF {p_aid,g_id}={0x%x, 0x%x}\n\n", bf->p_aid,
 			 bf->g_id);
-#endif
 	}
 
 	if (tatal_sta_num == 0) {

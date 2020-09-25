@@ -1406,11 +1406,9 @@ odm_txpowertracking_callback_thermal_meter(
 	dm->rf_calibrate_info.txpowertracking_callback_cnt++; /* cosa add for debug */
 	dm->rf_calibrate_info.is_txpowertracking_init = true;
 
-#if (MP_DRIVER == 1)
 	dm->rf_calibrate_info.txpowertrack_control = hal_data->txpowertrack_control; /* <Kordan> We should keep updating the control variable according to HalData.
      * <Kordan> rf_calibrate_info.rega24 will be initialized when ODM HW configuring, but MP configures with para files. */
 	dm->rf_calibrate_info.rega24 = 0x090e1317;
-#endif
 
 #if (DM_ODM_SUPPORT_TYPE == ODM_AP) && defined(MP_TEST)
 	if ((OPMODE & WIFI_MP_STATE) || *(dm->mp_mode)) {

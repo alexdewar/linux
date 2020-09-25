@@ -47,7 +47,6 @@ struct	qos_priv	{
 
 	unsigned int	  qos_option;	/* bit mask option: u-apsd, s-apsd, ts, block ack...		 */
 
-#ifdef CONFIG_WMMPS_STA
 	/* uapsd (unscheduled automatic power-save delivery) = a kind of wmmps */
 	u8 uapsd_max_sp_len;
 	/* declare uapsd_tid as a bitmap for the uapsd setting of TID 0~15 */
@@ -58,7 +57,6 @@ struct	qos_priv	{
 	u8 uapsd_tid_trigger_enabled;
 	/* declare uapsd_ap_supported to record whether the connected ap  supports uapsd or not */
 	u8 uapsd_ap_supported;
-#endif /* CONFIG_WMMPS_STA */	
 
 };
 

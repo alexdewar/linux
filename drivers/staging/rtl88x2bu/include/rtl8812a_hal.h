@@ -30,9 +30,7 @@
 #include "Hal8821APwrSeq.h" /* for 8821A/8811A */
 #include "Hal8812PhyReg.h"
 #include "Hal8812PhyCfg.h"
-#ifdef DBG_CONFIG_ERROR_DETECT
 #include "rtl8812a_sreset.h"
-#endif
 
 /* ---------------------------------------------------------------------
  *		RTL8812 Power Configuration CMDs for PCIe interface
@@ -70,11 +68,7 @@
 
 typedef struct _RT_FIRMWARE_8812 {
 	FIRMWARE_SOURCE	eFWSource;
-#ifdef CONFIG_EMBEDDED_FWIMG
 	u8			*szFwBuffer;
-#else
-	u8			szFwBuffer[FW_SIZE_8812];
-#endif
 	u32			ulFwLength;
 } RT_FIRMWARE_8812, *PRT_FIRMWARE_8812;
 
@@ -122,11 +116,7 @@ typedef struct _RT_FIRMWARE_8812 {
  * TX 128K, RX 16K, Page size 512B for TX, 128B for RX */
 #define MAX_RX_DMA_BUFFER_SIZE_8812	0x3E80 /* RX 16K */
 
-#ifdef CONFIG_WOWLAN
-	#define RESV_FMWF	(WKFMCAM_SIZE * MAX_WKFM_CAM_NUM) /* 16 entries, for each is 24 bytes*/
-#else
 	#define RESV_FMWF	0
-#endif
 
 #ifdef CONFIG_FW_C2H_DEBUG
 	#define RX_DMA_RESERVED_SIZE_8812	0x100	/* 256B, reserved for c2h debug message */
@@ -145,11 +135,7 @@ typedef struct _RT_FIRMWARE_8812 {
  * ARP Rsp:1, RWC:1, GTK Info:1,GTK RSP:1,GTK EXT MEM:1, AOAC rpt: 1,PNO: 6
  * NS offload: 1 NDP info: 1
  */
-#ifdef CONFIG_WOWLAN
-	#define WOWLAN_PAGE_NUM_8812	0x08
-#else
 	#define WOWLAN_PAGE_NUM_8812	0x00
-#endif
 
 
 #ifdef CONFIG_BEAMFORMER_FW_NDPA
@@ -158,11 +144,7 @@ typedef struct _RT_FIRMWARE_8812 {
 	#define FW_NDPA_PAGE_NUM	0x00
 #endif
 
-#ifdef DBG_FW_DEBUG_MSG_PKT
-	#define FW_DBG_MSG_PKT_PAGE_NUM_8812	0x01
-#else
 	#define FW_DBG_MSG_PKT_PAGE_NUM_8812	0x00
-#endif /*DBG_FW_DEBUG_MSG_PKT*/
 
 #define TX_TOTAL_PAGE_NUMBER_8812	(0xFF - BCNQ_PAGE_NUM_8812 - WOWLAN_PAGE_NUM_8812 - FW_NDPA_PAGE_NUM - FW_DBG_MSG_PKT_PAGE_NUM_8812)
 #define TX_PAGE_BOUNDARY_8812			(TX_TOTAL_PAGE_NUMBER_8812 + 1)
@@ -205,11 +187,7 @@ typedef struct _RT_FIRMWARE_8812 {
 
 /* For WoWLan , more reserved page
  * ARP Rsp:1, RWC:1, GTK Info:1,GTK RSP:1,GTK EXT MEM:1, PNO: 6 */
-#ifdef CONFIG_WOWLAN
-	#define WOWLAN_PAGE_NUM_8821	0x06
-#else
 	#define WOWLAN_PAGE_NUM_8821	0x00
-#endif
 
 #define TX_TOTAL_PAGE_NUMBER_8821	(0xFF - BCNQ_PAGE_NUM_8821 - WOWLAN_PAGE_NUM_8821)
 #define TX_PAGE_BOUNDARY_8821				(TX_TOTAL_PAGE_NUMBER_8821 + 1)
@@ -281,15 +259,6 @@ typedef struct _RT_FIRMWARE_8812 {
 
 #define AVAILABLE_EFUSE_ADDR(addr)	(addr < EFUSE_BT_REAL_CONTENT_LEN)
 
-#ifdef CONFIG_FILE_FWIMG
-extern char *rtw_fw_file_path;
-#ifdef CONFIG_WOWLAN
-extern char *rtw_fw_wow_file_path;
-#endif
-#ifdef CONFIG_MP_INCLUDED
-extern char *rtw_fw_mp_bt_file_path;
-#endif
-#endif
 
 
 /* rtl8812_hal_init.c */
@@ -319,17 +288,12 @@ void	Hal_ReadPAType_8821A(PADAPTER Adapter, u8 *PROMContent, BOOLEAN AutoloadFai
 void	Hal_ReadRFEType_8812A(PADAPTER Adapter, u8 *PROMContent, BOOLEAN AutoloadFail);
 void	Hal_EfuseParseBTCoexistInfo8812A(PADAPTER Adapter, u8 *hwinfo, BOOLEAN AutoLoadFail);
 void	hal_ReadUsbType_8812AU(PADAPTER Adapter, u8 *PROMContent, BOOLEAN AutoloadFail);
-#ifdef CONFIG_MP_INCLUDED
 int	FirmwareDownloadBT(PADAPTER Adapter, PRT_MP_FIRMWARE pFirmware);
-#endif
 void	Hal_ReadRemoteWakeup_8812A(PADAPTER padapter, u8 *hwinfo, BOOLEAN AutoLoadFail);
 
 BOOLEAN HalDetectPwrDownMode8812(PADAPTER Adapter);
 void Hal_EfuseParseKFreeData_8821A(PADAPTER Adapter, u8 *PROMContent, BOOLEAN AutoloadFail);
 
-#ifdef CONFIG_WOWLAN
-void Hal_DetectWoWMode(PADAPTER pAdapter);
-#endif /* CONFIG_WOWLAN */
 
 void _InitBeaconParameters_8812A(PADAPTER padapter);
 void SetBeaconRelatedRegisters8812A(PADAPTER padapter);
@@ -350,15 +314,8 @@ u32 upload_txpktbuf_8812au(_adapter *adapter, u8 *buf, u32 buflen);
 void rtl8812_start_thread(PADAPTER padapter);
 void rtl8812_stop_thread(PADAPTER padapter);
 
-#ifdef CONFIG_PCI_HCI
-BOOLEAN	InterruptRecognized8812AE(PADAPTER Adapter);
-void	UpdateInterruptMask8812AE(PADAPTER Adapter, u32 AddMSR, u32 AddMSR1, u32 RemoveMSR, u32 RemoveMSR1);
-void	InitTRXDescHwAddress8812AE(PADAPTER Adapter);
-#endif
 
-#ifdef CONFIG_BT_COEXIST
 void rtl8812a_combo_card_WifiOnlyHwInit(PADAPTER Adapter);
-#endif
 
 void
 Hal_PatchwithJaguar_8812(

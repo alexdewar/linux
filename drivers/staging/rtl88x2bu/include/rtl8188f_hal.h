@@ -27,9 +27,7 @@
 #include "Hal8188FPwrSeq.h"
 #include "Hal8188FPhyReg.h"
 #include "Hal8188FPhyCfg.h"
-#ifdef DBG_CONFIG_ERROR_DETECT
 #include "rtl8188f_sreset.h"
-#endif
 
 #define FW_8188F_SIZE			0x8000
 #define FW_8188F_START_ADDRESS	0x1000
@@ -39,11 +37,7 @@
 
 typedef struct _RT_FIRMWARE {
 	FIRMWARE_SOURCE	eFWSource;
-#ifdef CONFIG_EMBEDDED_FWIMG
 	u8			*szFwBuffer;
-#else
-	u8			szFwBuffer[FW_8188F_SIZE];
-#endif
 	u32			ulFwLength;
 } RT_FIRMWARE_8188F, *PRT_FIRMWARE_8188F;
 
@@ -93,11 +87,7 @@ typedef struct _RT_8188F_FIRMWARE_HDR {
 	#define RX_DMA_RESERVED_SIZE_8188F	0x80	/* 128B, reserved for tx report */
 #endif
 
-#ifdef CONFIG_WOWLAN
-	#define RESV_FMWF	(WKFMCAM_SIZE * MAX_WKFM_CAM_NUM) /* 16 entries, for each is 24 bytes*/
-#else
 	#define RESV_FMWF	0
-#endif
 
 #define RX_DMA_BOUNDARY_8188F		(RX_DMA_SIZE_8188F - RX_DMA_RESERVED_SIZE_8188F - 1)
 
@@ -113,20 +103,9 @@ typedef struct _RT_8188F_FIRMWARE_HDR {
  * ARP Rsp:1, RWC:1, GTK Info:1,GTK RSP:2,GTK EXT MEM:2, AOAC rpt:1 ,PNO: 6
  * NS offload:2 NDP info: 1
  */
-#ifdef CONFIG_WOWLAN
-	#define WOWLAN_PAGE_NUM_8188F	0x0b
-#else
 	#define WOWLAN_PAGE_NUM_8188F	0x00
-#endif
 
-#ifdef CONFIG_PNO_SUPPORT
-#undef WOWLAN_PAGE_NUM_8188F
-#define WOWLAN_PAGE_NUM_8188F	0x15
-#endif
 
-#ifdef CONFIG_AP_WOWLAN
-#define AP_WOWLAN_PAGE_NUM_8188F	0x02
-#endif
 
 #define TX_TOTAL_PAGE_NUMBER_8188F	(0xFF - BCNQ_PAGE_NUM_8188F - WOWLAN_PAGE_NUM_8188F)
 #define TX_PAGE_BOUNDARY_8188F		(TX_TOTAL_PAGE_NUMBER_8188F + 1)
@@ -225,9 +204,6 @@ void rtl8188f_InitBeaconParameters(PADAPTER padapter);
 void rtl8188f_InitBeaconMaxError(PADAPTER padapter, u8 InfraMode);
 void	_InitBurstPktLen_8188FS(PADAPTER Adapter);
 void _8051Reset8188(PADAPTER padapter);
-#ifdef CONFIG_WOWLAN
-void Hal_DetectWoWMode(PADAPTER pAdapter);
-#endif /* CONFIG_WOWLAN */
 
 void rtl8188f_start_thread(_adapter *padapter);
 void rtl8188f_stop_thread(_adapter *padapter);
@@ -239,22 +215,13 @@ void rtl8188f_stop_thread(_adapter *padapter);
 	void rtl8188fs_hal_check_bt_hang(_adapter *adapter);
 #endif
 
-#ifdef CONFIG_GPIO_WAKEUP
-void HalSetOutPutGPIO(PADAPTER padapter, u8 index, u8 OutPutValue);
-#endif
 
-#ifdef CONFIG_MP_INCLUDED
 int FirmwareDownloadBT(PADAPTER Adapter, PRT_MP_FIRMWARE pFirmware);
-#endif
 
 void CCX_FwC2HTxRpt_8188f(PADAPTER padapter, u8 *pdata, u8 len);
 
 u8 MRateToHwRate8188F(u8  rate);
 u8 HwRateToMRate8188F(u8	 rate);
 
-#ifdef CONFIG_PCI_HCI
-BOOLEAN	InterruptRecognized8188FE(PADAPTER Adapter);
-void	UpdateInterruptMask8188FE(PADAPTER Adapter, u32 AddMSR, u32 AddMSR1, u32 RemoveMSR, u32 RemoveMSR1);
-#endif
 
 #endif

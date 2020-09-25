@@ -19,26 +19,10 @@
 #include <osdep_service.h>
 #include <drv_types.h>
 
-#ifdef CONFIG_RTW_SW_LED
 /* ********************************************************************************
  * Interface to manipulate LED objects.
  * ******************************************************************************** */
-#ifdef CONFIG_USB_HCI
 	void rtl8710bu_InitSwLeds(PADAPTER padapter);
 	void rtl8710bu_DeInitSwLeds(PADAPTER padapter);
-#endif
-#ifdef CONFIG_SDIO_HCI
-	void rtl8710bs_InitSwLeds(PADAPTER padapter);
-	void rtl8710bs_DeInitSwLeds(PADAPTER padapter);
-#endif
-#ifdef CONFIG_GSPI_HCI
-	void rtl8710bs_InitSwLeds(PADAPTER padapter);
-	void rtl8710bs_DeInitSwLeds(PADAPTER padapter);
-#endif
-#ifdef CONFIG_PCI_HCI
-	void rtl8710be_InitSwLeds(PADAPTER padapter);
-	void rtl8710be_DeInitSwLeds(PADAPTER padapter);
-#endif
 
-#endif /*#ifdef CONFIG_RTW_SW_LED*/
 #endif

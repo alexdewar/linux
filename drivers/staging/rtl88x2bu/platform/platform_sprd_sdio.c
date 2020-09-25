@@ -29,9 +29,6 @@ int platform_wifi_power_on(void)
 	int ret = 0;
 
 
-#ifdef CONFIG_RTL8188E
-	rtw_wifi_gpio_wlan_ctrl(WLAN_POWER_ON);
-#endif /* CONFIG_RTL8188E */
 
 	/* Pull up pwd pin, make wifi leave power down mode. */
 	rtw_wifi_gpio_init();
@@ -44,10 +41,6 @@ int platform_wifi_power_on(void)
 	rtw_mdelay_os(5);
 
 	sdhci_bus_scan();
-#ifdef CONFIG_RTL8723B
-	/* YJ,test,130305 */
-	rtw_mdelay_os(1000);
-#endif
 #ifdef ANDROID_2X
 	rtw_mdelay_os(200);
 #else /* !ANDROID_2X */
@@ -73,12 +66,5 @@ void platform_wifi_power_off(void)
 	rtw_mdelay_os(5);
 	rtw_wifi_gpio_deinit();
 
-#ifdef CONFIG_RTL8188E
-	rtw_wifi_gpio_wlan_ctrl(WLAN_POWER_OFF);
-#endif /* CONFIG_RTL8188E */
 
-#ifdef CONFIG_WOWLAN
-	if (mmc_host)
-		mmc_host->pm_flags &= ~MMC_PM_KEEP_POWER;
-#endif /* CONFIG_WOWLAN */
 }

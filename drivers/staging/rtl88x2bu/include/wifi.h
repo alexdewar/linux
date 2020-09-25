@@ -44,22 +44,6 @@
 #define WLAN_WMM_LEN		24
 #define VENDOR_NAME_LEN		20
 
-#ifdef CONFIG_APPEND_VENDOR_IE_ENABLE
-#define WLAN_MAX_VENDOR_IE_LEN 255
-#define WLAN_MAX_VENDOR_IE_NUM 5
-#define WIFI_BEACON_VENDOR_IE_BIT BIT(0)
-#define WIFI_PROBEREQ_VENDOR_IE_BIT BIT(1)
-#define WIFI_PROBERESP_VENDOR_IE_BIT BIT(2)
-#define WIFI_ASSOCREQ_VENDOR_IE_BIT BIT(3)
-#define WIFI_ASSOCRESP_VENDOR_IE_BIT BIT(4)
-#ifdef CONFIG_P2P
-#define WIFI_P2P_PROBEREQ_VENDOR_IE_BIT BIT(5)
-#define WIFI_P2P_PROBERESP_VENDOR_IE_BIT BIT(6)
-#define WLAN_MAX_VENDOR_IE_MASK_MAX 7
-#else
-#define WLAN_MAX_VENDOR_IE_MASK_MAX 5
-#endif
-#endif
 
 #define P80211CAPTURE_VERSION	0x80211001
 
@@ -623,9 +607,7 @@ static inline int IsFrameTypeData(unsigned char *pframe)
 /* #define EID_BSSCoexistence			72 */ /* 20/40 BSS Coexistence
  * #define EID_BSSIntolerantChlReport	73 */
 #define _RIC_Descriptor_IE_			75
-#ifdef CONFIG_IEEE80211W
 #define _MME_IE_					76 /* 802.11w Management MIC element */
-#endif /* CONFIG_IEEE80211W */
 #define _LINK_ID_IE_					101
 #define _CH_SWITCH_TIMING_		104
 #define _PTI_BUFFER_STATUS_		106
@@ -1272,7 +1254,6 @@ enum P2P_PROTO_WK_ID {
 	P2P_CANCEL_RO_CH_WK = 7,
 };
 
-#ifdef CONFIG_P2P_PS
 enum P2P_PS_STATE {
 	P2P_PS_DISABLE = 0,
 	P2P_PS_ENABLE = 1,
@@ -1287,7 +1268,6 @@ enum P2P_PS_MODE {
 	P2P_PS_NOA	 = 2,
 	P2P_PS_MIX = 3, /* CTWindow and NoA */
 };
-#endif /* CONFIG_P2P_PS */
 
 /*	=====================WFD Section=====================
  *	For Wi-Fi Display */
@@ -1312,7 +1292,6 @@ enum P2P_PS_MODE {
 #define IP_MCAST_MAC(mac)		((mac[0] == 0x01) && (mac[1] == 0x00) && (mac[2] == 0x5e))
 #define ICMPV6_MCAST_MAC(mac)	((mac[0] == 0x33) && (mac[1] == 0x33) && (mac[2] != 0xff))
 
-#ifdef CONFIG_IOCTL_CFG80211
 /* Regulatroy Domain */
 struct regd_pair_mapping {
 	u16 reg_dmnenum;
@@ -1330,21 +1309,6 @@ struct rtw_regulatory {
 	int16_t power_limit;
 	struct regd_pair_mapping *regpair;
 };
-#endif
 
-#ifdef CONFIG_WAPI_SUPPORT
-#ifndef IW_AUTH_WAPI_VERSION_1
-#define IW_AUTH_WAPI_VERSION_1		0x00000008
-#endif
-#ifndef IW_AUTH_KEY_MGMT_WAPI_PSK
-#define IW_AUTH_KEY_MGMT_WAPI_PSK	0x04
-#endif
-#ifndef IW_AUTH_WAPI_ENABLED
-#define IW_AUTH_WAPI_ENABLED		0x20
-#endif
-#ifndef IW_ENCODE_ALG_SM4
-#define IW_ENCODE_ALG_SM4			0x20
-#endif
-#endif
 
 #endif /* _WIFI_H_ */

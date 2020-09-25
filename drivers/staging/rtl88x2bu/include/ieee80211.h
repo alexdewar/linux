@@ -24,7 +24,6 @@
 #define NET80211_TU_TO_US	1024		/* unit:us */
 #define DEFAULT_BCN_INTERVAL 100 /* 100 ms */
 
-#ifdef CONFIG_AP_MODE
 
 #define RTL_IOCTL_HOSTAPD (SIOCIWFIRSTPRIV + 28)
 
@@ -74,7 +73,6 @@ enum {
 #define WLAN_STA_VHT BIT(14)
 #define WLAN_STA_NONERP BIT(31)
 
-#endif
 
 #define IEEE_CMD_SET_WPA_PARAM			1
 #define IEEE_CMD_SET_WPA_IE				2
@@ -339,7 +337,6 @@ typedef struct ieee_param {
 			u16 key_len;
 			u8 key[0];
 		} crypt;
-#ifdef CONFIG_AP_MODE
 		struct {
 			u16 aid;
 			u16 capability;
@@ -351,12 +348,10 @@ typedef struct ieee_param {
 			u8	reserved[2];/* for set max_num_sta */
 			u8	buf[0];
 		} bcn_ie;
-#endif
 
 	} u;
 } ieee_param;
 
-#ifdef CONFIG_AP_MODE
 typedef struct ieee_param_ex {
 	u32 cmd;
 	u8 sta_addr[ETH_ALEN];
@@ -378,7 +373,6 @@ struct sta_data {
 	u64	tx_bytes;
 	u64	tx_drops;
 };
-#endif
 
 
 #if WIRELESS_EXT < 17
@@ -1571,25 +1565,6 @@ enum _PUBLIC_ACTION {
 	ACT_PUBLIC_MAX
 };
 
-#ifdef CONFIG_TDLS
-enum TDLS_ACTION_FIELD {
-	TDLS_SETUP_REQUEST = 0,
-	TDLS_SETUP_RESPONSE = 1,
-	TDLS_SETUP_CONFIRM = 2,
-	TDLS_TEARDOWN = 3,
-	TDLS_PEER_TRAFFIC_INDICATION = 4,
-	TDLS_CHANNEL_SWITCH_REQUEST = 5,
-	TDLS_CHANNEL_SWITCH_RESPONSE = 6,
-	TDLS_PEER_PSM_REQUEST = 7,
-	TDLS_PEER_PSM_RESPONSE = 8,
-	TDLS_PEER_TRAFFIC_RESPONSE = 9,
-	TDLS_DISCOVERY_REQUEST = 10,
-	TDLS_DISCOVERY_RESPONSE = 14,	/* it's used in public action frame */
-};
-
-#define	TUNNELED_PROBE_REQ	15
-#define	TUNNELED_PROBE_RSP	16
-#endif /* CONFIG_TDLS */
 
 /* BACK action code */
 enum rtw_ieee80211_back_actioncode {
@@ -1940,13 +1915,11 @@ u8 *rtw_get_owe_ie(const u8 *in_ie, uint in_len, u8 *owe_ie, uint *owe_ielen);
 
 void dump_ies(void *sel, const u8 *buf, u32 buf_len);
 
-#ifdef CONFIG_80211N_HT
 #define HT_SC_OFFSET_MAX 4
 extern const char *const _ht_sc_offset_str[];
 #define ht_sc_offset_str(sc) (((sc) >= HT_SC_OFFSET_MAX) ? _ht_sc_offset_str[2] : _ht_sc_offset_str[(sc)])
 
 void dump_ht_cap_ie_content(void *sel, const u8 *buf, u32 buf_len);
-#endif
 
 void dump_wps_ie(void *sel, const u8 *ie, u32 ie_len);
 

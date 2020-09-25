@@ -701,7 +701,6 @@ void rtw_chk_candidate_peer_notify(_adapter *adapter, struct wlan_network *scann
 	}
 #endif
 
-#ifdef CONFIG_IOCTL_CFG80211
 	rtw_cfg80211_notify_new_peer_candidate(adapter->rtw_wdev
 		, scanned->network.MacAddress
 		, BSS_EX_TLV_IES(&scanned->network)
@@ -709,7 +708,6 @@ void rtw_chk_candidate_peer_notify(_adapter *adapter, struct wlan_network *scann
 		, scanned->network.Rssi
 		, GFP_ATOMIC
 	);
-#endif
 
 exit:
 	return;
@@ -1857,7 +1855,6 @@ unsigned int on_action_self_protected(_adapter *adapter, union recv_frame *rfram
 	case RTW_ACT_SELF_PROTECTED_MESH_GK_ACK:
 		if (!(MLME_IS_MESH(adapter) && MLME_IS_ASOC(adapter)))
 			goto exit;
-#ifdef CONFIG_IOCTL_CFG80211
 		#if CONFIG_RTW_MACADDR_ACL
 		if (rtw_access_ctrl(adapter, get_addr2_ptr(pframe)) == _FALSE)
 			goto exit;
@@ -1870,7 +1867,6 @@ unsigned int on_action_self_protected(_adapter *adapter, union recv_frame *rfram
 		#endif
 		rtw_cfg80211_rx_action(adapter, rframe, NULL);
 		ret = _SUCCESS;
-#endif /* CONFIG_IOCTL_CFG80211 */
 		break;
 	default:
 		break;
@@ -2484,7 +2480,6 @@ void rtw_mesh_expire_peer_notify(_adapter *adapter, const u8 *peer_addr)
 {
 	u8 null_ssid[2] = {0, 0};
 
-#ifdef CONFIG_IOCTL_CFG80211
 	rtw_cfg80211_notify_new_peer_candidate(adapter->rtw_wdev
 		, peer_addr
 		, null_ssid
@@ -2492,7 +2487,6 @@ void rtw_mesh_expire_peer_notify(_adapter *adapter, const u8 *peer_addr)
 		, 0
 		, GFP_ATOMIC
 	);
-#endif
 
 	return;
 }
@@ -2693,9 +2687,6 @@ static void mpath_tx_tasklet_hdl(void *priv)
 			rtw_list_delete(&xframe->list);
 			res = rtw_xmit_posthandle(adapter, xframe, xframe->pkt);
 			if (res < 0) {
-				#ifdef DBG_TX_DROP_FRAME
-				RTW_INFO("DBG_TX_DROP_FRAME %s rtw_xmit fail\n", __FUNCTION__);
-				#endif
 				adapter->xmitpriv.tx_drop++;
 			}
 		}
@@ -2753,48 +2744,8 @@ void _rtw_mcache_free(rtw_mcache *cachep, void *objp)
 	kmem_cache_free(cachep, objp);
 }
 
-#ifdef DBG_MEM_ALLOC
-inline void *dbg_rtw_mcache_alloc(rtw_mcache *cachep, const enum mstat_f flags, const char *func, const int line)
-{
-	void *p;
-	u32 sz = cachep->size;
-
-	if (match_mstat_sniff_rules(flags, sz))
-		RTW_INFO("DBG_MEM_ALLOC %s:%d %s(%u)\n", func, line, __func__, sz);
-
-	p = _rtw_mcache_alloc(cachep);
-
-	rtw_mstat_update(
-		flags
-		, p ? MSTAT_ALLOC_SUCCESS : MSTAT_ALLOC_FAIL
-		, sz
-	);
-
-	return p;
-}
-
-inline void dbg_rtw_mcache_free(rtw_mcache *cachep, void *pbuf, const enum mstat_f flags, const char *func, const int line)
-{
-	u32 sz = cachep->size;
-
-	if (match_mstat_sniff_rules(flags, sz))
-		RTW_INFO("DBG_MEM_ALLOC %s:%d %s(%u)\n", func, line, __func__, sz);
-
-	_rtw_mcache_free(cachep, pbuf);
-
-	rtw_mstat_update(
-		flags
-		, MSTAT_FREE
-		, sz
-	);
-}
-
-#define rtw_mcache_alloc(cachep) dbg_rtw_mcache_alloc(cachep, MSTAT_TYPE_PHY, __FUNCTION__, __LINE__)
-#define rtw_mcache_free(cachep, objp) dbg_rtw_mcache_free(cachep, objp, MSTAT_TYPE_PHY, __FUNCTION__, __LINE__)
-#else
 #define rtw_mcache_alloc(cachep) _rtw_mcache_alloc(cachep)
 #define rtw_mcache_free(cachep, objp) _rtw_mcache_free(cachep, objp)
-#endif /* DBG_MEM_ALLOC */
 
 /* Mesh Received Cache */
 #define RTW_MRC_BUCKETS			256 /* must be a power of 2 */
@@ -3668,10 +3619,6 @@ int rtw_mesh_rx_data_validate_mctrl(_adapter *adapter, union recv_frame *rframe
 	}
 
 	if (ret == _FAIL) {
-		#ifdef DBG_RX_DROP_FRAME
-		RTW_INFO("DBG_RX_DROP_FRAME "FUNC_ADPT_FMT" invalid tfDS:%u AE:%u combination ra="MAC_FMT" ta="MAC_FMT"\n"
-			, FUNC_ADPT_ARG(adapter), rattrib->to_fr_ds, ae, MAC_ARG(rattrib->ra), MAC_ARG(rattrib->ta));
-		#endif
 		*mctrl_len = 0;
 	} else
 		*mctrl_len = mlen;
@@ -3835,10 +3782,6 @@ int rtw_mesh_rx_msdu_act_check(union recv_frame *rframe
 				, WLAN_REASON_MESH_PATH_NOFORWARD
 				, rattrib->ta
 			);
-			#ifdef DBG_RX_DROP_FRAME
-			RTW_INFO("DBG_RX_DROP_FRAME "FUNC_ADPT_FMT" mDA("MAC_FMT") not self, !dot11MeshForwarding\n"
-				, FUNC_ADPT_ARG(adapter), MAC_ARG(mda));
-			#endif
 			goto exit;
 		}
 
@@ -3850,10 +3793,6 @@ int rtw_mesh_rx_msdu_act_check(union recv_frame *rframe
 				, WLAN_REASON_MESH_PATH_NOFORWARD
 				, rattrib->ta
 			);
-			#ifdef DBG_RX_DROP_FRAME
-			RTW_INFO("DBG_RX_DROP_FRAME "FUNC_ADPT_FMT" mDA("MAC_FMT") unknown\n"
-				, FUNC_ADPT_ARG(adapter), MAC_ARG(mda));
-			#endif
 			minfo->mshstats.dropped_frames_no_route++;
 			goto exit;
 
@@ -3982,10 +3921,6 @@ fwd_chk:
 	if (mctrl->ttl == 1) {
 		minfo->mshstats.dropped_frames_ttl++;
 		if (!act) {
-			#ifdef DBG_RX_DROP_FRAME
-			RTW_INFO("DBG_RX_DROP_FRAME "FUNC_ADPT_FMT" ttl reaches 0, not forwarding\n"
-				, FUNC_ADPT_ARG(adapter));
-			#endif
 		}
 		goto exit;
 	}
@@ -4011,10 +3946,6 @@ fwd_chk:
 	{
 		xframe = rtw_alloc_xmitframe(&adapter->xmitpriv);
 		if (!xframe) {
-			#ifdef DBG_TX_DROP_FRAME
-			RTW_INFO("DBG_TX_DROP_FRAME "FUNC_ADPT_FMT" rtw_alloc_xmitframe fail\n"
-				, FUNC_ADPT_ARG(adapter));
-			#endif
 			goto exit;
 		}
 

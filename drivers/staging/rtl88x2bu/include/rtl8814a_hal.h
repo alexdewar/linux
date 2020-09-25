@@ -29,9 +29,7 @@
 #include "Hal8814PwrSeq.h"
 #include "Hal8814PhyReg.h"
 #include "Hal8814PhyCfg.h"
-#ifdef DBG_CONFIG_ERROR_DETECT
 	#include "rtl8814a_sreset.h"
-#endif /* DBG_CONFIG_ERROR_DETECT */
 
 enum {
 	VOLTAGE_V25						= 0x03,
@@ -42,11 +40,7 @@ enum {
 #define FW_START_ADDRESS   0x1000
 typedef struct _RT_FIRMWARE_8814 {
 	FIRMWARE_SOURCE	eFWSource;
-#ifdef CONFIG_EMBEDDED_FWIMG
 	u8			*szFwBuffer;
-#else
-	u8			szFwBuffer[FW_SIZE];
-#endif
 	u32			ulFwLength;
 } RT_FIRMWARE_8814, *PRT_FIRMWARE_8814;
 
@@ -123,7 +117,6 @@ typedef struct _RT_FIRMWARE_8814 {
 /*
  * 2013/08/16 MH MOve from SDIO.h for common use.
  *   */
-#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_USB_HCI)
 	#define TRX_SHARE_MODE_8814A				0	/* TRX Buffer Share Index */
 	#define BASIC_RXFF_SIZE_8814A				24576/* Basic RXFF Size is 24K = 24*1024 Unit: Byte */
 	#define TRX_SHARE_BUFF_UNIT_8814A			65536/* TRX Share Buffer unit Size 64K = 64*1024 Unit: Byte */
@@ -135,21 +128,8 @@ typedef struct _RT_FIRMWARE_8814 {
 	#define  NPQ_PGNUM_8814A					0x20	/* Normal Queue */
 	#define  EPQ_PGNUM_8814A					0x20	/* Extra Queue */
 
-#else	/*  #if defined(CONFIG_SDIO_HCI) || defined(CONFIG_USB_HCI) */
 
-	#define  HPQ_PGNUM_8814A		20
-	#define  NPQ_PGNUM_8814A		20
-	#define  LPQ_PGNUM_8814A		20 /* 1972 */
-	#define  EPQ_PGNUM_8814A		20
-	#define  BCQ_PGNUM_8814A		32
-
-#endif /* #if defined(CONFIG_SDIO_HCI) || defined(CONFIG_USB_HCI) */
-
-#ifdef CONFIG_WOWLAN
-	#define WOWLAN_PAGE_NUM_8814	0x06
-#else
 	#define WOWLAN_PAGE_NUM_8814	0x00
-#endif
 
 #define PAGE_SIZE_8814A						128/* TXFF Page Size, Unit: Byte */
 #define MAX_RX_DMA_BUFFER_SIZE_8814A		0x5C00	/* BASIC_RXFF_SIZE_8814A + TRX_SHARE_MODE_8814A * TRX_SHARE_BUFF_UNIT_8814A */ /* Basic RXFF Size + ShareBuffer Size */
@@ -220,15 +200,6 @@ Chip specific
  *   */
 #define	EFUSE_OOB_PROTECT_BYTES		15	/* PG data exclude header, dummy 6 bytes frome CP test and reserved 1byte. */
 
-#ifdef CONFIG_FILE_FWIMG
-extern char *rtw_fw_file_path;
-#ifdef CONFIG_WOWLAN
-extern char *rtw_fw_wow_file_path;
-#endif
-#ifdef CONFIG_MP_INCLUDED
-extern char *rtw_fw_mp_bt_file_path;
-#endif /* CONFIG_MP_INCLUDED */
-#endif /* CONFIG_FILE_FWIMG */
 
 /* rtl8814_hal_init.c */
 s32 FirmwareDownload8814A(PADAPTER	Adapter, BOOLEAN bUsedWoWLANFw);
@@ -293,9 +264,6 @@ u8	MgntQuery_NssTxRate(u16 Rate);
 
 /* BOOLEAN HalDetectPwrDownMode8812(PADAPTER Adapter); */
 
-#ifdef CONFIG_WOWLAN
-	void Hal_DetectWoWMode(PADAPTER pAdapter);
-#endif /* CONFIG_WOWLAN */
 
 void _InitBeaconParameters_8814A(PADAPTER padapter);
 void SetBeaconRelatedRegisters8814A(PADAPTER padapter);
@@ -314,15 +282,7 @@ void rtl8814_start_thread(PADAPTER padapter);
 void rtl8814_stop_thread(PADAPTER padapter);
 
 
-#ifdef CONFIG_PCI_HCI
-	BOOLEAN	InterruptRecognized8814AE(PADAPTER Adapter);
-	void	UpdateInterruptMask8814AE(PADAPTER Adapter, u32 AddMSR, u32 AddMSR1, u32 RemoveMSR, u32 RemoveMSR1);
-	void	InitMAC_TRXBD_8814AE(PADAPTER Adapter);
-	u16	get_txbd_rw_reg(u16 ff_hwaddr);
-#endif
 
-#ifdef CONFIG_BT_COEXIST
 	void rtl8814a_combo_card_WifiOnlyHwInit(PADAPTER Adapter);
-#endif
 
 #endif /* __RTL8188E_HAL_H__ */

@@ -35,7 +35,6 @@ void phydm_init_debug_setting(struct dm_struct *dm)
 	dm->fw_debug_components = 0;
 	dm->debug_components =
 
-#if DBG
 	/*@BB Functions*/
 	/*@DBG_DIG					|*/
 	/*@DBG_RA_MASK					|*/
@@ -65,7 +64,6 @@ void phydm_init_debug_setting(struct dm_struct *dm)
 	/*@ODM_COMP_INIT				|*/
 	/*@DBG_CMN					|*/
 	/*@ODM_COMP_API					|*/
-#endif
 	0;
 
 	dm->fw_buff_is_enpty = true;

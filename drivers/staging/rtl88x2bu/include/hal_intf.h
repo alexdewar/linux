@@ -45,13 +45,11 @@ enum _CHIP_TYPE {
 	MAX_CHIP_TYPE
 };
 
-#ifdef RTW_HALMAC
 enum fw_mem {
 	FW_EMEM,
 	FW_IMEM,
 	FW_DMEM,
 };
-#endif
 
 extern const u32 _chip_type_to_odm_ic_type[];
 #define chip_type_to_odm_ic_type(chip_type) (((chip_type) >= MAX_CHIP_TYPE) ? _chip_type_to_odm_ic_type[MAX_CHIP_TYPE] : _chip_type_to_odm_ic_type[(chip_type)])
@@ -97,13 +95,9 @@ typedef enum _HW_VARIABLES {
 	HW_VAR_AC_PARAM_BE,
 	HW_VAR_AC_PARAM_BK,
 	HW_VAR_ACM_CTRL,
-#ifdef CONFIG_WMMPS_STA
 	HW_VAR_UAPSD_TID,
-#endif /* CONFIG_WMMPS_STA */
 	HW_VAR_AMPDU_MIN_SPACE,
-#ifdef CONFIG_80211N_HT
 	HW_VAR_AMPDU_FACTOR,
-#endif /* CONFIG_80211N_HT */
 	HW_VAR_RXDMA_AGG_PG_TH,
 	HW_VAR_SET_RPWM,
 	HW_VAR_CPWM,
@@ -138,16 +132,7 @@ typedef enum _HW_VARIABLES {
 	HW_VAR_HCI_SUS_STATE,
 	/* The valid upper nav range for the HW updating, if the true value is larger than the upper range, the HW won't update it. */
 	/* Unit in microsecond. 0 means disable this function. */
-#if defined(CONFIG_WOWLAN) || defined(CONFIG_AP_WOWLAN)
-	HW_VAR_WOWLAN,
-	HW_VAR_WAKEUP_REASON,
-#endif
 	HW_VAR_RPWM_TOG,
-#ifdef CONFIG_GPIO_WAKEUP
-	HW_VAR_WOW_OUTPUT_GPIO,
-	HW_VAR_WOW_INPUT_GPIO,
-	HW_SET_GPIO_WL_CTRL,
-#endif
 	HW_VAR_SYS_CLKR,
 	HW_VAR_NAV_UPPER,
 	HW_VAR_RPT_TIMER_SETTING,
@@ -197,11 +182,6 @@ typedef enum _HW_VARIABLES {
 	HW_VAR_MDIO,
 	HW_VAR_L1OFF_CAPABILITY,
 	HW_VAR_L1OFF_NIC_SUPPORT,
-#ifdef CONFIG_TDLS
-#ifdef CONFIG_TDLS_CH_SW
-	HW_VAR_TDLS_BCN_EARLY_C2H_RPT,
-#endif
-#endif
 	HW_VAR_DUMP_MAC_TXFIFO,
 	HW_VAR_PWR_CMD,
 #ifdef CONFIG_FW_HANDLE_TXBCN
@@ -214,9 +194,6 @@ typedef enum _HW_VARIABLES {
 	#ifdef CONFIG_RTS_FULL_BW
 	HW_VAR_SET_RTS_BW,
 	#endif
-#if defined(CONFIG_PCI_HCI)
-	HW_VAR_ENSWBCN,
-#endif
 } HW_VARIABLES;
 
 typedef enum _HAL_DEF_VARIABLE {
@@ -265,9 +242,6 @@ typedef enum _HAL_ODM_VARIABLE {
 	HAL_ODM_INITIAL_GAIN,
 	HAL_ODM_RX_INFO_DUMP,
 	HAL_ODM_RX_Dframe_INFO,
-#ifdef CONFIG_ANTENNA_DIVERSITY
-	HAL_ODM_ANTDIV_SELECT
-#endif
 } HAL_ODM_VARIABLE;
 
 typedef enum _HAL_INTF_PS_FUNC {
@@ -301,9 +275,6 @@ struct hal_ops {
 	 */
 	s32(*mgnt_xmit)(_adapter *padapter, struct xmit_frame *pmgntframe);
 	s32(*hal_xmitframe_enqueue)(_adapter *padapter, struct xmit_frame *pxmitframe);
-#ifdef CONFIG_XMIT_THREAD_MODE
-	s32(*xmit_thread_handler)(_adapter *padapter);
-#endif
 	void	(*run_thread)(_adapter *padapter);
 	void	(*cancel_thread)(_adapter *padapter);
 
@@ -313,32 +284,18 @@ struct hal_ops {
 #ifdef CONFIG_RECV_THREAD_MODE
 	s32 (*recv_hdl)(_adapter *adapter);
 #endif
-#if defined(CONFIG_USB_HCI) || defined(CONFIG_PCI_HCI)
 	u32(*inirp_init)(_adapter *padapter);
 	u32(*inirp_deinit)(_adapter *padapter);
-#endif
 	/*** interrupt hdl section ***/
 	void	(*enable_interrupt)(_adapter *padapter);
 	void	(*disable_interrupt)(_adapter *padapter);
 	u8(*check_ips_status)(_adapter *padapter);
-#if defined(CONFIG_PCI_HCI)
-	s32(*interrupt_handler)(_adapter *padapter);
-	void (*unmap_beacon_icf)(_adapter *padapter);
-#endif
 
-#if defined(CONFIG_USB_HCI) && defined(CONFIG_SUPPORT_USB_INT)
-	void	(*interrupt_handler)(_adapter *padapter, u16 pkt_len, u8 *pbuf);
-#endif
 
-#if defined(CONFIG_PCI_HCI)
-	void	(*irp_reset)(_adapter *padapter);
-#endif
 
 	/*** DM section ***/
-#ifdef CONFIG_RTW_SW_LED
 	void	(*InitSwLeds)(_adapter *padapter);
 	void	(*DeInitSwLeds)(_adapter *padapter);
-#endif
 	void	(*set_chnl_bw_handler)(_adapter *padapter, u8 channel, enum channel_width Bandwidth, u8 Offset40, u8 Offset80);
 
 	void (*set_tx_power_level_handler)(_adapter *adapter, u8 channel);
@@ -391,11 +348,7 @@ struct hal_ops {
 	int	(*Efuse_PgPacketWrite)(_adapter *padapter, u8 offset, u8 word_en, u8 *data, BOOLEAN bPseudoTest);
 	u8(*Efuse_WordEnableDataWrite)(_adapter *padapter, u16 efuse_addr, u8 word_en, u8 *data, BOOLEAN bPseudoTest);
 	BOOLEAN(*Efuse_PgPacketWrite_BT)(_adapter *padapter, u8 offset, u8 word_en, u8 *data, BOOLEAN bPseudoTest);
-#if defined(CONFIG_RTL8710B)
-	BOOLEAN(*efuse_indirect_read4)(_adapter *padapter, u16 regaddr, u8 *value);
-#endif
 
-#ifdef DBG_CONFIG_ERROR_DETECT
 	void (*sreset_init_value)(_adapter *padapter);
 	void (*sreset_reset_value)(_adapter *padapter);
 	void (*silentreset)(_adapter *padapter);
@@ -403,30 +356,20 @@ struct hal_ops {
 	void (*sreset_linked_status_check)(_adapter *padapter);
 	u8(*sreset_get_wifi_status)(_adapter *padapter);
 	bool (*sreset_inprogress)(_adapter *padapter);
-#endif
 
 #ifdef CONFIG_IOL
 	int (*IOL_exec_cmds_sync)(_adapter *padapter, struct xmit_frame *xmit_frame, u32 max_wating_ms, u32 bndy_cnt);
 #endif
 
 	void (*hal_notch_filter)(_adapter *adapter, bool enable);
-#ifdef RTW_HALMAC
 	void (*hal_mac_c2h_handler)(_adapter *adapter, u8 *pbuf, u16 length);
-#else
-	s32(*c2h_handler)(_adapter *adapter, u8 id, u8 seq, u8 plen, u8 *payload);
-#endif
 	void (*reqtxrpt)(_adapter *padapter, u8 macid);
 	s32(*fill_h2c_cmd)(PADAPTER, u8 ElementID, u32 CmdLen, u8 *pCmdBuffer);
 	void (*fill_fake_txdesc)(PADAPTER, u8 *pDesc, u32 BufferLen,
 				 u8 IsPsPoll, u8 IsBTQosNull, u8 bDataFrame);
 	s32(*fw_dl)(_adapter *adapter, u8 wowlan);
-#ifdef RTW_HALMAC
 	s32 (*fw_mem_dl)(_adapter *adapter, enum fw_mem mem);
-#endif
 
-#if defined(CONFIG_WOWLAN) || defined(CONFIG_AP_WOWLAN) || defined(CONFIG_PCI_HCI)
-	void (*clear_interrupt)(_adapter *padapter);
-#endif
 	u8(*hal_get_tx_buff_rsvd_page_num)(_adapter *adapter, bool wowlan);
 #ifdef CONFIG_GPIO_API
 	void (*update_hisr_hsisr_ind)(PADAPTER padapter, u32 flag);
@@ -437,14 +380,9 @@ struct hal_ops {
 	void (*fw_correct_bcn)(PADAPTER padapter);
 #endif
 
-#ifdef RTW_HALMAC
 	u8(*init_mac_register)(PADAPTER);
 	u8(*init_phy)(PADAPTER);
-#endif /* RTW_HALMAC */
 
-#ifdef CONFIG_PCI_HCI
-	void (*hal_set_l1ssbackdoor_handler)(_adapter *padapter, u8 enable);
-#endif
 
 #ifdef CONFIG_RFKILL_POLL
 	bool (*hal_radio_onoff_check)(_adapter *adapter, u8 *valid);
@@ -686,10 +624,8 @@ void	rtw_hal_free_data(_adapter *padapter);
 
 void rtw_hal_dm_init(_adapter *padapter);
 void rtw_hal_dm_deinit(_adapter *padapter);
-#ifdef CONFIG_RTW_SW_LED
 void rtw_hal_sw_led_init(_adapter *padapter);
 void rtw_hal_sw_led_deinit(_adapter *padapter);
-#endif
 u32 rtw_hal_power_on(_adapter *padapter);
 void rtw_hal_power_off(_adapter *padapter);
 
@@ -724,20 +660,9 @@ void rtw_hal_disable_interrupt(_adapter *padapter);
 
 u8 rtw_hal_check_ips_status(_adapter *padapter);
 
-#if defined(CONFIG_USB_HCI) || defined(CONFIG_PCI_HCI)
 	u32	rtw_hal_inirp_init(_adapter *padapter);
 	u32	rtw_hal_inirp_deinit(_adapter *padapter);
-#endif
 
-#if defined(CONFIG_PCI_HCI)
-	void	rtw_hal_irp_reset(_adapter *padapter);
-void	rtw_hal_pci_dbi_write(_adapter *padapter, u16 addr, u8 data);
-u8	rtw_hal_pci_dbi_read(_adapter *padapter, u16 addr);
-void	rtw_hal_pci_mdio_write(_adapter *padapter, u8 addr, u16 data);
-u16	rtw_hal_pci_mdio_read(_adapter *padapter, u8 addr);
-u8	rtw_hal_pci_l1off_nic_support(_adapter *padapter);
-u8	rtw_hal_pci_l1off_capability(_adapter *padapter);
-#endif
 
 u8	rtw_hal_intf_ps_func(_adapter *padapter, HAL_INTF_PS_FUNC efunc_id, u8 *val);
 
@@ -779,13 +704,6 @@ void rtw_hal_write_syson_reg(_adapter *padapter, u32 RegAddr, u32 BitMask, u32 D
 #define phy_set_mac_reg	phy_set_bb_reg
 #define phy_query_mac_reg phy_query_bb_reg
 
-#if defined(CONFIG_PCI_HCI)
-	s32	rtw_hal_interrupt_handler(_adapter *padapter);
-	void	rtw_hal_unmap_beacon_icf(_adapter *padapter);
-#endif
-#if  defined(CONFIG_USB_HCI) && defined(CONFIG_SUPPORT_USB_INT)
-	void	rtw_hal_interrupt_handler(_adapter *padapter, u16 pkt_len, u8 *pbuf);
-#endif
 
 void	rtw_hal_set_chnl_bw(_adapter *padapter, u8 channel, enum channel_width Bandwidth, u8 Offset40, u8 Offset80);
 void	rtw_hal_dm_watchdog(_adapter *padapter);
@@ -795,7 +713,6 @@ void	rtw_hal_dm_watchdog_in_lps(_adapter *padapter);
 	s32	rtw_hal_hostap_mgnt_xmit_entry(_adapter *padapter, _pkt *pkt);
 #endif
 
-#ifdef DBG_CONFIG_ERROR_DETECT
 void rtw_hal_sreset_init(_adapter *padapter);
 void rtw_hal_sreset_reset(_adapter *padapter);
 void rtw_hal_sreset_reset_value(_adapter *padapter);
@@ -803,15 +720,11 @@ void rtw_hal_sreset_xmit_status_check(_adapter *padapter);
 void rtw_hal_sreset_linked_status_check(_adapter *padapter);
 u8   rtw_hal_sreset_get_wifi_status(_adapter *padapter);
 bool rtw_hal_sreset_inprogress(_adapter *padapter);
-#endif
 
 #ifdef CONFIG_IOL
 int rtw_hal_iol_cmd(ADAPTER *adapter, struct xmit_frame *xmit_frame, u32 max_wating_ms, u32 bndy_cnt);
 #endif
 
-#ifdef CONFIG_XMIT_THREAD_MODE
-s32 rtw_hal_xmit_thread_handler(_adapter *padapter);
-#endif
 
 #ifdef CONFIG_RECV_THREAD_MODE
 s32 rtw_hal_recv_hdl(_adapter *adapter);
@@ -830,10 +743,6 @@ bool rtw_hal_c2h_pkt_hdr_parse(_adapter *adapter, u8 *buf, u16 len, u8 *id, u8 *
 #endif
 
 s32 c2h_handler(_adapter *adapter, u8 id, u8 seq, u8 plen, u8 *payload);
-#ifndef RTW_HALMAC
-s32 rtw_hal_c2h_handler(_adapter *adapter, u8 id, u8 seq, u8 plen, u8 *payload);
-s32 rtw_hal_c2h_id_handle_directly(_adapter *adapter, u8 id, u8 seq, u8 plen, u8 *payload);
-#endif
 
 s32 rtw_hal_is_disable_sw_channel_plan(PADAPTER padapter);
 
@@ -857,9 +766,6 @@ void rtw_hal_fw_correct_bcn(_adapter *padapter);
 #endif
 s32 rtw_hal_fw_dl(_adapter *padapter, u8 wowlan);
 
-#if defined(CONFIG_WOWLAN) || defined(CONFIG_AP_WOWLAN)
-	void rtw_hal_clear_interrupt(_adapter *padapter);
-#endif
 
 void rtw_hal_set_tx_power_level(_adapter *adapter, u8 channel);
 void rtw_hal_update_txpwr_level(_adapter *adapter);
@@ -875,11 +781,9 @@ s8 rtw_hal_get_txpwr_target_extra_bias(_adapter *adapter, enum rf_path rfpath
 
 u8 rtw_hal_ops_check(_adapter *padapter);
 
-#ifdef RTW_HALMAC
 	u8 rtw_hal_init_mac_register(PADAPTER);
 	u8 rtw_hal_init_phy(PADAPTER);
 s32 rtw_hal_fw_mem_dl(_adapter *padapter, enum fw_mem mem);
-#endif /* RTW_HALMAC */
 
 #ifdef CONFIG_RFKILL_POLL
 bool rtw_hal_rfkill_poll(_adapter *adapter, u8 *valid);

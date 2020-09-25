@@ -47,7 +47,6 @@
 	#endif
 #endif
 
-#ifdef CONFIG_BR_EXT
 
 /* #define BR_EXT_DEBUG */
 
@@ -1574,4 +1573,3 @@ void *scdb_findEntry(_adapter *priv, unsigned char *macAddr,
 	return NULL;
 }
 
-#endif /* CONFIG_BR_EXT */

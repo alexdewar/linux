@@ -207,7 +207,6 @@ void _rtw_init_stainfo(struct sta_info *psta)
 	_rtw_init_sta_xmit_priv(&psta->sta_xmitpriv);
 	_rtw_init_sta_recv_priv(&psta->sta_recvpriv);
 
-#ifdef CONFIG_AP_MODE
 	_rtw_init_listhead(&psta->asoc_list);
 	_rtw_init_listhead(&psta->auth_list);
 	psta->bpairwise_key_installed = _FALSE;
@@ -215,7 +214,6 @@ void _rtw_init_stainfo(struct sta_info *psta)
 #ifdef CONFIG_RTW_80211R
 	psta->ft_pairwise_key_installed = _FALSE;
 #endif
-#endif /* CONFIG_AP_MODE	 */
 
 	rtw_st_ctl_init(&psta->st_ctl);
 }
@@ -264,7 +262,6 @@ u32	_rtw_init_sta_priv(struct	sta_priv *pstapriv)
 
 	pstapriv->adhoc_expire_to = 4; /* 4 * 2 = 8 sec */
 
-#ifdef CONFIG_AP_MODE
 	pstapriv->max_aid = macid_ctl->num;
 	pstapriv->rr_aid = 0;
 	pstapriv->started_aid = 1;
@@ -290,17 +287,12 @@ u32	_rtw_init_sta_priv(struct	sta_priv *pstapriv)
 	pstapriv->assoc_to = 3;
 	/* pstapriv->expire_to = 900; */ /* 900*2 = 1800 sec = 30 min, expire after no any traffic. */
 	/* pstapriv->expire_to = 30; */ /* 30*2 = 60 sec = 1 min, expire after no any traffic. */
-#ifdef CONFIG_ACTIVE_KEEP_ALIVE_CHECK
 	pstapriv->expire_to = 3; /* 3*2 = 6 sec */
-#else
-	pstapriv->expire_to = 60;/* 60*2 = 120 sec = 2 min, expire after no any traffic. */
-#endif
 #ifdef CONFIG_ATMEL_RC_PATCH
 	_rtw_memset(pstapriv->atmel_rc_pattern, 0, ETH_ALEN);
 #endif
 	pstapriv->max_num_sta = NUM_STA;
 
-#endif
 
 #if CONFIG_RTW_MACADDR_ACL
 	for (i = 0; i < RTW_ACL_PERIOD_NUM; i++)
@@ -311,9 +303,7 @@ u32	_rtw_init_sta_priv(struct	sta_priv *pstapriv)
 	rtw_pre_link_sta_ctl_init(pstapriv);
 #endif
 
-#if defined(DBG_ROAMING_TEST) || defined(CONFIG_RTW_REPEATER_SON)
-	rtw_set_rx_chk_limit(adapter,1);
-#elif defined(CONFIG_ACTIVE_KEEP_ALIVE_CHECK) && !defined(CONFIG_LPS_LCLK_WD_TIMER)
+#if   defined(CONFIG_ACTIVE_KEEP_ALIVE_CHECK) && !defined(CONFIG_LPS_LCLK_WD_TIMER)
 	rtw_set_rx_chk_limit(adapter,4);
 #else
 	rtw_set_rx_chk_limit(adapter,8);
@@ -326,12 +316,10 @@ exit:
 		if (pstapriv->pallocated_stainfo_buf)
 			rtw_vmfree(pstapriv->pallocated_stainfo_buf,
 				sizeof(struct sta_info) * NUM_STA + MEM_ALIGNMENT_OFFSET);
-		#ifdef CONFIG_AP_MODE
 		if (pstapriv->sta_aid)
 			rtw_mfree(pstapriv->sta_aid, pstapriv->max_aid * sizeof(struct sta_info *));
 		if (pstapriv->sta_dz_bitmap)
 			rtw_mfree(pstapriv->sta_dz_bitmap, pstapriv->aid_bmp_len);
-		#endif
 	}
 
 	return ret;
@@ -427,10 +415,8 @@ void rtw_mfree_sta_priv_lock(struct	sta_priv *pstapriv)
 	_rtw_spinlock_free(&pstapriv->wakeup_q.lock);
 	_rtw_spinlock_free(&pstapriv->sleep_q.lock);
 
-#ifdef CONFIG_AP_MODE
 	_rtw_spinlock_free(&pstapriv->asoc_list_lock);
 	_rtw_spinlock_free(&pstapriv->auth_list_lock);
-#endif
 
 }
 
@@ -478,14 +464,12 @@ u32	_rtw_free_sta_priv(struct	sta_priv *pstapriv)
 		if (pstapriv->pallocated_stainfo_buf)
 			rtw_vmfree(pstapriv->pallocated_stainfo_buf,
 				sizeof(struct sta_info) * NUM_STA + MEM_ALIGNMENT_OFFSET);
-		#ifdef CONFIG_AP_MODE
 		if (pstapriv->sta_aid)
 			rtw_mfree(pstapriv->sta_aid, pstapriv->max_aid * sizeof(struct sta_info *));
 		if (pstapriv->sta_dz_bitmap)
 			rtw_mfree(pstapriv->sta_dz_bitmap, pstapriv->aid_bmp_len);
 		if (pstapriv->tim_bitmap)
 			rtw_mfree(pstapriv->tim_bitmap, pstapriv->aid_bmp_len);
-		#endif
 	}
 
 	return _SUCCESS;
@@ -496,9 +480,7 @@ static void rtw_init_recv_timer(struct recv_reorder_ctrl *preorder_ctrl)
 {
 	_adapter *padapter = preorder_ctrl->padapter;
 
-#if defined(CONFIG_80211N_HT) && defined(CONFIG_RECV_REORDERING_CTRL)
 	rtw_init_timer(&(preorder_ctrl->reordering_ctrl_timer), padapter, rtw_reordering_ctrl_timeout_handler, preorder_ctrl);
-#endif
 }
 
 /* struct	sta_info *rtw_alloc_stainfo(_queue *pfree_sta_queue, unsigned char *hwaddr) */
@@ -563,12 +545,7 @@ struct	sta_info *rtw_alloc_stainfo(struct	sta_priv *pstapriv, const u8 *hwaddr)
 		}
 
 		rtw_init_timer(&psta->addba_retry_timer, psta->padapter, addba_timer_hdl, psta);
-#ifdef CONFIG_IEEE80211W
 		rtw_init_timer(&psta->dot11w_expire_timer, psta->padapter, sa_query_timer_hdl, psta);
-#endif /* CONFIG_IEEE80211W */
-#ifdef CONFIG_TDLS
-		rtw_init_tdls_timer(pstapriv->padapter, psta);
-#endif /* CONFIG_TDLS */
 
 		/* for A-MPDU Rx reordering buffer control */
 		for (i = 0; i < 16 ; i++) {
@@ -577,10 +554,6 @@ struct	sta_info *rtw_alloc_stainfo(struct	sta_priv *pstapriv, const u8 *hwaddr)
 			preorder_ctrl->tid = i;
 			preorder_ctrl->enable = _FALSE;
 			preorder_ctrl->indicate_seq = 0xffff;
-			#ifdef DBG_RX_SEQ
-			RTW_INFO("DBG_RX_SEQ "FUNC_ADPT_FMT" tid:%u SN_CLEAR indicate_seq:%d\n"
-				, FUNC_ADPT_ARG(pstapriv->padapter), i, preorder_ctrl->indicate_seq);
-			#endif
 			preorder_ctrl->wend_b = 0xffff;
 			/* preorder_ctrl->wsize_b = (NR_RECVBUFF-2); */
 			preorder_ctrl->wsize_b = 64;/* 64; */
@@ -731,14 +704,9 @@ u32	rtw_free_stainfo(_adapter *padapter , struct sta_info *psta)
 	/* re-init sta_info; 20061114 */ /* will be init in alloc_stainfo */
 	/* _rtw_init_sta_xmit_priv(&psta->sta_xmitpriv); */
 	/* _rtw_init_sta_recv_priv(&psta->sta_recvpriv); */
-#ifdef CONFIG_IEEE80211W
 	_cancel_timer_ex(&psta->dot11w_expire_timer);
-#endif /* CONFIG_IEEE80211W */
 	_cancel_timer_ex(&psta->addba_retry_timer);
 
-#ifdef CONFIG_TDLS
-	psta->tdls_sta_state = TDLS_STATE_NONE;
-#endif /* CONFIG_TDLS */
 
 	/* for A-MPDU Rx reordering buffer control, cancel reordering_ctrl_timer */
 	for (i = 0; i < 16 ; i++) {
@@ -783,7 +751,6 @@ u32	rtw_free_stainfo(_adapter *padapter , struct sta_info *psta)
 	if (is_pre_link_sta == _FALSE)
 		rtw_release_macid(pstapriv->padapter, psta);
 
-#ifdef CONFIG_AP_MODE
 
 	/*
 		_enter_critical_bh(&pstapriv->asoc_list_lock, &irqL0);
@@ -832,7 +799,6 @@ u32	rtw_free_stainfo(_adapter *padapter , struct sta_info *psta)
 	psta->under_exist_checking = 0;
 #endif /* CONFIG_TX_MCAST2UNI */
 
-#endif /* CONFIG_AP_MODE	 */
 
 	rtw_st_ctl_deinit(&psta->st_ctl);
 
@@ -970,10 +936,8 @@ u32 rtw_init_bcmc_stainfo(_adapter *padapter)
 		res = _FAIL;
 		goto exit;
 	}
-#ifdef CONFIG_BEAMFORMING
 	psta->cmn.bf_info.g_id = 63;
 	psta->cmn.bf_info.p_aid = 0;
-#endif
 
 	ptxservq = &(psta->sta_xmitpriv.be_q);
 
@@ -1002,7 +966,6 @@ struct sta_info *rtw_get_bcmc_stainfo(_adapter *padapter)
 
 }
 
-#ifdef CONFIG_AP_MODE
 u16 rtw_aid_alloc(_adapter *adapter, struct sta_info *sta)
 {
 	struct sta_priv *stapriv = &adapter->stapriv;
@@ -1056,7 +1019,6 @@ void dump_aid_status(void *sel, _adapter *adapter)
 
 	rtw_mfree(aid_bmp, stapriv->aid_bmp_len);
 }
-#endif /* CONFIG_AP_MODE */
 
 #if CONFIG_RTW_MACADDR_ACL
 const char *const _acl_period_str[RTW_ACL_PERIOD_NUM] = {

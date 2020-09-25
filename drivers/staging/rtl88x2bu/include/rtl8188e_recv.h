@@ -19,32 +19,14 @@
 #define RECV_BLK_CNT 16
 #define RECV_BLK_TH RECV_BLK_CNT
 
-#if defined(CONFIG_USB_HCI)
 	#ifndef MAX_RECVBUF_SZ
-		#ifndef CONFIG_MINIMAL_MEMORY_USAGE
 			/* #define MAX_RECVBUF_SZ (32768) */ /* 32k */
 			/* #define MAX_RECVBUF_SZ (16384) */ /* 16K */
 			/* #define MAX_RECVBUF_SZ (10240) */ /* 10K */
 			#define MAX_RECVBUF_SZ (15360) /* 15k < 16k */
 			/* #define MAX_RECVBUF_SZ (8192+1024) */ /* 8K+1k */
-		#else
-			#define MAX_RECVBUF_SZ (4000) /* about 4K */
-		#endif
 	#endif /* !MAX_RECVBUF_SZ */
 
-#elif defined(CONFIG_PCI_HCI)
-	/* #ifndef CONFIG_MINIMAL_MEMORY_USAGE */
-	/*	#define MAX_RECVBUF_SZ (9100) */
-	/* #else */
-	#define MAX_RECVBUF_SZ (4000) /* about 4K
-	* #endif */
-
-
-#elif defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
-
-	#define MAX_RECVBUF_SZ (10240)
-
-#endif
 
 /* Rx smooth factor */
 #define	Rx_Smooth_Factor (20)
@@ -135,21 +117,11 @@ typedef struct rxreport_8188e {
 } RXREPORT, *PRXREPORT;
 
 
-#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
-	s32 rtl8188es_init_recv_priv(PADAPTER padapter);
-	void rtl8188es_free_recv_priv(PADAPTER padapter);
-#endif
 
-#ifdef CONFIG_USB_HCI
 	void rtl8188eu_init_recvbuf(_adapter *padapter, struct recv_buf *precvbuf);
 	s32 rtl8188eu_init_recv_priv(PADAPTER padapter);
 	void rtl8188eu_free_recv_priv(PADAPTER padapter);
-#endif
 
-#ifdef CONFIG_PCI_HCI
-	s32 rtl8188ee_init_recv_priv(PADAPTER padapter);
-	void rtl8188ee_free_recv_priv(PADAPTER padapter);
-#endif
 
 void rtl8188e_query_rx_desc_status(union recv_frame *precvframe, struct recv_stat *prxstat);
 

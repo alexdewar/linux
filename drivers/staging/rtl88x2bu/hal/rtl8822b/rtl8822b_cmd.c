@@ -32,11 +32,9 @@
 s32 rtl8822b_fillh2ccmd(PADAPTER adapter, u8 id, u32 buf_len, u8 *pbuf)
 {
 	u8 h2c[RTW_HALMAC_H2C_MAX_SIZE] = {0};
-#ifdef CONFIG_RTW_DEBUG
 	u8 msg[(RTW_HALMAC_H2C_MAX_SIZE - 1) * 5 + 1] = {0};
 	u8 *msg_p;
 	u32 msg_size, i, n;
-#endif /* CONFIG_RTW_DEBUG */
 	int err;
 	s32 ret = _FAIL;
 
@@ -50,7 +48,6 @@ s32 rtl8822b_fillh2ccmd(PADAPTER adapter, u8 id, u32 buf_len, u8 *pbuf)
 	if (rtw_is_surprise_removed(adapter))
 		goto exit;
 
-#ifdef CONFIG_RTW_DEBUG
 	msg_p = msg;
 	msg_size = (RTW_HALMAC_H2C_MAX_SIZE - 1) * 5 + 1;
 	for (i = 0; i < buf_len; i++) {
@@ -62,7 +59,6 @@ s32 rtl8822b_fillh2ccmd(PADAPTER adapter, u8 id, u32 buf_len, u8 *pbuf)
 	}
 	RTW_DBG(FUNC_ADPT_FMT ": id=0x%02x buf=%s\n",
 		 FUNC_ADPT_ARG(adapter), id, msg);
-#endif /* CONFIG_RTW_DEBUG */
 
 	h2c[0] = id;
 	_rtw_memcpy(h2c + 1, pbuf, buf_len);
@@ -107,10 +103,8 @@ void rtl8822b_set_FwPwrMode_cmd(PADAPTER adapter, u8 psmode)
 	u8 bcn_recv_time;
 	struct mlme_ext_priv *pmlmeext = &adapter->mlmeextpriv;
 #endif
-#ifdef CONFIG_WMMPS_STA
 	struct mlme_priv	*pmlmepriv = &(adapter->mlmepriv);
 	struct qos_priv	*pqospriv = &pmlmepriv->qospriv;
-#endif /* CONFIG_WMMPS_STA */	
 	u8 h2c[RTW_HALMAC_H2C_MAX_SIZE] = {0};
 	u8 PowerState = 0, awake_intvl = 1, rlbm = 0;
 	u8 allQueueUAPSD = 0;
@@ -128,7 +122,6 @@ void rtl8822b_set_FwPwrMode_cmd(PADAPTER adapter, u8 psmode)
 			psmode == PS_MODE_ACTIVE ? pwrpriv->current_lps_hw_port_id : hw_port);
 
 	if (psmode == PS_MODE_MIN || psmode == PS_MODE_MAX) {
-#ifdef CONFIG_WMMPS_STA	
 		if (rtw_is_wmmps_mode(adapter)) {
 			mode = 2;
 
@@ -138,15 +131,12 @@ void rtl8822b_set_FwPwrMode_cmd(PADAPTER adapter, u8 psmode)
 			if ((pqospriv->uapsd_tid & BIT_MASK_TID_TC) == ALL_TID_TC_SUPPORTED_UAPSD)
 				allQueueUAPSD = 1;
 		} else
-#endif /* CONFIG_WMMPS_STA */
 		{
 			mode = 1;
-#ifdef CONFIG_WMMPS_STA	
 			/* For WMMPS test case, the station must retain sleep mode to capture buffered data on LPS mechanism */ 
 			if ((pqospriv->uapsd_tid & BIT_MASK_TID_TC)  != 0)
 				smart_ps = 0;
 			else
-#endif /* CONFIG_WMMPS_STA */
 			{
 				smart_ps = pwrpriv->smart_ps;
 			}
@@ -189,11 +179,9 @@ void rtl8822b_set_FwPwrMode_cmd(PADAPTER adapter, u8 psmode)
 	}
 
 	if (psmode > 0) {
-#ifdef CONFIG_BT_COEXIST
 		if (rtw_btcoex_IsBtControlLps(adapter) == _TRUE)
 			PowerState = rtw_btcoex_RpwmVal(adapter);
 		else
-#endif /* CONFIG_BT_COEXIST */
 			PowerState = 0x00; /* AllON(0x0C), RFON(0x04), RFOFF(0x00) */
 	} else
 		PowerState = 0x0C; /* AllON(0x0C), RFON(0x04), RFOFF(0x00) */
@@ -237,31 +225,12 @@ void rtl8822b_set_FwPwrMode_cmd(PADAPTER adapter, u8 psmode)
 	}
 #endif
 
-#ifdef CONFIG_BT_COEXIST
 	rtw_btcoex_RecordPwrMode(adapter, h2c + 1, RTW_HALMAC_H2C_MAX_SIZE - 1);
-#endif /* CONFIG_BT_COEXIST */
 
 	RTW_DBG_DUMP("H2C-PwrMode Parm:", h2c, RTW_HALMAC_H2C_MAX_SIZE);
 	rtw_halmac_send_h2c(adapter_to_dvobj(adapter), h2c);
 }
 
-#ifdef CONFIG_TDLS
-#ifdef CONFIG_TDLS_CH_SW
-void rtl8822b_set_BcnEarly_C2H_Rpt_cmd(PADAPTER padapter, u8 enable)
-{
-	u8	u1H2CSetPwrMode[RTW_HALMAC_H2C_MAX_SIZE] = {0};
-
-	SET_PWR_MODE_SET_CMD_ID(u1H2CSetPwrMode, CMD_ID_SET_PWR_MODE);
-	SET_PWR_MODE_SET_CLASS(u1H2CSetPwrMode, CLASS_SET_PWR_MODE);
-	SET_PWR_MODE_SET_MODE(u1H2CSetPwrMode, 1);
-	SET_PWR_MODE_SET_RLBM(u1H2CSetPwrMode, 1);
-	SET_PWR_MODE_SET_BCN_EARLY_RPT(u1H2CSetPwrMode, enable);
-	SET_PWR_MODE_SET_PWR_STATE(u1H2CSetPwrMode, 0x0C);
-	
-	rtw_halmac_send_h2c(adapter_to_dvobj(padapter), u1H2CSetPwrMode);
-}
-#endif
-#endif
 
 void rtl8822b_set_FwPwrModeInIPS_cmd(PADAPTER adapter, u8 cmd_param)
 {
@@ -281,32 +250,6 @@ void rtl8822b_set_FwPwrModeInIPS_cmd(PADAPTER adapter, u8 cmd_param)
 	rtw_halmac_send_h2c(adapter_to_dvobj(adapter), h2c);
 }
 
-#ifdef CONFIG_WOWLAN
-void rtl8822b_set_fw_pwrmode_inips_cmd_wowlan(PADAPTER padapter, u8 ps_mode)
-{
-	struct registry_priv  *registry_par = &padapter->registrypriv;
-	u8 param[H2C_INACTIVE_PS_LEN] = {0};
-	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
-
-	RTW_INFO("%s, ps_mode: %d\n", __func__, ps_mode);
-	if (ps_mode == PS_MODE_ACTIVE) {
-		SET_H2CCMD_INACTIVE_PS_EN(param, 0);
-	}
-	else {
-		SET_H2CCMD_INACTIVE_PS_EN(param, 1);
-		if(registry_par->suspend_type == FW_IPS_DISABLE_BBRF && !check_fwstate(pmlmepriv, _FW_LINKED))
-			SET_H2CCMD_INACTIVE_DISBBRF(param, 1);
-		if(registry_par->suspend_type == FW_IPS_WRC) {
-			SET_H2CCMD_INACTIVE_PERIOD_SCAN_EN(param, 1);
-			SET_H2CCMD_INACTIVE_PS_FREQ(param, 3);
-			SET_H2CCMD_INACTIVE_PS_DURATION(param, 1);
-			SET_H2CCMD_INACTIVE_PS_PERIOD_SCAN_TIME(param, 3);
-		}
-	}
-
-	rtl8822b_fillh2ccmd(padapter, H2C_INACTIVE_PS_, sizeof(param), param);
-}
-#endif /* CONFIG_WOWLAN */
 
 #ifdef CONFIG_LPS_PWR_TRACKING
 #define CLASS_FW_THERMAL_RPT	0x06
@@ -338,12 +281,10 @@ void rtl8822b_set_fw_thermal_rpt_cmd(_adapter *adapter, u8 enable, u8 thermal_va
 #endif
 
 
-#ifdef CONFIG_BT_COEXIST
 void rtl8822b_download_BTCoex_AP_mode_rsvd_page(PADAPTER adapter)
 {
 	hw_var_set_dl_rsvd_page(adapter, RT_MEDIA_CONNECT);
 }
-#endif /* CONFIG_BT_COEXIST */
 
 
 /*
@@ -351,7 +292,6 @@ void rtl8822b_download_BTCoex_AP_mode_rsvd_page(PADAPTER adapter)
  */
 static void c2h_ccx_rpt(PADAPTER adapter, u8 *pdata)
 {
-#ifdef CONFIG_XMIT_ACK
 	u8 tx_state;
 
 
@@ -362,7 +302,6 @@ static void c2h_ccx_rpt(PADAPTER adapter, u8 *pdata)
 		rtw_ack_tx_done(&adapter->xmitpriv, RTW_SCTX_DONE_SUCCESS);
 	else
 		rtw_ack_tx_done(&adapter->xmitpriv, RTW_SCTX_DONE_CCX_PKT_FAIL);
-#endif /* CONFIG_XMIT_ACK */
 }
 
 static void
@@ -524,12 +463,10 @@ static void process_c2h_event(PADAPTER adapter, u8 *c2h, u32 size)
 	c2h_payload_len = c2h_len - 2;
 
 	switch (id) {
-#ifdef CONFIG_BEAMFORMING
 	case CMD_ID_C2H_SND_TXBF:
 		RTW_INFO("%s: [CMD_ID_C2H_SND_TXBF] len=%d\n", __FUNCTION__, c2h_payload_len);
 		rtw_bf_c2h_handler(adapter, id, pc2h_data, c2h_len);
 		break;
-#endif /* CONFIG_BEAMFORMING */
 
 	case CMD_ID_C2H_AP_REQ_TXRPT:
 		/*RTW_INFO("[C2H], C2H_AP_REQ_TXRPT!!\n");*/
@@ -588,21 +525,6 @@ static void process_c2h_event(PADAPTER adapter, u8 *c2h, u32 size)
 
 void rtl8822b_c2h_handler(PADAPTER adapter, u8 *pbuf, u16 length)
 {
-#ifdef CONFIG_WOWLAN
-	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(adapter);
-
-
-	if (pwrpriv->wowlan_mode == _TRUE) {
-#ifdef CONFIG_RTW_DEBUG
-		u32 desc_size;
-
-		desc_size = rtl8822b_get_rx_desc_size(adapter);
-		RTW_INFO("%s: return because wowolan_mode==TRUE! CMDID=%d\n",
-			 __FUNCTION__, C2H_GET_CMD_ID(pbuf + desc_size));
-#endif /* CONFIG_RTW_DEBUG */
-		return;
-	}
-#endif /* CONFIG_WOWLAN*/
 
 	process_c2h_event(adapter, pbuf, length);
 }

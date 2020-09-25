@@ -15,7 +15,6 @@
 
 #include <drv_types.h>
 
-#ifdef CONFIG_IOCTL_CFG80211
 
 
 /*
@@ -36,103 +35,6 @@
 
 #include <net/rtnetlink.h>
 
-#ifdef DBG_MEM_ALLOC
-extern bool match_mstat_sniff_rules(const enum mstat_f flags, const size_t size);
-struct sk_buff *dbg_rtw_cfg80211_vendor_event_alloc(struct wiphy *wiphy, struct wireless_dev *wdev, int len, int event_id, gfp_t gfp
-		, const enum mstat_f flags, const char *func, const int line)
-{
-	struct sk_buff *skb;
-	unsigned int truesize = 0;
-
-	skb = cfg80211_vendor_event_alloc(wiphy, wdev, len, event_id, gfp);
-
-	if (skb)
-		truesize = skb->truesize;
-
-	if (!skb || truesize < len || match_mstat_sniff_rules(flags, truesize))
-		RTW_INFO("DBG_MEM_ALLOC %s:%d %s(%d), skb:%p, truesize=%u\n", func, line, __FUNCTION__, len, skb, truesize);
-
-	rtw_mstat_update(
-		flags
-		, skb ? MSTAT_ALLOC_SUCCESS : MSTAT_ALLOC_FAIL
-		, truesize
-	);
-
-	return skb;
-}
-
-void dbg_rtw_cfg80211_vendor_event(struct sk_buff *skb, gfp_t gfp
-		   , const enum mstat_f flags, const char *func, const int line)
-{
-	unsigned int truesize = skb->truesize;
-
-	if (match_mstat_sniff_rules(flags, truesize))
-		RTW_INFO("DBG_MEM_ALLOC %s:%d %s, truesize=%u\n", func, line, __FUNCTION__, truesize);
-
-	cfg80211_vendor_event(skb, gfp);
-
-	rtw_mstat_update(
-		flags
-		, MSTAT_FREE
-		, truesize
-	);
-}
-
-struct sk_buff *dbg_rtw_cfg80211_vendor_cmd_alloc_reply_skb(struct wiphy *wiphy, int len
-		, const enum mstat_f flags, const char *func, const int line)
-{
-	struct sk_buff *skb;
-	unsigned int truesize = 0;
-
-	skb = cfg80211_vendor_cmd_alloc_reply_skb(wiphy, len);
-
-	if (skb)
-		truesize = skb->truesize;
-
-	if (!skb || truesize < len || match_mstat_sniff_rules(flags, truesize))
-		RTW_INFO("DBG_MEM_ALLOC %s:%d %s(%d), skb:%p, truesize=%u\n", func, line, __FUNCTION__, len, skb, truesize);
-
-	rtw_mstat_update(
-		flags
-		, skb ? MSTAT_ALLOC_SUCCESS : MSTAT_ALLOC_FAIL
-		, truesize
-	);
-
-	return skb;
-}
-
-int dbg_rtw_cfg80211_vendor_cmd_reply(struct sk_buff *skb
-	      , const enum mstat_f flags, const char *func, const int line)
-{
-	unsigned int truesize = skb->truesize;
-	int ret;
-
-	if (match_mstat_sniff_rules(flags, truesize))
-		RTW_INFO("DBG_MEM_ALLOC %s:%d %s, truesize=%u\n", func, line, __FUNCTION__, truesize);
-
-	ret = cfg80211_vendor_cmd_reply(skb);
-
-	rtw_mstat_update(
-		flags
-		, MSTAT_FREE
-		, truesize
-	);
-
-	return ret;
-}
-
-#define rtw_cfg80211_vendor_event_alloc(wiphy, wdev, len, event_id, gfp) \
-	dbg_rtw_cfg80211_vendor_event_alloc(wiphy, wdev, len, event_id, gfp, MSTAT_FUNC_CFG_VENDOR | MSTAT_TYPE_SKB, __FUNCTION__, __LINE__)
-
-#define rtw_cfg80211_vendor_event(skb, gfp) \
-	dbg_rtw_cfg80211_vendor_event(skb, gfp, MSTAT_FUNC_CFG_VENDOR | MSTAT_TYPE_SKB, __FUNCTION__, __LINE__)
-
-#define rtw_cfg80211_vendor_cmd_alloc_reply_skb(wiphy, len) \
-	dbg_rtw_cfg80211_vendor_cmd_alloc_reply_skb(wiphy, len, MSTAT_FUNC_CFG_VENDOR | MSTAT_TYPE_SKB, __FUNCTION__, __LINE__)
-
-#define rtw_cfg80211_vendor_cmd_reply(skb) \
-	dbg_rtw_cfg80211_vendor_cmd_reply(skb, MSTAT_FUNC_CFG_VENDOR | MSTAT_TYPE_SKB, __FUNCTION__, __LINE__)
-#else
 
 struct sk_buff *rtw_cfg80211_vendor_event_alloc(
 	struct wiphy *wiphy, struct wireless_dev *wdev, int len, int event_id, gfp_t gfp)
@@ -151,7 +53,6 @@ struct sk_buff *rtw_cfg80211_vendor_event_alloc(
 
 #define rtw_cfg80211_vendor_cmd_reply(skb) \
 	cfg80211_vendor_cmd_reply(skb)
-#endif /* DBG_MEM_ALLOC */
 
 /*
  * This API is to be used for asynchronous vendor events. This
@@ -261,10 +162,6 @@ int rtw_dev_get_feature_set(struct net_device *dev)
 	feature_set |= WIFI_FEATURE_LOGGER;
 #endif
 
-#ifdef CONFIG_RTW_WIFI_HAL
-	feature_set |= WIFI_FEATURE_CONFIG_NDO;
-	feature_set |= WIFI_FEATURE_SCAN_RAND;
-#endif
 
 	return feature_set;
 }
@@ -414,14 +311,10 @@ static void LinkLayerStats(_adapter *padapter)
 				pwrpriv->pwr_saving_start_time = rtw_get_current_time();
 			}
 		} else {		
-#ifdef CONFIG_IPS
 			if ( pwrpriv->bpower_saving == _TRUE ) {
 				pwrpriv->pwr_saving_time += rtw_get_passing_time_ms(pwrpriv->pwr_saving_start_time);
 				pwrpriv->pwr_saving_start_time = rtw_get_current_time();
 			}
-#else
-			pwrpriv->pwr_saving_time = pwrpriv->on_time;
-#endif
 		}
 
 		ps_time = pwrpriv->pwr_saving_time;
@@ -801,192 +694,6 @@ static int rtw_cfgvendor_logger_get_rx_pkt_fates(struct wiphy *wiphy,
 }
 
 #endif /* CONFIG_RTW_CFGVENDOR_WIFI_LOGGER */
-#ifdef CONFIG_RTW_WIFI_HAL
-#ifdef CONFIG_RTW_CFGVENDOR_RANDOM_MAC_OUI
-
-#ifndef ETHER_ISMULTI
-#define ETHER_ISMULTI(ea) (((const u8 *)(ea))[0] & 1)
-#endif
-
-
-static u8 null_addr[ETH_ALEN] = {0};
-static void rtw_hal_random_gen_mac_addr(u8 *mac_addr)
-{
-	do {
-		get_random_bytes(&mac_addr[3], ETH_ALEN-3);
-		if (memcmp(mac_addr, null_addr, ETH_ALEN) != 0)
-			break;
-	} while(1);
-}
-
-void rtw_hal_pno_random_gen_mac_addr(PADAPTER adapter)
-{
-	u8 mac_addr[ETH_ALEN];
-	struct rtw_wdev_priv *pwdev_priv = adapter_wdev_data(adapter);
-
-	memcpy(mac_addr, pwdev_priv->pno_mac_addr, ETH_ALEN);
-	if (mac_addr[0] == 0xFF) return;
-	rtw_hal_random_gen_mac_addr(mac_addr);
-	memcpy(pwdev_priv->pno_mac_addr, mac_addr, ETH_ALEN);
-#ifdef CONFIG_RTW_DEBUG
-	print_hex_dump(KERN_DEBUG, "pno_mac_addr: ",
-		       DUMP_PREFIX_OFFSET, 16, 1, pwdev_priv->pno_mac_addr,
-		       ETH_ALEN, 1);
-#endif
-}
-
-void rtw_hal_set_hw_mac_addr(PADAPTER adapter, u8 *mac_addr)
-{
-	rtw_ps_deny(adapter, PS_DENY_IOCTL);
-	LeaveAllPowerSaveModeDirect(adapter);
-
-#ifdef CONFIG_MI_WITH_MBSSID_CAM
-	rtw_hal_change_macaddr_mbid(adapter, mac_addr);
-#else
-	rtw_hal_set_hwreg(adapter, HW_VAR_MAC_ADDR, mac_addr);
-#endif
-#ifdef CONFIG_RTW_DEBUG
-	rtw_hal_dump_macaddr(RTW_DBGDUMP, adapter);
-#endif
-	rtw_ps_deny_cancel(adapter, PS_DENY_IOCTL);
-}
-
-static int rtw_cfgvendor_set_rand_mac_oui(struct wiphy *wiphy,
-		struct wireless_dev *wdev, const void  *data, int len)
-{
-	int err = 0;
-	PADAPTER adapter;
-	void *devaddr;
-	struct net_device *netdev;
-	int type, mac_len;
-	u8 pno_random_mac_oui[3];
-	u8 mac_addr[ETH_ALEN] = {0};
-	struct pwrctrl_priv *pwrctl;
-	struct rtw_wdev_priv *pwdev_priv;
-
-	type = nla_type(data);
-	mac_len = nla_len(data);
-	if (mac_len != 3) {
-		RTW_ERR("%s oui len error %d != 3\n", __func__, mac_len);
-		return -1;
-	}
-
-	if (type == ANDR_WIFI_ATTRIBUTE_RANDOM_MAC_OUI) {
-		memcpy(pno_random_mac_oui, nla_data(data), 3);
-		print_hex_dump(KERN_DEBUG, "pno_random_mac_oui: ",
-			       DUMP_PREFIX_OFFSET, 16, 1, pno_random_mac_oui,
-			       3, 1);
-
-		if (ETHER_ISMULTI(pno_random_mac_oui)) {
-			pr_err("%s: oui is multicast address\n", __func__);
-			return -1;
-		}
-
-		adapter = wiphy_to_adapter(wiphy);
-		if (adapter == NULL) {
-			pr_err("%s: wiphy_to_adapter == NULL\n", __func__);
-			return -1;
-		}
-
-		pwdev_priv = adapter_wdev_data(adapter);
-
-		memcpy(mac_addr, pno_random_mac_oui, 3);
-		rtw_hal_random_gen_mac_addr(mac_addr);
-		memcpy(pwdev_priv->pno_mac_addr, mac_addr, ETH_ALEN);
-#ifdef CONFIG_RTW_DEBUG
-		print_hex_dump(KERN_DEBUG, "pno_mac_addr: ",
-			       DUMP_PREFIX_OFFSET, 16, 1, pwdev_priv->pno_mac_addr,
-			       ETH_ALEN, 1);
-#endif
-	} else {
-		RTW_ERR("%s oui type error %x != 0x2\n", __func__, type);
-		err = -1;
-	}
-
-
-	return err;
-}
-
-#endif
-
-
-static int rtw_cfgvendor_set_nodfs_flag(struct wiphy *wiphy,
-	struct wireless_dev *wdev, const void *data, int len)
-{
-	int err = 0;	
-	int type;
-	u32 nodfs = 0;
-	_adapter *padapter = GET_PRIMARY_ADAPTER(wiphy_to_adapter(wiphy));
-
-	RTW_DBG(FUNC_NDEV_FMT" %s\n", FUNC_NDEV_ARG(wdev_to_ndev(wdev)), (char*)data);
-
-	type = nla_type(data);
-	if (type == ANDR_WIFI_ATTRIBUTE_NODFS_SET) {
-		nodfs = nla_get_u32(data);
-		adapter_to_dvobj(padapter)->nodfs = nodfs;
-	} else {
-		err = -EINVAL;
-	}
-
-	RTW_INFO("%s nodfs=%d, err=%d\n", __func__, nodfs, err);
-	
-	return err;
-}
-
-static int rtw_cfgvendor_set_country(struct wiphy *wiphy,
-	struct wireless_dev *wdev, const void  *data, int len)
-{
-#define CNTRY_BUF_SZ	4	/* Country string is 3 bytes + NUL */
-	int err = 0, rem, type;
-	char country_code[CNTRY_BUF_SZ] = {0};
-	const struct nlattr *iter;
-	_adapter *padapter = GET_PRIMARY_ADAPTER(wiphy_to_adapter(wiphy));
-
-	RTW_DBG(FUNC_NDEV_FMT" %s\n", FUNC_NDEV_ARG(wdev_to_ndev(wdev)), (char*)data);
-
-	nla_for_each_attr(iter, data, len, rem) {
-		type = nla_type(iter);
-		switch (type) {
-			case ANDR_WIFI_ATTRIBUTE_COUNTRY:
-				_rtw_memcpy(country_code, nla_data(iter),
-					MIN(nla_len(iter), CNTRY_BUF_SZ));
-				break;
-			default:
-				RTW_ERR("Unknown type: %d\n", type);
-				return -EINVAL;
-		}
-	}
-
-	RTW_INFO("%s country_code:\"%c%c\" \n", __func__, country_code[0], country_code[1]);
-
-	rtw_set_country(padapter, country_code);
-
-	return err;
-}
-
-static int rtw_cfgvendor_set_nd_offload(struct wiphy *wiphy,
-	struct wireless_dev *wdev, const void *data, int len)
-{
-	int err = 0;	
-	int type;
-	u8 nd_en = 0;
-	_adapter *padapter = GET_PRIMARY_ADAPTER(wiphy_to_adapter(wiphy));
-
-	RTW_DBG(FUNC_NDEV_FMT" %s\n", FUNC_NDEV_ARG(wdev_to_ndev(wdev)), (char*)data);
-
-	type = nla_type(data);
-	if (type == ANDR_WIFI_ATTRIBUTE_ND_OFFLOAD_VALUE) {
-		nd_en = nla_get_u8(data);
-		/* ND has been enabled when wow is enabled */
-	} else {
-		err = -EINVAL;
-	}
-
-	RTW_INFO("%s nd_en=%d, err=%d\n", __func__, nd_en, err);
-	
-	return err;
-}
-#endif /* CONFIG_RTW_WIFI_HAL */
 
 static const struct wiphy_vendor_command rtw_vendor_cmds[] = {
 #ifdef CONFIG_RTW_CFGVEDNOR_LLSTATS
@@ -1099,43 +806,6 @@ static const struct wiphy_vendor_command rtw_vendor_cmds[] = {
 		.doit = rtw_cfgvendor_logger_get_rx_pkt_fates
 	},	
 #endif /* CONFIG_RTW_CFGVENDOR_WIFI_LOGGER */
-#ifdef CONFIG_RTW_WIFI_HAL
-#ifdef CONFIG_RTW_CFGVENDOR_RANDOM_MAC_OUI
-	{
-		{
-			.vendor_id = OUI_GOOGLE,
-			.subcmd = WIFI_SUBCMD_SET_PNO_RANDOM_MAC_OUI
-		},
-		.flags = WIPHY_VENDOR_CMD_NEED_WDEV | WIPHY_VENDOR_CMD_NEED_NETDEV,
-		.doit = rtw_cfgvendor_set_rand_mac_oui
-	},
-#endif
-	{
-		{
-			.vendor_id = OUI_GOOGLE,
-			.subcmd = WIFI_SUBCMD_NODFS_SET
-		},
-		.flags = WIPHY_VENDOR_CMD_NEED_WDEV | WIPHY_VENDOR_CMD_NEED_NETDEV,
-		.doit = rtw_cfgvendor_set_nodfs_flag
-
-	},
-	{
-		{
-			.vendor_id = OUI_GOOGLE,
-			.subcmd = WIFI_SUBCMD_SET_COUNTRY_CODE
-		},
-		.flags = WIPHY_VENDOR_CMD_NEED_WDEV | WIPHY_VENDOR_CMD_NEED_NETDEV,
-		.doit = rtw_cfgvendor_set_country
-	},
-	{
-		{
-			.vendor_id = OUI_GOOGLE,
-			.subcmd = WIFI_SUBCMD_CONFIG_ND_OFFLOAD
-		},
-		.flags = WIPHY_VENDOR_CMD_NEED_WDEV | WIPHY_VENDOR_CMD_NEED_NETDEV,
-		.doit = rtw_cfgvendor_set_nd_offload
-	},
-#endif /* CONFIG_RTW_WIFI_HAL */
 	{
 		{
 			.vendor_id = OUI_GOOGLE,
@@ -1187,4 +857,3 @@ int rtw_cfgvendor_detach(struct wiphy *wiphy)
 	return 0;
 }
 
-#endif /* CONFIG_IOCTL_CFG80211 */

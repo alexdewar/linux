@@ -27,9 +27,7 @@
 #include "Hal8710BPwrSeq.h"
 #include "Hal8710BPhyReg.h"
 #include "Hal8710BPhyCfg.h"
-#ifdef DBG_CONFIG_ERROR_DETECT
 	#include "rtl8710b_sreset.h"
-#endif
 #ifdef CONFIG_LPS_POFF
 	#include "rtl8710b_lps_poff.h"
 #endif
@@ -40,11 +38,7 @@
 
 typedef struct _RT_FIRMWARE {
 	FIRMWARE_SOURCE	eFWSource;
-#ifdef CONFIG_EMBEDDED_FWIMG
 	u8			*szFwBuffer;
-#else
-	u8			szFwBuffer[FW_8710B_SIZE];
-#endif
 	u32			ulFwLength;
 } RT_FIRMWARE_8710B, *PRT_FIRMWARE_8710B;
 
@@ -90,11 +84,7 @@ typedef struct _RT_8710B_FIRMWARE_HDR {
 #define TX_DMA_SIZE_8710B			0x8000	/* 32K(TX) */
 #define RX_DMA_SIZE_8710B			0x4000	/* 16K(RX) */
 
-#ifdef CONFIG_WOWLAN
-	#define RESV_FMWF	(WKFMCAM_SIZE * MAX_WKFM_CAM_NUM) /* 16 entries, for each is 24 bytes*/
-#else
 	#define RESV_FMWF	0
-#endif
 
 #ifdef CONFIG_FW_C2H_DEBUG
 	#define RX_DMA_RESERVED_SIZE_8710B	0x100	/* 256B, reserved for c2h debug message */
@@ -117,20 +107,9 @@ typedef struct _RT_8710B_FIRMWARE_HDR {
  * ARP Rsp:1, RWC:1, GTK Info:1,GTK RSP:2,GTK EXT MEM:2, AOAC rpt 1, PNO: 6
  * NS offload: 2 NDP info: 1
  */
-#ifdef CONFIG_WOWLAN
-	#define WOWLAN_PAGE_NUM_8710B	0x0b
-#else
 	#define WOWLAN_PAGE_NUM_8710B	0x00
-#endif
 
-#ifdef CONFIG_PNO_SUPPORT
-	#undef WOWLAN_PAGE_NUM_8710B
-	#define WOWLAN_PAGE_NUM_8710B	0x15
-#endif
 
-#ifdef CONFIG_AP_WOWLAN
-	#define AP_WOWLAN_PAGE_NUM_8710B	0x02
-#endif
 
 #define TX_TOTAL_PAGE_NUMBER_8710B\
 	(0xFF - BCNQ_PAGE_NUM_8710B -WOWLAN_PAGE_NUM_8710B)
@@ -193,13 +172,6 @@ typedef enum _PACKAGE_TYPE_E
 #define INCLUDE_MULTI_FUNC_GPS(_Adapter) \
 	(GET_HAL_DATA(_Adapter)->MultiFunc & RT_MULTI_FUNC_GPS)
 
-#ifdef CONFIG_FILE_FWIMG
-	extern char *rtw_fw_file_path;
-	extern char *rtw_fw_wow_file_path;
-	#ifdef CONFIG_MP_INCLUDED
-		extern char *rtw_fw_mp_bt_file_path;
-	#endif /* CONFIG_MP_INCLUDED */
-#endif /* CONFIG_FILE_FWIMG */
 
 /* rtl8710b_hal_init.c */
 s32 rtl8710b_FirmwareDownload(PADAPTER padapter, BOOLEAN  bUsedWoWLANFw);
@@ -260,18 +232,13 @@ void _8051Reset8710(PADAPTER padapter);
 void rtl8710b_start_thread(_adapter *padapter);
 void rtl8710b_stop_thread(_adapter *padapter);
 
-#ifdef CONFIG_GPIO_WAKEUP
-	void HalSetOutPutGPIO(PADAPTER padapter, u8 index, u8 OutPutValue);
-#endif
 
 void CCX_FwC2HTxRpt_8710b(PADAPTER padapter, u8 *pdata, u8 len);
 
 u8 MRateToHwRate8710B(u8 rate);
 u8 HwRateToMRate8710B(u8 rate);
 
-#ifdef CONFIG_USB_HCI
 	void rtl8710b_cal_txdesc_chksum(struct tx_desc *ptxdesc);
-#endif
 
 
 #endif

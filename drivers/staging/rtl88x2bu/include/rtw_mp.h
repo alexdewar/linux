@@ -32,7 +32,6 @@ struct mp_xmit_frame {
 
 	_adapter *padapter;
 
-#ifdef CONFIG_USB_HCI
 
 	/* insert urb, irp, and irpcnt info below... */
 	/* max frag_cnt = 8 */
@@ -43,7 +42,6 @@ struct mp_xmit_frame {
 	sint last[8];
 	uint irpcnt;
 	uint fragcnt;
-#endif /* CONFIG_USB_HCI */
 
 	uint mem[(MAX_MP_XMITBUF_SZ >> 2)];
 };
@@ -290,17 +288,6 @@ enum {
 	MP_DPK_TRK,
 	MP_DPK,
 	MP_NULL,
-#ifdef CONFIG_APPEND_VENDOR_IE_ENABLE
-	VENDOR_IE_SET ,
-	VENDOR_IE_GET ,
-#endif
-#ifdef CONFIG_WOWLAN
-	MP_WOW_ENABLE,
-	MP_WOW_SET_PATTERN,
-#endif
-#ifdef CONFIG_AP_WOWLAN
-	MP_AP_WOW_ENABLE,
-#endif
 	MP_SD_IREAD,
 	MP_SD_IWRITE,
 };
@@ -406,11 +393,7 @@ struct bb_reg_param {
 
 typedef struct _MP_FIRMWARE {
 	FIRMWARE_SOURCE eFWSource;
-#ifdef CONFIG_EMBEDDED_FWIMG
 	u8		*szFwBuffer;
-#else
-	u8			szFwBuffer[0x8000];
-#endif
 	u32		ulFwLength;
 } RT_MP_FIRMWARE, *PRT_MP_FIRMWARE;
 
@@ -677,9 +660,6 @@ extern u32 read_bbreg(_adapter *padapter, u32 addr, u32 bitmask);
 extern void write_bbreg(_adapter *padapter, u32 addr, u32 bitmask, u32 val);
 extern u32 read_rfreg(PADAPTER padapter, u8 rfpath, u32 addr);
 extern void write_rfreg(PADAPTER padapter, u8 rfpath, u32 addr, u32 val);
-#ifdef CONFIG_ANTENNA_DIVERSITY
-u8 rtw_mp_set_antdiv(PADAPTER padapter, BOOLEAN bMain);
-#endif
 void	SetChannel(PADAPTER pAdapter);
 void	SetBandwidth(PADAPTER pAdapter);
 int	SetTxPower(PADAPTER pAdapter);

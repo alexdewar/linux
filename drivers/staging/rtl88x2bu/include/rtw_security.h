@@ -74,7 +74,6 @@ union pn48	{
 
 	u64	val;
 
-#ifdef CONFIG_LITTLE_ENDIAN
 
 struct {
 	u8 TSC0;
@@ -87,20 +86,6 @@ struct {
 	u8 TSC7;
 } _byte_;
 
-#elif defined(CONFIG_BIG_ENDIAN)
-
-struct {
-	u8 TSC7;
-	u8 TSC6;
-	u8 TSC5;
-	u8 TSC4;
-	u8 TSC3;
-	u8 TSC2;
-	u8 TSC1;
-	u8 TSC0;
-} _byte_;
-
-#endif
 
 };
 
@@ -139,13 +124,10 @@ struct security_priv {
 	union pn48		dot11Grptxpn;			/* PN48 used for Grp Key xmit. */
 	union pn48		dot11Grprxpn;			/* PN48 used for Grp Key recv. */
 	u8				iv_seq[4][8];
-#ifdef CONFIG_IEEE80211W
 	u32	dot11wBIPKeyid;						/* key id used for BIP Key ( tx key index) */
 	union Keytype	dot11wBIPKey[6];		/* BIP Key, for index4 and index5 */
 	union pn48		dot11wBIPtxpn;			/* PN48 used for BIP xmit. */
 	union pn48		dot11wBIPrxpn;			/* PN48 used for BIP recv. */
-#endif /* CONFIG_IEEE80211W */
-#ifdef CONFIG_AP_MODE
 	/* extend security capabilities for AP_MODE */
 	unsigned int dot8021xalg;/* 0:disable, 1:psk, 2:802.1x */
 	unsigned int wpa_psk;/* 0:disable, bit(0): WPA, bit(1):WPA2 */
@@ -154,7 +136,6 @@ struct security_priv {
 	unsigned int wpa_pairwise_cipher;
 	unsigned int wpa2_pairwise_cipher;
 	u8 mfp_opt;
-#endif
 #ifdef CONFIG_CONCURRENT_MODE
 	u8	dot118021x_bmc_cam_id;
 #endif
@@ -171,9 +152,7 @@ struct security_priv {
 #ifdef CONFIG_GTK_OL
 	u8	binstallKCK_KEK;
 #endif /* CONFIG_GTK_OL */
-#ifdef CONFIG_IEEE80211W
 	u8	binstallBIPkey;
-#endif /* CONFIG_IEEE80211W */
 	u8	busetkipkey;
 	u8	bcheck_grpkey;
 	u8	bgrpkey_handshake;
@@ -245,11 +224,7 @@ struct security_priv {
 #endif /* DBG_SW_SEC_CNT */
 };
 
-#ifdef CONFIG_IEEE80211W
 #define SEC_IS_BIP_KEY_INSTALLED(sec) ((sec)->binstallBIPkey)
-#else
-#define SEC_IS_BIP_KEY_INSTALLED(sec) _FALSE
-#endif
 
 struct rtw_sha256_state {
 	u64 length;
@@ -445,9 +420,7 @@ static const unsigned long K[64] = {
 #ifndef MIN
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 #endif
-#ifdef CONFIG_IEEE80211W
 int omac1_aes_128(const u8 *key, const u8 *data, size_t data_len, u8 *mac);
-#endif /* CONFIG_IEEE80211W */
 #ifdef CONFIG_RTW_MESH_AEK
 int aes_siv_encrypt(const u8 *key, const u8 *pw, size_t pwlen
 	, size_t num_elem, const u8 *addr[], const size_t *len, u8 *out);
@@ -474,27 +447,12 @@ void rtw_wep_encrypt(_adapter *padapter, u8  *pxmitframe);
 u32 rtw_aes_decrypt(_adapter *padapter, u8  *precvframe);
 u32 rtw_tkip_decrypt(_adapter *padapter, u8  *precvframe);
 void rtw_wep_decrypt(_adapter *padapter, u8  *precvframe);
-#ifdef CONFIG_IEEE80211W
 u32	rtw_BIP_verify(_adapter *padapter, u8 *whdr_pos, sint flen
 	, const u8 *key, u16 id, u64* ipn);
-#endif
-#ifdef CONFIG_TDLS
-void wpa_tdls_generate_tpk(_adapter *padapter, void *sta);
-int wpa_tdls_ftie_mic(u8 *kck, u8 trans_seq,
-			u8 *lnkid, u8 *rsnie, u8 *timeoutie, u8 *ftie,
-			u8 *mic);
-int wpa_tdls_teardown_ftie_mic(u8 *kck, u8 *lnkid, u16 reason,
-			u8 dialog_token, u8 trans_seq, u8 *ftie, u8 *mic);
-int tdls_verify_mic(u8 *kck, u8 trans_seq,
-			u8 *lnkid, u8 *rsnie, u8 *timeoutie, u8 *ftie);
-#endif /* CONFIG_TDLS */
 
 void rtw_sec_restore_wep_key(_adapter *adapter);
 u8 rtw_handle_tkip_countermeasure(_adapter *adapter, const char *caller);
 
-#ifdef CONFIG_WOWLAN
-u16 rtw_calc_crc(u8  *pdata, int length);
-#endif /*CONFIG_WOWLAN*/
 
 #define rtw_sec_chk_auth_alg(a, s) \
 	((a)->securitypriv.auth_alg == (s))

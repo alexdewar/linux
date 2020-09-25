@@ -614,13 +614,11 @@ int rtw_generate_ie(struct registry_priv *pregistrypriv)
 	if (rateLen > 8)
 		ie = rtw_set_ie(ie, _EXT_SUPPORTEDRATES_IE_, (rateLen - 8), (pdev_network->SupportedRates + 8), &sz);
 
-#ifdef CONFIG_80211N_HT
 	/* HT Cap. */
 	if (is_supported_ht(pregistrypriv->wireless_mode)
 	    && (pregistrypriv->ht_enable == _TRUE)) {
 		/* todo: */
 	}
-#endif /* CONFIG_80211N_HT */
 
 	/* pdev_network->IELength =  sz; */ /* update IELength */
 
@@ -1735,7 +1733,6 @@ err_chk:
 	RTW_INFO("%s mac addr:"MAC_FMT"\n", __func__, MAC_ARG(out));
 }
 
-#ifdef CONFIG_80211N_HT
 void dump_ht_cap_ie_content(void *sel, const u8 *buf, u32 buf_len)
 {
 	if (buf_len != HT_CAP_IE_LEN) {
@@ -1795,7 +1792,6 @@ void dump_ht_op_ie(void *sel, const u8 *ie, u32 ie_len)
 
 	dump_ht_op_ie_content(sel, ht_op_ie + 2, ht_op_ielen);
 }
-#endif /* CONFIG_80211N_HT */
 
 void dump_ies(void *sel, const u8 *buf, u32 buf_len)
 {
@@ -1807,20 +1803,14 @@ void dump_ies(void *sel, const u8 *buf, u32 buf_len)
 		len = *(pos + 1);
 
 		RTW_PRINT_SEL(sel, "%s ID:%u, LEN:%u\n", __FUNCTION__, id, len);
-#ifdef CONFIG_80211N_HT
 		dump_ht_cap_ie(sel, pos, len + 2);
 		dump_ht_op_ie(sel, pos, len + 2);
-#endif
-#ifdef CONFIG_80211AC_VHT
 		dump_vht_cap_ie(sel, pos, len + 2);
 		dump_vht_op_ie(sel, pos, len + 2);
-#endif
 		dump_wps_ie(sel, pos, len + 2);
 #ifdef CONFIG_P2P
 		dump_p2p_ie(sel, pos, len + 2);
-#ifdef CONFIG_WFD
 		dump_wfd_ie(sel, pos, len + 2);
-#endif
 #endif
 
 		pos += (2 + len);
@@ -1875,7 +1865,6 @@ void rtw_ies_get_chbw(u8 *ies, int ies_len, u8 *ch, u8 *bw, u8 *offset, u8 ht, u
 	if (p && ie_len > 0)
 		*ch = *(p + 2);
 
-#ifdef CONFIG_80211N_HT
 	if (ht || vht) {
 		u8 *ht_cap_ie, *ht_op_ie;
 		int ht_cap_ielen, ht_op_ielen;
@@ -1910,7 +1899,6 @@ void rtw_ies_get_chbw(u8 *ies, int ies_len, u8 *ch, u8 *bw, u8 *offset, u8 ht, u
 			}
 		}
 
-#ifdef CONFIG_80211AC_VHT
 		if (vht) {
 			u8 *vht_op_ie;
 			int vht_op_ielen;
@@ -1921,10 +1909,8 @@ void rtw_ies_get_chbw(u8 *ies, int ies_len, u8 *ch, u8 *bw, u8 *offset, u8 ht, u
 					*bw = CHANNEL_WIDTH_80;
 			}
 		}
-#endif /* CONFIG_80211AC_VHT */
 
 	}
-#endif /* CONFIG_80211N_HT */
 }
 
 void rtw_bss_get_chbw(WLAN_BSSID_EX *bss, u8 *ch, u8 *bw, u8 *offset, u8 ht, u8 vht)

@@ -73,11 +73,9 @@ u8 rtl8822b_phy_init_mac_register(PADAPTER adapter)
 	hal = GET_HAL_DATA(adapter);
 
 	ret = _FALSE;
-#ifdef CONFIG_LOAD_PHY_PARA_FROM_FILE
 	res = phy_ConfigMACWithParaFile(adapter, PHY_FILE_MAC_REG);
 	if (_SUCCESS == res)
 		ret = _TRUE;
-#endif /* CONFIG_LOAD_PHY_PARA_FROM_FILE */
 	if (_FALSE == ret) {
 		status = odm_config_mac_with_header_file(&hal->odmpriv);
 		if (HAL_STATUS_SUCCESS == status)
@@ -100,11 +98,9 @@ static u8 _init_bb_reg(PADAPTER Adapter)
 	 * 1. Read PHY_REG.TXT BB INIT!!
 	 */
 	ret = _FALSE;
-#ifdef CONFIG_LOAD_PHY_PARA_FROM_FILE
 	res = phy_ConfigBBWithParaFile(Adapter, PHY_FILE_PHY_REG, CONFIG_BB_PHY_REG);
 	if (_SUCCESS == res)
 		ret = _TRUE;
-#endif
 	if (_FALSE == ret) {
 		status = odm_config_bb_with_header_file(&hal->odmpriv, CONFIG_BB_PHY_REG);
 		if (HAL_STATUS_SUCCESS == status)
@@ -122,11 +118,9 @@ static u8 _init_bb_reg(PADAPTER Adapter)
 		 * 1.1 Read PHY_REG_MP.TXT BB INIT!!
 		 */
 		ret = _FALSE;
-#ifdef CONFIG_LOAD_PHY_PARA_FROM_FILE
 		res = phy_ConfigBBWithMpParaFile(Adapter, PHY_FILE_PHY_REG_MP);
 		if (_SUCCESS == res)
 			ret = _TRUE;
-#endif
 		if (_FALSE == ret) {
 			status = odm_config_bb_with_header_file(&hal->odmpriv, CONFIG_BB_PHY_REG_MP);
 			if (HAL_STATUS_SUCCESS == status)
@@ -143,11 +137,9 @@ static u8 _init_bb_reg(PADAPTER Adapter)
 	 * 2. Read BB AGC table Initialization
 	 */
 	ret = _FALSE;
-#ifdef CONFIG_LOAD_PHY_PARA_FROM_FILE
 	res = phy_ConfigBBWithParaFile(Adapter, PHY_FILE_AGC_TAB, CONFIG_BB_AGC_TAB);
 	if (_SUCCESS == res)
 		ret = _TRUE;
-#endif
 	if (_FALSE == ret) {
 		status = odm_config_bb_with_header_file(&hal->odmpriv, CONFIG_BB_AGC_TAB);
 		if (HAL_STATUS_SUCCESS == status)
@@ -187,9 +179,7 @@ static u8 _init_rf_reg(PADAPTER adapter)
 	u8 path;
 	enum rf_path phydm_path;
 	PHAL_DATA_TYPE hal = GET_HAL_DATA(adapter);
-#ifdef CONFIG_LOAD_PHY_PARA_FROM_FILE
 	u8 *regfile;
-#endif
 	enum hal_status status;
 	int res;
 	u8 ret = _TRUE;
@@ -203,16 +193,12 @@ static u8 _init_rf_reg(PADAPTER adapter)
 		switch (path) {
 		case 0:
 			phydm_path = RF_PATH_A;
-			#ifdef CONFIG_LOAD_PHY_PARA_FROM_FILE
 			regfile = PHY_FILE_RADIO_A;
-			#endif
 			break;
 
 		case 1:
 			phydm_path = RF_PATH_B;
-			#ifdef CONFIG_LOAD_PHY_PARA_FROM_FILE
 			regfile = PHY_FILE_RADIO_B;
-			#endif
 			break;
 
 		default:
@@ -221,11 +207,9 @@ static u8 _init_rf_reg(PADAPTER adapter)
 		}
 
 		ret = _FALSE;
-#ifdef CONFIG_LOAD_PHY_PARA_FROM_FILE
 		res = PHY_ConfigRFWithParaFile(adapter, regfile, phydm_path);
 		if (_SUCCESS == res)
 			ret = _TRUE;
-#endif
 		if (_FALSE == ret) {
 			status = odm_config_rf_with_header_file(&hal->odmpriv, CONFIG_RF_RADIO, phydm_path);
 			if (HAL_STATUS_SUCCESS != status)
@@ -240,11 +224,9 @@ static u8 _init_rf_reg(PADAPTER adapter)
 	 * Configuration of Tx Power Tracking
 	 */
 	ret = _FALSE;
-#ifdef CONFIG_LOAD_PHY_PARA_FROM_FILE
 	res = PHY_ConfigRFWithTxPwrTrackParaFile(adapter, PHY_FILE_TXPWR_TRACK);
 	if (_SUCCESS == res)
 		ret = _TRUE;
-#endif
 	if (_FALSE == ret) {
 		status = odm_config_rf_with_tx_pwr_track_header_file(&hal->odmpriv);
 		if (HAL_STATUS_SUCCESS != status) {
@@ -321,7 +303,6 @@ static void dm_CheckPbcGPIO(PADAPTER adapter)
 	if (!adapter->registrypriv.hw_wps_pbc)
 		return;
 
-#ifdef CONFIG_USB_HCI
 	tmp1byte = rtw_read8(adapter, GPIO_IO_SEL);
 	tmp1byte |= (HAL_8192C_HW_GPIO_WPS_BIT);
 	rtw_write8(adapter, GPIO_IO_SEL, tmp1byte); /* enable GPIO[2] as output mode */
@@ -339,15 +320,6 @@ static void dm_CheckPbcGPIO(PADAPTER adapter)
 
 	if (tmp1byte & HAL_8192C_HW_GPIO_WPS_BIT)
 		bPbcPressed = _TRUE;
-#else
-	tmp1byte = rtw_read8(adapter, GPIO_IN);
-
-	if ((tmp1byte == 0xff) || adapter->init_adpt_in_progress)
-		return;
-
-	if ((tmp1byte & HAL_8192C_HW_GPIO_WPS_BIT) == 0)
-		bPbcPressed = _TRUE;
-#endif
 
 	if (_TRUE == bPbcPressed) {
 		/*
@@ -361,60 +333,6 @@ static void dm_CheckPbcGPIO(PADAPTER adapter)
 #endif /* CONFIG_SUPPORT_HW_WPS_PBC */
 
 
-#ifdef CONFIG_PCI_HCI
-/*
- * Description:
- *	Perform interrupt migration dynamically to reduce CPU utilization.
- *
- * Assumption:
- *	1. Do not enable migration under WIFI test.
- */
-void dm_InterruptMigration(PADAPTER adapter)
-{
-	PHAL_DATA_TYPE hal = GET_HAL_DATA(adapter);
-	struct mlme_priv *pmlmepriv = &adapter->mlmepriv;
-	BOOLEAN bCurrentIntMt, bCurrentACIntDisable;
-	BOOLEAN IntMtToSet = _FALSE;
-	BOOLEAN ACIntToSet = _FALSE;
-
-
-	/* Retrieve current interrupt migration and Tx four ACs IMR settings first. */
-	bCurrentIntMt = hal->bInterruptMigration;
-	bCurrentACIntDisable = hal->bDisableTxInt;
-
-	/*
-	 * <Roger_Notes> Currently we use busy traffic for reference instead of RxIntOK counts to prevent non-linear Rx statistics
-	 * when interrupt migration is set before. 2010.03.05.
-	 */
-	if (!adapter->registrypriv.wifi_spec
-	    && (check_fwstate(pmlmepriv, _FW_LINKED) == _TRUE)
-	    && pmlmepriv->LinkDetectInfo.bHigherBusyTraffic) {
-		IntMtToSet = _TRUE;
-
-		/* To check whether we should disable Tx interrupt or not. */
-		if (pmlmepriv->LinkDetectInfo.bHigherBusyRxTraffic)
-			ACIntToSet = _TRUE;
-	}
-
-	/* Update current settings. */
-	if (bCurrentIntMt != IntMtToSet) {
-		RTW_INFO("%s: Update interrupt migration(%d)\n", __FUNCTION__, IntMtToSet);
-		if (IntMtToSet) {
-			/*
-			 * <Roger_Notes> Set interrupt migration timer and corresponging Tx/Rx counter.
-			 * timer 25ns*0xfa0=100us for 0xf packets.
-			 * 2010.03.05.
-			 */
-			rtw_write32(adapter, REG_INT_MIG, 0xff000fa0); /* 0x306:Rx, 0x307:Tx */
-			hal->bInterruptMigration = IntMtToSet;
-		} else {
-			/* Reset all interrupt migration settings. */
-			rtw_write32(adapter, REG_INT_MIG, 0);
-			hal->bInterruptMigration = IntMtToSet;
-		}
-	}
-}
-#endif /* CONFIG_PCI_HCI */
 
 /*
  * ============================================================
@@ -526,28 +444,22 @@ void rtl8822b_phy_haldm_watchdog(PADAPTER adapter)
 	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
 	u8 i = 0;
 
-#ifdef CONFIG_MP_INCLUDED
 	/* for MP power tracking */
 	if ((adapter->registrypriv.mp_mode == 1)
 	    && (adapter->mppriv.mp_dm == 0))
 		return;
-#endif /* CONFIG_MP_INCLUDED */
 
 	if (!rtw_is_hw_init_completed(adapter))
 		goto skip_dm;
 
-#ifdef CONFIG_LPS
 	bFwCurrentInPSMode = adapter_to_pwrctl(adapter)->bFwCurrentInPSMode;
 	rtw_hal_get_hwreg(adapter, HW_VAR_FWLPS_RF_ON, &bFwPSAwake);
-#endif /* CONFIG_LPS */
 
-#ifdef CONFIG_P2P_PS
 	/*
 	 * Fw is under p2p powersaving mode, driver should stop dynamic mechanism.
 	 */
 	if (adapter->wdinfo.p2p_ps_mode)
 		bFwPSAwake = _FALSE;
-#endif /* CONFIG_P2P_PS */
 
 	if ((rtw_is_hw_init_completed(adapter))
 	    && ((!bFwCurrentInPSMode) && bFwPSAwake)) {
@@ -559,11 +471,8 @@ void rtl8822b_phy_haldm_watchdog(PADAPTER adapter)
 		 */
 	}
 
-#ifdef CONFIG_LPS
 	if (pwrpriv->bLeisurePs && bFwCurrentInPSMode && pwrpriv->pwr_mode != PS_MODE_ACTIVE
-#ifdef CONFIG_WMMPS_STA	
 		&& !rtw_is_wmmps_mode(adapter)
-#endif /* CONFIG_WMMPS_STA */
 	) {
 
 		for (i = 0; i < dvobj->iface_nums; i++) {
@@ -576,29 +485,21 @@ void rtl8822b_phy_haldm_watchdog(PADAPTER adapter)
 		in_lps = _TRUE;
 		LPS_Leave(current_lps_iface, LPS_CTRL_PHYDM);
 	}
-#endif
 
-#ifdef CONFIG_BEAMFORMING
 #ifdef RTW_BEAMFORMING_VERSION_2
 	if (check_fwstate(&adapter->mlmepriv, WIFI_STATION_STATE) &&
 			check_fwstate(&adapter->mlmepriv, _FW_LINKED))
 		rtw_hal_beamforming_config_csirate(adapter);
 #endif
-#endif
 
-#ifdef CONFIG_DISABLE_ODM
-	goto skip_dm;
-#endif
 
 	rtw_phydm_watchdog(adapter, in_lps);
 
 
 skip_dm:
 
-#ifdef CONFIG_LPS
 	if (lps_changed)
 		LPS_Enter(current_lps_iface, LPS_CTRL_PHYDM);
-#endif
 
 	/*
 	 * Check GPIO to determine current RF on/off and Pbc status.
@@ -628,9 +529,6 @@ u32 rtl8822b_read_bb_reg(PADAPTER adapter, u32 addr, u32 mask)
 	u32 val = 0, val_org, shift;
 
 
-#if (DISABLE_BB_RF == 1)
-	return 0;
-#endif
 
 	val_org = rtw_read32(adapter, addr);
 	shift = phy_calculatebitshift(mask);
@@ -644,9 +542,6 @@ void rtl8822b_write_bb_reg(PADAPTER adapter, u32 addr, u32 mask, u32 val)
 	u32 val_org, shift;
 
 
-#if (DISABLE_BB_RF == 1)
-	return;
-#endif
 
 	if (mask != 0xFFFFFFFF) {
 		/* not "double word" write */
@@ -705,24 +600,12 @@ void rtl8822b_set_tx_power_level(PADAPTER adapter, u8 channel)
 {
 	PHAL_DATA_TYPE hal = GET_HAL_DATA(adapter);
 	struct dm_struct *phydm;
-	#ifdef CONFIG_ANTENNA_DIVERSITY
-	struct phydm_fat_struct *p_dm_fat_table;
-	#endif
 	u8 path = RF_PATH_A;
 
 
 	hal = GET_HAL_DATA(adapter);
 	phydm = &hal->odmpriv;
 
-	#ifdef CONFIG_ANTENNA_DIVERSITY
-	p_dm_fat_table = &phydm->dm_fat_table;
-
-	if (hal->AntDivCfg) {
-		/* antenna diversity Enable */
-		path = (p_dm_fat_table->rx_idle_ant == MAIN_ANT) ? RF_PATH_A : RF_PATH_B;
-		set_tx_power_level_by_path(adapter, channel, path);
-	} else
-	#endif
 	{
 		/* antenna diversity disable */
 		for (path = RF_PATH_A; path < hal->NumTotalRFPath; ++path)
@@ -1003,7 +886,6 @@ void rtl8822b_switch_chnl_and_set_bw(PADAPTER adapter)
 
 	/* config coex setting */
 	if (switch_band) {
-#ifdef CONFIG_BT_COEXIST
 		if (hal->EEPROMBluetoothCoexist) {
 			struct mlme_ext_priv *mlmeext;
 
@@ -1015,13 +897,9 @@ void rtl8822b_switch_chnl_and_set_bw(PADAPTER adapter)
 				rtw_btcoex_switchband_notify(_FALSE, hal->current_band_type);
 		} else
 			rtw_btcoex_wifionly_switchband_notify(adapter);
-#else /* !CONFIG_BT_COEXIST */
-		rtw_btcoex_wifionly_switchband_notify(adapter);
-#endif /* CONFIG_BT_COEXIST */
 	}
 
 	/* <2016/03/09> ** This Setting is for MP Driver Only*/
-#ifdef CONFIG_MP_INCLUDED
 	if (adapter->registrypriv.mp_mode == _TRUE) {
 		/* <2016/02/25, VincentL> Add for 8822B Antenna Binding between "2.4G-WiFi"
 			And between "5G-BT", Suggested by RF SzuyiTsai*/
@@ -1030,7 +908,6 @@ void rtl8822b_switch_chnl_and_set_bw(PADAPTER adapter)
 		else /* 5G */
 			phy_set_rf_path_switch_8822b(p_dm_odm, 0); /*To BT-5G*/
 	}
-#endif
 
 	phydm_config_kfree(p_dm_odm, hal->current_channel);
 
@@ -1162,7 +1039,6 @@ void rtl8822b_notch_filter_switch(PADAPTER adapter, bool enable)
 		RTW_INFO("%s: Disable notch filter\n", __FUNCTION__);
 }
 
-#ifdef CONFIG_MP_INCLUDED
 /*
  * Description:
  *	Config RF path
@@ -1218,9 +1094,7 @@ void rtl8822b_mp_config_rfpath(PADAPTER adapter)
 
 	RTW_INFO("-Config RF Path Finish\n");
 }
-#endif /* CONFIG_MP_INCLUDED */
 
-#ifdef CONFIG_BEAMFORMING
 /* REG_TXBF_CTRL		(Offset 0x42C) */
 #define BITS_R_TXBF1_AID_8822B			(BIT_MASK_R_TXBF1_AID_8822B << BIT_SHIFT_R_TXBF1_AID_8822B)
 #define BIT_CLEAR_R_TXBF1_AID_8822B(x)		((x) & (~BITS_R_TXBF1_AID_8822B))
@@ -2314,12 +2188,10 @@ void rtl8822b_phy_bf_sounding_status(PADAPTER adapter, u8 status)
 
 	RTW_INFO("-%s\n", __FUNCTION__);
 }
-#endif /* CONFIG_BEAMFORMING */
 
 #ifdef CONFIG_LPS_PWR_TRACKING
 void rtw_lps_pwr_tracking(_adapter *adapter, u8 thermal_value)
 {
-	#ifdef CONFIG_LPS
 	u8 lps_changed;
 
 	if (adapter_to_pwrctl(adapter)->bLeisurePs &&
@@ -2333,7 +2205,6 @@ void rtw_lps_pwr_tracking(_adapter *adapter, u8 thermal_value)
 
 	if (lps_changed)
 		LPS_Enter(adapter, "LPS_CTRL_TXSS");
-	#endif
 
 	thermal_value += THERMAL_DIFF_TH;
 	rtl8822b_set_fw_thermal_rpt_cmd(adapter, _TRUE, thermal_value);

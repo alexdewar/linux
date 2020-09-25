@@ -105,10 +105,6 @@
 #define REG_TXPKTBUF_BCNQ_BDNY_8723B	0x0424
 #define REG_TXPKTBUF_MGQ_BDNY_8723B	0x0425
 #define REG_TXPKTBUF_WMAC_LBK_BF_HD_8723B	0x045D
-#ifdef CONFIG_WOWLAN
-	#define REG_TXPKTBUF_IV_LOW             0x0484
-	#define REG_TXPKTBUF_IV_HIGH            0x0488
-#endif
 #define REG_AMPDU_BURST_MODE_8723B	0x04BC
 
 /* -----------------------------------------------------
@@ -179,11 +175,6 @@
 #define BIT_USB_RXDMA_AGG_EN	BIT(31)
 #define RXDMA_AGG_MODE_EN		BIT(1)
 
-#ifdef CONFIG_WOWLAN
-	#define RXPKT_RELEASE_POLL		BIT(16)
-	#define RXDMA_IDLE				BIT(17)
-	#define RW_RELEASE_EN			BIT(18)
-#endif
 
 /* -----------------------------------------------------
  *
@@ -209,9 +200,6 @@
  * ----------------------------------------------------- */
 #ifdef CONFIG_RF_POWER_TRIM
 
-	#ifdef CONFIG_RTL8723B
-		#define EEPROM_RF_GAIN_OFFSET			0xC1
-	#endif
 
 	#define EEPROM_RF_GAIN_VAL				0x1F6
 #endif /*CONFIG_RF_POWER_TRIM*/
@@ -268,13 +256,5 @@
 #define	IMR_TXFOVW_8723B					BIT(9)			/* Transmit FIFO Overflow */
 #define	IMR_RXFOVW_8723B					BIT(8)			/* Receive FIFO Overflow */
 
-#ifdef CONFIG_PCI_HCI
-	/* #define IMR_RX_MASK		(IMR_ROK_8723B|IMR_RDU_8723B|IMR_RXFOVW_8723B) */
-	#define IMR_TX_MASK			(IMR_VODOK_8723B | IMR_VIDOK_8723B | IMR_BEDOK_8723B | IMR_BKDOK_8723B | IMR_MGNTDOK_8723B | IMR_HIGHDOK_8723B)
-
-	#define RT_BCN_INT_MASKS	(IMR_BCNDMAINT0_8723B | IMR_TXBCN0OK_8723B | IMR_TXBCN0ERR_8723B | IMR_BCNDERR0_8723B)
-
-	#define RT_AC_INT_MASKS	(IMR_VIDOK_8723B | IMR_VODOK_8723B | IMR_BEDOK_8723B | IMR_BKDOK_8723B)
-#endif
 
 #endif /* __RTL8723B_SPEC_H__ */

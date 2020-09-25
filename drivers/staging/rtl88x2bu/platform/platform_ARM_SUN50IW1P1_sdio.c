@@ -18,21 +18,8 @@
  *	CONFIG_PLATFORM_ARM_SUN50IW1P1
  */
 #include <drv_types.h>
-#ifdef CONFIG_GPIO_WAKEUP
-#include <linux/gpio.h>
-#endif
 
 #ifdef CONFIG_MMC
-#if defined(CONFIG_PLATFORM_ARM_SUN50IW1P1)
-extern void sunxi_mmc_rescan_card(unsigned ids);
-extern void sunxi_wlan_set_power(int on);
-extern int sunxi_wlan_get_bus_index(void);
-extern int sunxi_wlan_get_oob_irq(void);
-extern int sunxi_wlan_get_oob_irq_flags(void);
-#endif
-#ifdef CONFIG_GPIO_WAKEUP
-extern unsigned int oob_irq;
-#endif
 #endif /* CONFIG_MMC */
 
 /*
@@ -47,22 +34,8 @@ int platform_wifi_power_on(void)
 #ifdef CONFIG_MMC
 	{
 
-#if defined(CONFIG_PLATFORM_ARM_SUN50IW1P1)
-		int wlan_bus_index = sunxi_wlan_get_bus_index();
-		if (wlan_bus_index < 0)
-			return wlan_bus_index;
-
-		sunxi_wlan_set_power(1);
-		mdelay(100);
-		sunxi_mmc_rescan_card(wlan_bus_index);
-#endif
 		RTW_INFO("%s: power up, rescan card.\n", __FUNCTION__);
 
-#ifdef CONFIG_GPIO_WAKEUP
-#if defined(CONFIG_PLATFORM_ARM_SUN50IW1P1)
-		oob_irq = sunxi_wlan_get_oob_irq();
-#endif
-#endif /* CONFIG_GPIO_WAKEUP */
 	}
 #endif /* CONFIG_MMC */
 
@@ -72,15 +45,6 @@ int platform_wifi_power_on(void)
 void platform_wifi_power_off(void)
 {
 #ifdef CONFIG_MMC
-#if defined(CONFIG_PLATFORM_ARM_SUN50IW1P1)
-	int wlan_bus_index = sunxi_wlan_get_bus_index();
-	if (wlan_bus_index < 0)
-		return;
-
-	sunxi_mmc_rescan_card(wlan_bus_index);
-	mdelay(100);
-	sunxi_wlan_set_power(0);
-#endif
 	RTW_INFO("%s: remove card, power off.\n", __FUNCTION__);
 #endif /* CONFIG_MMC */
 }
