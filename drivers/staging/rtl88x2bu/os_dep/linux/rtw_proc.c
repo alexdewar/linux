@@ -30,52 +30,16 @@ inline struct proc_dir_entry *get_rtw_drv_proc(void)
 
 #define RTW_PROC_NAME DRV_NAME
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 9, 0))
-#define file_inode(file) ((file)->f_dentry->d_inode)
-#endif
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 10, 0))
-#define PDE_DATA(inode) PDE((inode))->data
-#define proc_get_parent_data(inode) PDE((inode))->parent->data
-#endif
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 24))
-#define get_proc_net proc_net
-#else
 #define get_proc_net init_net.proc_net
-#endif
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 10, 0))
-int single_open_size(struct file *file, int (*show)(struct seq_file *, void *),
-		void *data, size_t size)
-{
-	char *buf = kmalloc(size, GFP_KERNEL);
-	int ret;
-	if (!buf)
-		return -ENOMEM;
-	ret = single_open(file, show, data);
-	if (ret) {
-		kfree(buf);
-		return ret;
-	}
-	((struct seq_file *)file->private_data)->buf = buf;
-	((struct seq_file *)file->private_data)->size = size;
-	return 0;
-}
-#endif
 
 inline struct proc_dir_entry *rtw_proc_create_dir(const char *name, struct proc_dir_entry *parent, void *data)
 {
 	struct proc_dir_entry *entry;
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 10, 0))
 	entry = proc_mkdir_data(name, S_IRUGO | S_IXUGO, parent, data);
-#else
-	/* entry = proc_mkdir_mode(name, S_IRUGO|S_IXUGO, parent); */
-	entry = proc_mkdir(name, parent);
-	if (entry)
-		entry->data = data;
-#endif
 
 	return entry;
 }
@@ -85,15 +49,7 @@ inline struct proc_dir_entry *rtw_proc_create_entry(const char *name, struct pro
 {
 	struct proc_dir_entry *entry;
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 26))
 	entry = proc_create_data(name,  S_IFREG | S_IRUGO | S_IWUGO, parent, fops, data);
-#else
-	entry = create_proc_entry(name, S_IFREG | S_IRUGO | S_IWUGO, parent);
-	if (entry) {
-		entry->data = data;
-		entry->proc_fops = fops;
-	}
-#endif
 
 	return entry;
 }
@@ -262,37 +218,19 @@ static ssize_t rtw_drv_proc_write(struct file *file, const char __user *buffer, 
 }
 
 static const struct rtw_proc_ops rtw_drv_proc_seq_fops = {
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 6, 0))
 	.proc_open = rtw_drv_proc_open,
 	.proc_read = seq_read,
 	.proc_lseek = seq_lseek,
 	.proc_release = seq_release,
 	.proc_write = rtw_drv_proc_write,
-#else
-	.owner = THIS_MODULE,
-	.open = rtw_drv_proc_open,
-	.read = seq_read,
-	.llseek = seq_lseek,
-	.release = seq_release,
-	.write = rtw_drv_proc_write,
-#endif
 };
 
 static const struct rtw_proc_ops rtw_drv_proc_sseq_fops = {
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 6, 0))
 	.proc_open = rtw_drv_proc_open,
 	.proc_read = seq_read,
 	.proc_lseek = seq_lseek,
 	.proc_release = single_release,
 	.proc_write = rtw_drv_proc_write,
-#else
-	.owner = THIS_MODULE,
-	.open = rtw_drv_proc_open,
-	.read = seq_read,
-	.llseek = seq_lseek,
-	.release = single_release,
-	.write = rtw_drv_proc_write,
-#endif
 };
 
 int rtw_drv_proc_init(void)
@@ -491,9 +429,7 @@ static int proc_get_sdio_dbg(struct seq_file *m, void *v)
 }
 
 #if (DBG_SDIO >= 2)
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 0, 0))
 #define strnicmp	strncasecmp
-#endif /* Linux kernel >= 4.0.0 */
 void rtw_sdio_dbg_reg_free(struct dvobj_priv *d);
 #endif /* DBG_SDIO >= 2 */
 
@@ -4795,37 +4731,19 @@ static ssize_t rtw_adapter_proc_write(struct file *file, const char __user *buff
 }
 
 static const struct rtw_proc_ops rtw_adapter_proc_seq_fops = {
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 6, 0))
 	.proc_open = rtw_adapter_proc_open,
 	.proc_read = seq_read,
 	.proc_lseek = seq_lseek,
 	.proc_release = seq_release,
 	.proc_write = rtw_adapter_proc_write,
-#else
-	.owner = THIS_MODULE,
-	.open = rtw_adapter_proc_open,
-	.read = seq_read,
-	.llseek = seq_lseek,
-	.release = seq_release,
-	.write = rtw_adapter_proc_write,
-#endif
 };
 
 static const struct rtw_proc_ops rtw_adapter_proc_sseq_fops = {
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 6, 0))
 	.proc_open = rtw_adapter_proc_open,
 	.proc_read = seq_read,
 	.proc_lseek = seq_lseek,
 	.proc_release = single_release,
 	.proc_write = rtw_adapter_proc_write,
-#else
-	.owner = THIS_MODULE,
-	.open = rtw_adapter_proc_open,
-	.read = seq_read,
-	.llseek = seq_lseek,
-	.release = single_release,
-	.write = rtw_adapter_proc_write,
-#endif
 };
 
 int proc_get_odm_adaptivity(struct seq_file *m, void *v)
@@ -4984,37 +4902,19 @@ static ssize_t rtw_odm_proc_write(struct file *file, const char __user *buffer, 
 }
 
 static const struct rtw_proc_ops rtw_odm_proc_seq_fops = {
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 6, 0))
 	.proc_open = rtw_odm_proc_open,
 	.proc_read = seq_read,
 	.proc_lseek = seq_lseek,
 	.proc_release = seq_release,
 	.proc_write = rtw_odm_proc_write,
-#else
-	.owner = THIS_MODULE,
-	.open = rtw_odm_proc_open,
-	.read = seq_read,
-	.llseek = seq_lseek,
-	.release = seq_release,
-	.write = rtw_odm_proc_write,
-#endif
 };
 
 static const struct rtw_proc_ops rtw_odm_proc_sseq_fops = {
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 6, 0))
 	.proc_open = rtw_odm_proc_open,
 	.proc_read = seq_read,
 	.proc_lseek = seq_lseek,
 	.proc_release = single_release,
 	.proc_write = rtw_odm_proc_write,
-#else
-	.owner = THIS_MODULE,
-	.open = rtw_odm_proc_open,
-	.read = seq_read,
-	.llseek = seq_lseek,
-	.release = single_release,
-	.write = rtw_odm_proc_write,
-#endif
 };
 
 struct proc_dir_entry *rtw_odm_proc_init(struct net_device *dev)
@@ -5149,37 +5049,19 @@ static ssize_t rtw_mcc_proc_write(struct file *file, const char __user *buffer, 
 }
 
 static const struct rtw_proc_ops rtw_mcc_proc_seq_fops = {
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 6, 0))
 	.proc_open = rtw_mcc_proc_open,
 	.proc_read = seq_read,
 	.proc_lseek = seq_lseek,
 	.proc_release = seq_release,
 	.proc_write = rtw_mcc_proc_write,
-#else
-	.owner = THIS_MODULE,
-	.open = rtw_mcc_proc_open,
-	.read = seq_read,
-	.llseek = seq_lseek,
-	.release = seq_release,
-	.write = rtw_mcc_proc_write,
-#endif
 };
 
 static const struct rtw_proc_ops rtw_mcc_proc_sseq_fops = {
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 6, 0))
 	.proc_open = rtw_mcc_proc_open,
 	.proc_read = seq_read,
 	.proc_lseek = seq_lseek,
 	.proc_release = single_release,
 	.proc_write = rtw_mcc_proc_write,
-#else
-	.owner = THIS_MODULE,
-	.open = rtw_mcc_proc_open,
-	.read = seq_read,
-	.llseek = seq_lseek,
-	.release = single_release,
-	.write = rtw_mcc_proc_write,
-#endif
 };
 
 struct proc_dir_entry *rtw_mcc_proc_init(struct net_device *dev)

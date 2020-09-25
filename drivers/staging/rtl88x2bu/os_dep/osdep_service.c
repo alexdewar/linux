@@ -181,11 +181,7 @@ inline struct sk_buff *_rtw_skb_clone(struct sk_buff *skb)
 }
 inline struct sk_buff *_rtw_pskb_copy(struct sk_buff *skb)
 {
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36))
 	return pskb_copy(skb, in_interrupt() ? GFP_ATOMIC : GFP_KERNEL);
-#else
-	return skb_clone(skb, in_interrupt() ? GFP_ATOMIC : GFP_KERNEL);
-#endif
 
 }
 
@@ -221,20 +217,12 @@ void _rtw_skb_queue_purge(struct sk_buff_head *list)
 #ifdef CONFIG_USB_HCI
 inline void *_rtw_usb_buffer_alloc(struct usb_device *dev, size_t size, dma_addr_t *dma)
 {
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 35))
 	return usb_alloc_coherent(dev, size, (in_interrupt() ? GFP_ATOMIC : GFP_KERNEL), dma);
-#else
-	return usb_buffer_alloc(dev, size, (in_interrupt() ? GFP_ATOMIC : GFP_KERNEL), dma);
-#endif
 
 }
 inline void _rtw_usb_buffer_free(struct usb_device *dev, size_t size, void *addr, dma_addr_t dma)
 {
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 35))
 	usb_free_coherent(dev, size, addr, dma);
-#else
-	usb_buffer_free(dev, size, addr, dma);
-#endif
 
 }
 #endif /* CONFIG_USB_HCI */
@@ -833,12 +821,7 @@ inline void rtw_list_splice_init(_list *list, _list *head)
 
 inline void rtw_list_splice_tail(_list *list, _list *head)
 {
-	#if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 27))
-	if (!list_empty(list))
-		__list_splice(list, head);
-	#else
 	list_splice_tail(list, head);
-	#endif
 }
 
 inline void rtw_hlist_head_init(rtw_hlist_head *h)
@@ -948,11 +931,7 @@ inline void _rtw_wait_for_comp(_completion *comp)
 void	_rtw_mutex_init(_mutex *pmutex)
 {
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37))
 	mutex_init(pmutex);
-#else
-	init_MUTEX(pmutex);
-#endif
 
 
 }
@@ -961,10 +940,7 @@ void	_rtw_mutex_free(_mutex *pmutex);
 void	_rtw_mutex_free(_mutex *pmutex)
 {
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37))
 	mutex_destroy(pmutex);
-#else
-#endif
 
 
 
@@ -1114,12 +1090,10 @@ void rtw_sleep_schedulable(int ms)
 void rtw_msleep_os(int ms)
 {
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36))
 	if (ms < 20) {
 		unsigned long us = ms * 1000UL;
 		usleep_range(us, us + 1000UL);
 	} else
-#endif
 		msleep((unsigned int)ms);
 
 
@@ -1129,14 +1103,7 @@ void rtw_usleep_os(int us)
 {
 
 	/* msleep((unsigned int)us); */
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36))
 	usleep_range(us, us + 1);
-#else
-	if (1 < (us / 1000))
-		msleep(1);
-	else
-		msleep((us / 1000) + 1);
-#endif
 
 
 
@@ -1404,16 +1371,7 @@ inline int ATOMIC_DEC_RETURN(ATOMIC_T *v)
 
 inline bool ATOMIC_INC_UNLESS(ATOMIC_T *v, int u)
 {
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 15))
 	return atomic_add_unless(v, 1, u);
-#else
-	/* only make sure not exceed after this function */
-	if (ATOMIC_INC_RETURN(v) > u) {
-		ATOMIC_DEC(v);
-		return 0;
-	}
-	return 1;
-#endif
 }
 
 /*
@@ -1453,21 +1411,11 @@ static int readFile(struct file *fp, char *buf, int len)
 {
 	int rlen = 0, sum = 0;
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 1, 0))
 	if (!(fp->f_mode & FMODE_CAN_READ))
-#else
-	if (!fp->f_op || !fp->f_op->read)
-#endif
 		return -EPERM;
 
 	while (sum < len) {
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 0))
 		rlen = kernel_read(fp, buf + sum, len - sum, &fp->f_pos);
-#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 1, 0))
-		rlen = __vfs_read(fp, buf + sum, len - sum, &fp->f_pos);
-#else
-		rlen = fp->f_op->read(fp, buf + sum, len - sum, &fp->f_pos);
-#endif
 		if (rlen > 0)
 			sum += rlen;
 		else if (0 != rlen)
@@ -1484,21 +1432,11 @@ static int writeFile(struct file *fp, char *buf, int len)
 {
 	int wlen = 0, sum = 0;
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 1, 0))
 	if (!(fp->f_mode & FMODE_CAN_WRITE))
-#else
-	if (!fp->f_op || !fp->f_op->write)
-#endif
 		return -EPERM;
 
 	while (sum < len) {
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 0))
 		wlen = kernel_write(fp, buf + sum, len - sum, &fp->f_pos);
-#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 1, 0))
-		wlen = __vfs_write(fp, buf + sum, len - sum, &fp->f_pos);
-#else
-		wlen = fp->f_op->write(fp, buf + sum, len - sum, &fp->f_pos);
-#endif
 		if (wlen > 0)
 			sum += wlen;
 		else if (0 != wlen)
@@ -1543,21 +1481,13 @@ static int isFileReadable(const char *path, u32 *sz)
 		ret = PTR_ERR(fp);
 	else {
 		oldfs = get_fs();
-		#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 1, 0))
 		set_fs(KERNEL_DS);
-		#else
-		set_fs(get_ds());
-		#endif
 
 		if (1 != readFile(fp, &buf, 1))
 			ret = PTR_ERR(fp);
 
 		if (ret == 0 && sz) {
-			#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 19, 0))
 			*sz = i_size_read(fp->f_path.dentry->d_inode);
-			#else
-			*sz = i_size_read(fp->f_dentry->d_inode);
-			#endif
 		}
 
 		set_fs(oldfs);
@@ -1585,11 +1515,7 @@ static int retriveFromFile(const char *path, u8 *buf, u32 sz)
 			RTW_INFO("%s openFile path:%s fp=%p\n", __FUNCTION__, path , fp);
 
 			oldfs = get_fs();
-			#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 1, 0))
 			set_fs(KERNEL_DS);
-			#else
-			set_fs(get_ds());
-			#endif
 			ret = readFile(fp, buf, sz);
 			set_fs(oldfs);
 			closeFile(fp);
@@ -1624,11 +1550,7 @@ static int storeToFile(const char *path, u8 *buf, u32 sz)
 			RTW_INFO("%s openFile path:%s fp=%p\n", __FUNCTION__, path , fp);
 
 			oldfs = get_fs();
-			#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 1, 0))
 			set_fs(KERNEL_DS);
-			#else
-			set_fs(get_ds());
-			#endif
 			ret = writeFile(fp, buf, sz);
 			set_fs(oldfs);
 			closeFile(fp);
@@ -1734,11 +1656,7 @@ struct net_device *rtw_alloc_etherdev_with_old_priv(int sizeof_priv, void *old_p
 	struct net_device *pnetdev;
 	struct rtw_netdev_priv_indicator *pnpi;
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 35))
 	pnetdev = alloc_etherdev_mq(sizeof(struct rtw_netdev_priv_indicator), 4);
-#else
-	pnetdev = alloc_etherdev(sizeof(struct rtw_netdev_priv_indicator));
-#endif
 	if (!pnetdev)
 		goto RETURN;
 
@@ -1755,11 +1673,7 @@ struct net_device *rtw_alloc_etherdev(int sizeof_priv)
 	struct net_device *pnetdev;
 	struct rtw_netdev_priv_indicator *pnpi;
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 35))
 	pnetdev = alloc_etherdev_mq(sizeof(struct rtw_netdev_priv_indicator), 4);
-#else
-	pnetdev = alloc_etherdev(sizeof(struct rtw_netdev_priv_indicator));
-#endif
 	if (!pnetdev)
 		goto RETURN;
 
@@ -1876,15 +1790,7 @@ u64 rtw_division64(u64 x, u64 y)
 
 inline u32 rtw_random32(void)
 {
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0))
 	return prandom_u32();
-#elif (LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18))
-	u32 random_int;
-	get_random_bytes(&random_int , 4);
-	return random_int;
-#else
-	return random32();
-#endif
 }
 
 void rtw_buf_free(u8 **buf, u32 *buf_len)

@@ -42,10 +42,8 @@
 
 
 	#include <linux/version.h>
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 11, 0))
 	#include <linux/sched/signal.h>
 	#include <linux/sched/types.h>
-#endif
 	#include <osdep_service_linux.h>
 	#include <drv_types_linux.h>
 

@@ -56,9 +56,6 @@ enum {
 #undef _seqdump
 
 	#define _dbgdump printk
-	#if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 24))
-	#define KERN_CONT
-	#endif
 	#define _seqdump seq_printf
 
 void RTW_BUF_DUMP_SEL(uint _loglevel, void *sel, u8 *_titlestring,

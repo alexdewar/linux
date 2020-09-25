@@ -28,6 +28,7 @@
 #endif
 #define CONFIG_USB_HCI	1
 #define PLATFORM_LINUX	1
+#define KERNEL_NEW 1
 
 /*
  * Wi-Fi Functions Config

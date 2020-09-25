@@ -522,7 +522,7 @@ int rtw_mesh_rx_msdu_act_check(union recv_frame *rframe
 
 void dump_mesh_stats(void *sel, _adapter *adapter);
 
-#if defined(PLATFORM_LINUX) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 32))
+#if defined(PLATFORM_LINUX) && (KERNEL_NEW)
 #define rtw_lockdep_assert_held(l) lockdep_assert_held(l)
 #define rtw_lockdep_is_held(l) lockdep_is_held(l)
 #else
