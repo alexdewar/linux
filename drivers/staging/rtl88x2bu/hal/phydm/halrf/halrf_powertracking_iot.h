@@ -57,10 +57,7 @@
 
 
 #define iqk_matrix_reg_num	8
-#if (DM_ODM_SUPPORT_TYPE == ODM_CE) && defined(DM_ODM_CE_MAC80211)
-#else
 #define IQK_MATRIX_SETTINGS_NUM	(14+24+21) /* Channels_2_4G_NUM + Channels_5G_20M_NUM + Channels_5G */
-#endif
 
 extern	u32 ofdm_swing_table[OFDM_TABLE_SIZE];
 extern	u8 cck_swing_table_ch1_ch13[CCK_TABLE_SIZE][8];
@@ -84,11 +81,8 @@ extern  u32 ofdm_swing_table_03DB_8710c[OFDM_03DB_TABLE_SIZE_8710C];
 extern  u32 tx_scaling_table_jaguar[TXSCALE_TABLE_SIZE];
 
 /* <20121018, Kordan> In case fail to read TxPowerTrack.txt, we use the table of 88E as the default table. */
-#if (DM_ODM_SUPPORT_TYPE == ODM_CE) && defined(DM_ODM_CE_MAC80211)
-#else
 static u8 delta_swing_table_idx_2ga_p_8188e[] = {0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 4,  4,  4,  4,  4,  4,  5,  5,  7,  7,  8,  8,  8,  9,  9,  9,  9,  9};
 static u8 delta_swing_table_idx_2ga_n_8188e[] = {0, 0, 0, 2, 2, 3, 3, 4, 4, 4, 4, 5, 5,  6,  6,  7,  7,  7,  7,  8,  8,  9,  9, 10, 10, 10, 11, 11, 11, 11};
-#endif
 
 void
 odm_txpowertracking_init(
@@ -158,22 +152,18 @@ struct dm_rf_calibration_struct {
 	u8  delta_swing_table_idx_2g_cck_a_n[DELTA_SWINGIDX_SIZE];
 	u8  delta_swing_table_idx_2g_cck_b_p[DELTA_SWINGIDX_SIZE];
 	u8  delta_swing_table_idx_2g_cck_b_n[DELTA_SWINGIDX_SIZE];
-#if !(DM_ODM_SUPPORT_TYPE & ODM_IOT)
 	u8  delta_swing_table_idx_2g_cck_c_p[DELTA_SWINGIDX_SIZE];
 	u8  delta_swing_table_idx_2g_cck_c_n[DELTA_SWINGIDX_SIZE];
 	u8  delta_swing_table_idx_2g_cck_d_p[DELTA_SWINGIDX_SIZE];
 	u8  delta_swing_table_idx_2g_cck_d_n[DELTA_SWINGIDX_SIZE];
-#endif
 	u8  delta_swing_table_idx_2ga_p[DELTA_SWINGIDX_SIZE];
 	u8  delta_swing_table_idx_2ga_n[DELTA_SWINGIDX_SIZE];
 	u8  delta_swing_table_idx_2gb_p[DELTA_SWINGIDX_SIZE];
 	u8  delta_swing_table_idx_2gb_n[DELTA_SWINGIDX_SIZE];
-#if !(DM_ODM_SUPPORT_TYPE & ODM_IOT)
 	u8  delta_swing_table_idx_2gc_p[DELTA_SWINGIDX_SIZE];
 	u8  delta_swing_table_idx_2gc_n[DELTA_SWINGIDX_SIZE];
 	u8  delta_swing_table_idx_2gd_p[DELTA_SWINGIDX_SIZE];
 	u8  delta_swing_table_idx_2gd_n[DELTA_SWINGIDX_SIZE];
-#endif
 
 #if (RTL8195B_SUPPORT == 1)
 	u8  delta_swing_table_idx_5ga_p[BAND_NUM][DELTA_SWINGIDX_SIZE];
@@ -182,13 +172,10 @@ struct dm_rf_calibration_struct {
 	u8  delta_swing_table_idx_5gb_n[BAND_NUM][DELTA_SWINGIDX_SIZE];
 #endif
 
-#if !(DM_ODM_SUPPORT_TYPE & ODM_IOT)
 	u8  delta_swing_table_idx_5gc_p[BAND_NUM][DELTA_SWINGIDX_SIZE];
 	u8  delta_swing_table_idx_5gc_n[BAND_NUM][DELTA_SWINGIDX_SIZE];
 	u8  delta_swing_table_idx_5gd_p[BAND_NUM][DELTA_SWINGIDX_SIZE];
 	u8  delta_swing_table_idx_5gd_n[BAND_NUM][DELTA_SWINGIDX_SIZE];
-#endif
-#if !(DM_ODM_SUPPORT_TYPE & ODM_IOT)
 	u8  delta_swing_tssi_table_2g_cck_a[DELTA_SWINTSSI_SIZE];
 	u8  delta_swing_tssi_table_2g_cck_b[DELTA_SWINTSSI_SIZE];
 	u8  delta_swing_tssi_table_2g_cck_c[DELTA_SWINTSSI_SIZE];
@@ -201,7 +188,6 @@ struct dm_rf_calibration_struct {
 	u8  delta_swing_tssi_table_5gb[BAND_NUM][DELTA_SWINTSSI_SIZE];
 	u8  delta_swing_tssi_table_5gc[BAND_NUM][DELTA_SWINTSSI_SIZE];
 	u8  delta_swing_tssi_table_5gd[BAND_NUM][DELTA_SWINTSSI_SIZE];
-#endif
 	s8  delta_swing_table_xtal_p[DELTA_SWINGIDX_SIZE];
 	s8  delta_swing_table_xtal_n[DELTA_SWINGIDX_SIZE];
 	u8  delta_swing_table_idx_2ga_p_8188e[DELTA_SWINGIDX_SIZE];
@@ -209,11 +195,7 @@ struct dm_rf_calibration_struct {
 
 	u8			bb_swing_idx_ofdm[MAX_RF_PATH];
 	u8			bb_swing_idx_ofdm_current;
-#if (DM_ODM_SUPPORT_TYPE & (ODM_WIN | ODM_CE | ODM_IOT))
 	u8			bb_swing_idx_ofdm_base[MAX_RF_PATH];
-#else
-	u8			bb_swing_idx_ofdm_base;
-#endif
 	boolean		default_bb_swing_index_flag;
 	boolean			bb_swing_flag_ofdm;
 	u8			bb_swing_idx_cck;
@@ -260,14 +242,12 @@ struct dm_rf_calibration_struct {
 	u32	IQK_MAC_backup[IQK_MAC_REG_NUM];
 	u32	IQK_BB_backup_recover[9];
 	u32	IQK_BB_backup[IQK_BB_REG_NUM];
-#if !(DM_ODM_SUPPORT_TYPE & ODM_IOT)
 	u32 	tx_iqc_8723b[2][3][2]; /* { {S1: 0xc94, 0xc80, 0xc4c} , {S0: 0xc9c, 0xc88, 0xc4c}} */
 	u32 	rx_iqc_8723b[2][2][2]; /* { {S1: 0xc14, 0xca0} ,           {S0: 0xc14, 0xca0}} */
 	u32	tx_iqc_8703b[3][2];	/* { {S1: 0xc94, 0xc80, 0xc4c} , {S0: 0xc9c, 0xc88, 0xc4c}}*/
 	u32	rx_iqc_8703b[2][2];	/* { {S1: 0xc14, 0xca0} ,           {S0: 0xc14, 0xca0}}*/
 	u32	tx_iqc_8723d[2][3][2];	/* { {S1: 0xc94, 0xc80, 0xc4c} , {S0: 0xc9c, 0xc88, 0xc4c}}*/
 	u32	rx_iqc_8723d[2][2][2];	/* { {S1: 0xc14, 0xca0} ,           {S0: 0xc14, 0xca0}}*/
-#endif
 	/* JJ ADD 20161014 */
 	u32	tx_iqc_8710b[2][3][2];	/* { {S1: 0xc94, 0xc80, 0xc4c} , {S0: 0xc9c, 0xc88, 0xc4c}}*/
 	u32	rx_iqc_8710b[2][2][2];	/* { {S1: 0xc14, 0xca0} ,           {S0: 0xc14, 0xca0}}*/
@@ -339,33 +319,5 @@ odm_txpowertracking_check_iot(
 	void		*dm_void
 );
 
-#if (DM_ODM_SUPPORT_TYPE & (ODM_WIN))
-
-void
-odm_txpowertracking_callback_thermal_meter92c(
-	void	*adapter
-);
-
-void
-odm_txpowertracking_callback_rx_gain_thermal_meter92d(
-	void	*adapter
-);
-
-void
-odm_txpowertracking_callback_thermal_meter92d(
-	void	*adapter
-);
-
-void
-odm_txpowertracking_direct_call92c(
-	void		*adapter
-);
-
-void
-odm_txpowertracking_thermal_meter_check(
-	void		*adapter
-);
-
-#endif
 
 #endif	/*#ifndef __HALRF_POWER_TRACKING_H__*/

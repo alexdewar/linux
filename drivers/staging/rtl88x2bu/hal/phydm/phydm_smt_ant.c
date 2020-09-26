@@ -1223,48 +1223,6 @@ void phydm_fast_ant_training_hl_smart_antenna_type2(
 	}
 }
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-
-void phydm_beam_switch_workitem_callback(
-	void *context)
-{
-	void *adapter = (void *)context;
-	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(((PADAPTER)adapter));
-	struct dm_struct *dm = &hal_data->DM_OutSrc;
-	struct smt_ant_honbo *sat_tab = &dm->dm_sat_table;
-
-#if DEV_BUS_TYPE != RT_PCI_INTERFACE
-	sat_tab->pkt_skip_statistic_en = 1;
-#endif
-	PHYDM_DBG(dm, DBG_ANT_DIV,
-		  "[ SmartAnt ] Beam Switch Workitem Callback, pkt_skip_statistic_en = (( %d ))\n",
-		  sat_tab->pkt_skip_statistic_en);
-
-	phydm_update_beam_pattern_type2(dm, sat_tab->update_beam_codeword, sat_tab->rfu_codeword_total_bit_num);
-
-#if DEV_BUS_TYPE != RT_PCI_INTERFACE
-#if 0
-	/*odm_stall_execution(sat_tab->latch_time);*/
-#endif
-	sat_tab->pkt_skip_statistic_en = 0;
-#endif
-	PHYDM_DBG(dm, DBG_ANT_DIV,
-		  "pkt_skip_statistic_en = (( %d )), latch_time = (( %d ))\n",
-		  sat_tab->pkt_skip_statistic_en, sat_tab->latch_time);
-}
-
-void phydm_beam_decision_workitem_callback(
-	void *context)
-{
-	void *adapter = (void *)context;
-	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(((PADAPTER)adapter));
-	struct dm_struct *dm = &hal_data->DM_OutSrc;
-
-	PHYDM_DBG(dm, DBG_ANT_DIV,
-		  "[ SmartAnt ] Beam decision Workitem Callback\n");
-	phydm_fast_ant_training_hl_smart_antenna_type2(dm);
-}
-#endif
 
 void phydm_process_rssi_for_hb_smtant_type2(
 	void *dm_void,
@@ -2155,48 +2113,6 @@ void odm_fast_ant_training_hl_smart_antenna_type1(
 	}
 }
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-
-void phydm_beam_switch_workitem_callback(
-	void *context)
-{
-	void *adapter = (void *)context;
-	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(((PADAPTER)adapter));
-	struct dm_struct *dm = &hal_data->DM_OutSrc;
-	struct smt_ant_honbo *sat_tab = &dm->dm_sat_table;
-
-#if DEV_BUS_TYPE != RT_PCI_INTERFACE
-	sat_tab->pkt_skip_statistic_en = 1;
-#endif
-	PHYDM_DBG(dm, DBG_ANT_DIV,
-		  "[ SmartAnt ] Beam Switch Workitem Callback, pkt_skip_statistic_en = (( %d ))\n",
-		  sat_tab->pkt_skip_statistic_en);
-
-	phydm_update_beam_pattern(dm, sat_tab->update_beam_codeword, sat_tab->rfu_codeword_total_bit_num);
-
-#if DEV_BUS_TYPE != RT_PCI_INTERFACE
-#if 0
-	/*odm_stall_execution(sat_tab->latch_time);*/
-#endif
-	sat_tab->pkt_skip_statistic_en = 0;
-#endif
-	PHYDM_DBG(dm, DBG_ANT_DIV,
-		  "pkt_skip_statistic_en = (( %d )), latch_time = (( %d ))\n",
-		  sat_tab->pkt_skip_statistic_en, sat_tab->latch_time);
-}
-
-void phydm_beam_decision_workitem_callback(
-	void *context)
-{
-	void *adapter = (void *)context;
-	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(((PADAPTER)adapter));
-	struct dm_struct *dm = &hal_data->DM_OutSrc;
-
-	PHYDM_DBG(dm, DBG_ANT_DIV,
-		  "[ SmartAnt ] Beam decision Workitem Callback\n");
-	odm_fast_ant_training_hl_smart_antenna_type1(dm);
-}
-#endif
 
 #endif /*@#ifdef CONFIG_HL_SMART_ANTENNA_TYPE1*/
 

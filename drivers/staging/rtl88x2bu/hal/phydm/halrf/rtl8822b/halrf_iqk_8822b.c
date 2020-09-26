@@ -24,15 +24,7 @@
  *****************************************************************************/
 
 #include "mp_precomp.h"
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-#if RT_PLATFORM == PLATFORM_MACOSX
-#include "phydm_precomp.h"
-#else
-#include "../phydm_precomp.h"
-#endif
-#else
 #include "../../phydm_precomp.h"
-#endif
 
 #if (RTL8822B_SUPPORT == 1)
 
@@ -56,7 +48,6 @@ void phydm_get_read_counter_8822b(struct dm_struct *dm)
 
 /*@---------------------------Define Local Constant---------------------------*/
 
-#if !(DM_ODM_SUPPORT_TYPE & ODM_AP)
 void do_iqk_8822b(void *dm_void, u8 delta_thermal_index, u8 thermal_value,
 		  u8 threshold)
 {
@@ -66,19 +57,6 @@ void do_iqk_8822b(void *dm_void, u8 delta_thermal_index, u8 thermal_value,
 	dm->rf_calibrate_info.thermal_value_iqk = thermal_value;
 	halrf_segment_iqk_trigger(dm, true, iqk->segment_iqk);
 }
-#else
-/*Originally config->do_iqk is hooked phy_iq_calibrate_8822b*/
-/*But do_iqk_8822b and phy_iq_calibrate_8822b have different arguments*/
-void do_iqk_8822b(void *dm_void, u8 delta_thermal_index, u8 thermal_value,
-		  u8 threshold)
-{
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-	struct dm_iqk_info *iqk = &dm->IQK_info;
-	boolean is_recovery = (boolean)delta_thermal_index;
-
-	halrf_segment_iqk_trigger(dm, true, iqk->segment_iqk);
-}
-#endif
 
 u32 _iqk_ltec_read_8822b(struct dm_struct *dm, u16 reg_addr)
 {
@@ -222,19 +200,11 @@ void _iqk_iqk_fail_report_8822b(struct dm_struct *dm)
 
 	for (i = 0; i < 4; i++) {
 		if (tmp1bf0 & (0x1 << i))
-#if !(DM_ODM_SUPPORT_TYPE & ODM_AP)
 			RF_DBG(dm, DBG_RF_IQK, "[IQK] please check S%d TXIQK\n",
 			       i);
-#else
-			panic_printk("[IQK] please check S%d TXIQK\n", i);
-#endif
 		if (tmp1bf0 & (0x1 << (i + 12)))
-#if !(DM_ODM_SUPPORT_TYPE & ODM_AP)
 			RF_DBG(dm, DBG_RF_IQK, "[IQK] please check S%d RXIQK\n",
 			       i);
-#else
-			panic_printk("[IQK] please check S%d RXIQK\n", i);
-#endif
 	}
 }
 
@@ -1910,9 +1880,6 @@ void phy_iq_calibrate_8822b(void *dm_void, boolean clear, boolean segment_iqk)
 	_iqk_fail_count_8822b(dm);
 	if (*dm->mp_mode)
 		halrf_iqk_hwtx_check(dm, false);
-#if (DM_ODM_SUPPORT_TYPE & ODM_AP)
-	_iqk_iqk_fail_report_8822b(dm);
-#endif
 	halrf_iqk_dbg(dm);
 }
 

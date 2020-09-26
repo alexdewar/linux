@@ -100,11 +100,7 @@ odm_clear_txpowertracking_state(
 
 void
 odm_txpowertracking_callback_thermal_meter(
-#if (DM_ODM_SUPPORT_TYPE & ODM_AP)
-	struct dm_struct		*dm
-#else
 	void	*adapter
-#endif
 );
 
 #if (RTL8822C_SUPPORT == 1 || RTL8814B_SUPPORT == 1)

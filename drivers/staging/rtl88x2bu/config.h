@@ -1,0 +1,402 @@
+#define CONFIG_RTL8822B
+#define CONFIG_USB_HCI
+#define CONFIG_MP_INCLUDED
+#define CONFIG_POWER_SAVING
+#define CONFIG_BT_COEXIST
+#define CONFIG_EFUSE_CONFIG_FILE
+#define CONFIG_LOAD_PHY_PARA_FROM_FILE
+#define CONFIG_TXPWR_BY_RATE
+#define CONFIG_TXPWR_BY_RATE_EN
+#define CONFIG_TXPWR_LIMIT
+#define CONFIG_80211W
+#define CONFIG_BR_EXT
+#define CONFIG_WIFI_MONITOR
+#define CONFIG_RTW_NAPI
+#define CONFIG_RTW_GRO
+#define CONFIG_RTW_NETIF_SG
+#define CONFIG_RTW_VHT_2G4
+#define CONFIG_RTW_DEBUG
+#define CONFIG_PROC_DEBUG
+#define CONFIG_RTW_SDIO_PM_KEEP_POWER
+#define CONFIG_PLATFORM_I386_PC
+#define CONFIG_CUSTOMER_HUAWEI
+#undef CONFIG_AUTOCFG_CP
+#undef CONFIG_MULTIDRV
+#undef CONFIG_RTL8188E
+#undef CONFIG_RTL8812A
+#undef CONFIG_RTL8821A
+#undef CONFIG_RTL8192E
+#undef CONFIG_RTL8723B
+#undef CONFIG_RTL8814A
+#undef CONFIG_RTL8723C
+#undef CONFIG_RTL8188F
+#undef CONFIG_RTL8188GTV
+#undef CONFIG_RTL8723D
+#undef CONFIG_RTL8821C
+#undef CONFIG_RTL8710B
+#undef CONFIG_RTL8192F
+#undef CONFIG_RTL8822C
+#undef CONFIG_RTL8814B
+#undef CONFIG_PCI_HCI
+#undef CONFIG_SDIO_HCI
+#undef CONFIG_GSPI_HCI
+#undef CONFIG_USB_AUTOSUSPEND
+#undef CONFIG_HW_PWRP_DETECTION
+#undef CONFIG_WAPI_SUPPORT
+#undef CONFIG_EXT_CLK
+#undef CONFIG_TRAFFIC_PROTECT
+#undef CONFIG_TXPWR_LIMIT_EN
+#undef CONFIG_SIGNAL_SCALE_MAPPING
+#undef CONFIG_REDUCE_TX_CPU_LOADING
+#undef CONFIG_TDLS
+#undef CONFIG_MCC_MODE
+#undef CONFIG_APPEND_VENDOR_IE_ENABLE
+#undef CONFIG_RTW_IPCAM_APPLICATION
+#undef CONFIG_RTW_REPEATER_SON
+#undef CONFIG_RTW_WIFI_HAL
+#undef CONFIG_ICMP_VOQ
+#undef CONFIG_WOWLAN
+#undef CONFIG_WOW_STA_MIX
+#undef CONFIG_GPIO_WAKEUP
+#undef CONFIG_HIGH_ACTIVE_DEV2HST
+#undef CONFIG_ONE_PIN_GPIO
+#undef CONFIG_HIGH_ACTIVE_HST2DEV
+#undef CONFIG_PNO_SUPPORT
+#undef CONFIG_PNO_SET_DEBUG
+#undef CONFIG_AP_WOWLAN
+#undef CONFIG_MP_VHT_HW_TX_MODE
+#undef CONFIG_PLATFORM_ANDROID_X86
+#undef CONFIG_PLATFORM_ANDROID_INTEL_X86
+#undef CONFIG_PLATFORM_JB_X86
+#undef CONFIG_PLATFORM_ARM_S3C2K4
+#undef CONFIG_PLATFORM_ARM_PXA2XX
+#undef CONFIG_PLATFORM_ARM_S3C6K4
+#undef CONFIG_PLATFORM_MIPS_RMI
+#undef CONFIG_PLATFORM_RTD2880B
+#undef CONFIG_PLATFORM_MIPS_AR9132
+#undef CONFIG_PLATFORM_RTK_DMP
+#undef CONFIG_PLATFORM_MIPS_PLM
+#undef CONFIG_PLATFORM_MSTAR389
+#undef CONFIG_PLATFORM_MT53XX
+#undef CONFIG_PLATFORM_ARM_MX51_241H
+#undef CONFIG_PLATFORM_FS_MX61
+#undef CONFIG_PLATFORM_ACTIONS_ATJ227X
+#undef CONFIG_PLATFORM_TEGRA3_CARDHU
+#undef CONFIG_PLATFORM_TEGRA4_DALMORE
+#undef CONFIG_PLATFORM_ARM_TCC8900
+#undef CONFIG_PLATFORM_ARM_TCC8920
+#undef CONFIG_PLATFORM_ARM_TCC8920_JB42
+#undef CONFIG_PLATFORM_ARM_TCC8930_JB42
+#undef CONFIG_PLATFORM_ARM_RK2818
+#undef CONFIG_PLATFORM_ARM_RK3066
+#undef CONFIG_PLATFORM_ARM_RK3188
+#undef CONFIG_PLATFORM_ARM_RK3399
+#undef CONFIG_PLATFORM_ARM_URBETTER
+#undef CONFIG_PLATFORM_ARM_TI_PANDA
+#undef CONFIG_PLATFORM_MIPS_JZ4760
+#undef CONFIG_PLATFORM_DMP_PHILIPS
+#undef CONFIG_PLATFORM_MSTAR_TITANIA12
+#undef CONFIG_PLATFORM_MSTAR
+#undef CONFIG_PLATFORM_SZEBOOK
+#undef CONFIG_PLATFORM_ARM_SUNxI
+#undef CONFIG_PLATFORM_ARM_SUN6I
+#undef CONFIG_PLATFORM_ARM_SUN7I
+#undef CONFIG_PLATFORM_ARM_SUN8I_W3P1
+#undef CONFIG_PLATFORM_ARM_SUN8I_W5P1
+#undef CONFIG_PLATFORM_ACTIONS_ATM702X
+#undef CONFIG_PLATFORM_ACTIONS_ATV5201
+#undef CONFIG_PLATFORM_ACTIONS_ATM705X
+#undef CONFIG_PLATFORM_ARM_SUN50IW1P1
+#undef CONFIG_PLATFORM_ARM_RTD299X
+#undef CONFIG_PLATFORM_ARM_LGE
+#undef CONFIG_PLATFORM_ARM_SPREADTRUM_6820
+#undef CONFIG_PLATFORM_ARM_SPREADTRUM_8810
+#undef CONFIG_PLATFORM_ARM_WMT
+#undef CONFIG_PLATFORM_TI_DM365
+#undef CONFIG_PLATFORM_MOZART
+#undef CONFIG_PLATFORM_RTK119X
+#undef CONFIG_PLATFORM_RTK119X_AM
+#undef CONFIG_PLATFORM_RTK129X
+#undef CONFIG_PLATFORM_RTK390X
+#undef CONFIG_PLATFORM_NOVATEK_NT72668
+#undef CONFIG_PLATFORM_HISILICON
+#undef CONFIG_PLATFORM_HISILICON_HI3798
+#undef CONFIG_PLATFORM_NV_TK1
+#undef CONFIG_PLATFORM_NV_TK1_UBUNTU
+#undef CONFIG_PLATFORM_RTL8197D
+#undef CONFIG_PLATFORM_AML_S905
+#undef CONFIG_PLATFORM_ZTE_ZX296716
+#undef CONFIG_CUSTOMER_HUAWEI_GENERAL
+#undef CONFIG_DRVEXT_MODULE
+
+
+#define CONFIG_MP_INCLUDED 
+#define CONFIG_POWER_SAVING 
+#define CONFIG_BT_COEXIST 
+#define CONFIG_EFUSE_CONFIG_FILE 
+#define CONFIG_LOAD_PHY_PARA_FROM_FILE 
+#define CONFIG_TXPWR_BY_RATE 
+#define CONFIG_TXPWR_BY_RATE_EN 
+#define CONFIG_TXPWR_LIMIT 
+#undef CONFIG_TXPWR_LIMIT_EN 
+#undef CONFIG_RTW_ADAPTIVITY_EN 
+#undef CONFIG_RTW_ADAPTIVITY_MODE 
+#define CONFIG_IEEE80211W 
+#undef HIGH_ACTIVE_HST2DEV 
+#define CONFIG_BR_EXT 
+#define CONFIG_WIFI_MONITOR 
+#define CONFIG_RTW_NAPI 
+#define CONFIG_RTW_GRO 
+#define CONFIG_RTW_NETIF_SG 
+#define CONFIG_RTW_DEBUG 
+#define CONFIG_PROC_DEBUG 
+#undef CONFIG_RTW_UP_MAPPING_RULE 
+#define RTW_VHT_2G4 
+#define CONFIG_LITTLE_ENDIAN 
+#define CONFIG_IOCTL_CFG80211 
+#define RTW_USE_CFG80211_STA_EVENT
+
+// autoconf.h
+/******************************************************************************
+ *
+ * Copyright(c) 2015 - 2017 Realtek Corporation.
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of version 2 of the GNU General Public License as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ *****************************************************************************/
+#define CONFIG_SINGLE_IMG
+#undef CONFIG_DISABLE_ODM
+
+/*
+ * Public  General Config
+ */
+#define AUTOCONF_INCLUDED
+#define RTL871X_MODULE_NAME "88x2BU"
+#define DRV_NAME "rtl88x2bu"
+
+/* Set CONFIG_RTL8822B from Makefile */
+#define CONFIG_RTL8822B
+#define CONFIG_USB_HCI	1
+#define PLATFORM_LINUX	1
+#define KERNEL_NEW 1
+
+/*
+ * Wi-Fi Functions Config
+ */
+
+#define CONFIG_80211N_HT
+#define CONFIG_80211AC_VHT
+#define CONFIG_BEAMFORMING
+
+	/*
+	 * Indecate new sta asoc through cfg80211_new_sta
+	 * If kernel version >= 3.2 or
+	 * version < 3.2 but already apply cfg80211 patch,
+	 * RTW_USE_CFG80211_STA_EVENT must be defiend!
+	 */
+	/* Set RTW_USE_CFG80211_STA_EVENT from Makefile */
+	#undef RTW_USE_CFG80211_STA_EVENT /* Indecate new sta asoc through cfg80211_new_sta
+	// #define CONFIG_CFG80211_FORCE_COMPATIBLE_2_6_37_UNDER
+	#undef CONFIG_CFG80211_FORCE_COMPATIBLE_2_6_37_UNDER
+        #undef CONFIG_DEBUG_CFG80211
+	#undef CONFIG_DRV_ISSUE_PROV_REQ */ /* IOT FOR S2
+	#define CONFIG_SET_SCAN_DENY_TIMER
+
+/*
+ * Internal  General Config
+ */
+#undef CONFIG_H2CLBK
+
+#define RTW_HALMAC		/* Use HALMAC architecture, necessary for 8822B */
+#define CONFIG_EMBEDDED_FWIMG	1
+	#define	LOAD_FW_HEADER_FROM_DRIVER
+#undef CONFIG_FILE_FWIMG
+
+#define CONFIG_XMIT_ACK
+	#define CONFIG_ACTIVE_KEEP_ALIVE_CHECK
+
+#define CONFIG_RECV_REORDERING_CTRL	1
+
+#undef CONFIG_SUPPORT_USB_INT
+
+	#define CONFIG_IPS	1
+	#undef CONFIG_IPS_LEVEL_2 /*enable this to set default IPS mode to IPS_LEVEL_2*/
+	#define CONFIG_IPS_CHECK_IN_WD /* Do IPS Check in WatchDog.	*/
+	#undef CONFIG_FWLPS_IN_IPS
+	#undef SUPPORT_HW_RFOFF_DETECTED	1
+
+	#define CONFIG_LPS	1
+		#define CONFIG_LPS_LCLK	1
+
+			#undef CONFIG_XMIT_THREAD_MODE
+			#define LPS_RPWM_WAIT_MS 300
+			#define CONFIG_DETECT_CPWM_BY_POLLING
+		#undef DBG_CHECK_FW_PS_STATE
+
+		#define CONFIG_WMMPS_STA 1
+        
+	/* before link */
+	#undef CONFIG_ANTENNA_DIVERSITY
+
+
+/*#else*/	/* CONFIG_MP_INCLUDED */
+
+/*#endif*/	/* CONFIG_MP_INCLUDED */
+
+#define CONFIG_AP_MODE	1
+	#undef CONFIG_INTERRUPT_BASED_TXBCN /* Tx Beacon when driver BCN_OK ,BCN_ERR interrupt occurs
+
+	#define CONFIG_NATIVEAP_MLME
+	#define CONFIG_FIND_BEST_CHANNEL	1
+
+#define CONFIG_P2P	1
+	/* The CONFIG_WFD is for supporting the Wi-Fi display */
+	#define CONFIG_WFD
+
+	#define CONFIG_P2P_REMOVE_GROUP_INFO
+
+	#undef CONFIG_DBG_P2P
+
+	#define CONFIG_P2P_PS
+	#undef CONFIG_P2P_IPS
+	#define CONFIG_P2P_OP_CHK_SOCIAL_CH
+	#define CONFIG_CFG80211_ONECHANNEL_UNDER_CONCURRENT  /* replace CONFIG_P2P_CHK_INVITE_CH_LIST flag */
+	#undef CONFIG_P2P_INVITE_IOT
+
+#define CONFIG_SKB_COPY	1 /* amsdu */
+
+#define CONFIG_RTW_LED
+	#define CONFIG_RTW_SW_LED
+		#undef CONFIG_RTW_LED_HANDLED_BY_CMD_THREAD
+
+#define USB_INTERFERENCE_ISSUE /* this should be checked in all usb interface */
+#define CONFIG_GLOBAL_UI_PID
+
+#undef CONFIG_RTW_80211K
+
+#define CONFIG_LAYER2_ROAMING
+#define CONFIG_LAYER2_ROAMING_RESUME
+#undef CONFIG_ADAPTOR_INFO_CACHING_FILE /* now just applied on 8192cu only, should make it general... */
+#undef CONFIG_RESUME_IN_WORKQUEUE
+#define CONFIG_SET_SCAN_DENY_TIMER
+#define CONFIG_LONG_DELAY_ISSUE
+#define CONFIG_NEW_SIGNAL_STAT_PROCESS
+#undef CONFIG_SIGNAL_DISPLAY_DBM /*display RX signal with dbm*/
+#undef RTW_NOTCH_FILTER 0 /* 0:Disable, 1:Enable, */
+
+
+/*
+ * Interface  Related Config
+ */
+#undef CONFIG_MINIMAL_MEMORY_USAGE
+
+#undef CONFIG_REDUCE_USB_TX_INT	/* Trade-off: Improve performance, but may cause TX URBs blocked by USB Host/Bus driver on few platforms. */
+#undef CONFIG_EASY_REPLACEMENT
+
+/*
+ * CONFIG_USE_USB_BUFFER_ALLOC_XX uses Linux USB Buffer alloc API and is for Linux platform only now!
+ */
+#undef CONFIG_USE_USB_BUFFER_ALLOC_TX 1	/* Trade-off: For TX path, improve stability on some platforms, but may cause performance degrade on other platforms.*/
+#undef CONFIG_USE_USB_BUFFER_ALLOC_RX 1 /* For RX path*/
+	#define CONFIG_PREALLOC_RECV_SKB
+		#undef CONFIG_FIX_NR_BULKIN_BUFFER /* only use PREALLOC_RECV_SKB buffer, don't alloc skb at runtime*/
+
+/*
+ * USB VENDOR REQ BUFFER ALLOCATION METHOD
+ * if not set we'll use function local variable (stack memory)
+ */
+#undef CONFIG_USB_VENDOR_REQ_BUFFER_DYNAMIC_ALLOCATE
+#define CONFIG_USB_VENDOR_REQ_BUFFER_PREALLOC
+
+#define CONFIG_USB_VENDOR_REQ_MUTEX
+#define CONFIG_VENDOR_REQ_RETRY
+
+#undef CONFIG_USB_SUPPORT_ASYNC_VDN_REQ 1
+
+/*
+ * HAL  Related Config
+ */
+#define RTL8812A_RX_PACKET_INCLUDE_CRC	0
+
+#define CONFIG_RX_PACKET_APPEND_FCS
+
+#undef CONFIG_ONLY_ONE_OUT_EP_TO_LOW	0
+
+#define CONFIG_OUT_EP_WIFI_MODE	0
+
+#define ENABLE_USB_DROP_INCORRECT_OUT
+
+#define CONFIG_ADHOC_WORKAROUND_SETTING	1
+
+#define ENABLE_NEW_RFE_TYPE	0
+
+#define DISABLE_BB_RF	0
+
+	#define MP_DRIVER 1
+	#define CONFIG_MP_IWPRIV_SUPPORT	1
+	 #undef CONFIG_USB_TX_AGGREGATION
+	 #undef CONFIG_USB_RX_AGGREGATION
+
+/*
+ * Platform  Related Config
+ */
+	// /* for ODM and outsrc BT-Coex */
+	// #ifndef CONFIG_LPS
+	// 	#define CONFIG_LPS	/* download reserved page to FW */
+	// #endif
+
+
+
+// // #ifdef CONFIG_USB_TX_AGGREGATION
+// #undef CONFIG_TX_EARLY_MODE
+// // #endif
+
+#define	RTL8188E_EARLY_MODE_PKT_NUM_10	0
+#undef CONFIG_CUSTOMER01_SMART_ANTENNA
+
+/*
+ * Debug Related Config
+ */
+#define DBG	1
+
+#define DBG_CONFIG_ERROR_DETECT
+
+#undef CONFIG_DIS_UPHY
+
+/* block of commented-out defines */
+#undef DBG_CONFIG_ERROR_DETECT_INT
+#undef DBG_CONFIG_ERROR_RESET
+
+#undef DBG_IO
+#undef DBG_DELAY_OS
+#undef DBG_MEM_ALLOC
+#undef DBG_IOCTL
+
+#undef DBG_TX
+#undef DBG_XMIT_BUF
+#undef DBG_XMIT_BUF_EXT
+#undef DBG_TX_DROP_FRAME
+
+#undef DBG_RX_DROP_FRAME
+#undef DBG_RX_SEQ
+#undef DBG_RX_SIGNAL_DISPLAY_PROCESSING
+#undef DBG_RX_SIGNAL_DISPLAY_SSID_MONITORED "jeff-ap"
+
+
+
+#undef DBG_SHOW_MCUFWDL_BEFORE_51_ENABLE
+#undef DBG_ROAMING_TEST
+
+#undef DBG_HAL_INIT_PROFILING
+
+#undef DBG_MEMORY_LEAK	1
+
+/* another commented-out define */
+#undef DBG_FW_DEBUG_MSG_PKT  /* FW use this feature to tx debug broadcast pkt. This pkt include FW debug message*/

@@ -35,18 +35,9 @@ void odm_tx_pwr_track_set_pwr8822b(void *dm_void, enum pwrtrack_method method,
 				   u8 rf_path, u8 channel_mapped_index);
 
 void get_delta_swing_table_8822b(void *dm_void,
-#if (DM_ODM_SUPPORT_TYPE & ODM_AP)
-				 u8 **temperature_up_a, u8 **temperature_down_a,
-				 u8 **temperature_up_b, u8 **temperature_down_b,
-				 u8 **temperature_up_cck_a,
-				 u8 **temperature_down_cck_a,
-				 u8 **temperature_up_cck_b,
-				 u8 **temperature_down_cck_b
-#else
 				 u8 **temperature_up_a, u8 **temperature_down_a,
 				 u8 **temperature_up_b,
 				 u8 **temperature_down_b
-#endif
 				 );
 
 void aac_check_8822b(struct dm_struct *dm);
@@ -55,11 +46,7 @@ void phy_lc_calibrate_8822b(void *dm_void);
 
 void halrf_rf_lna_setting_8822b(struct dm_struct *dm, enum halrf_lna_set type);
 
-#if ((DM_ODM_SUPPORT_TYPE & ODM_AP) || (DM_ODM_SUPPORT_TYPE == ODM_CE))
 void phy_set_rf_path_switch_8822b(struct dm_struct *dm,
-#else
-void phy_set_rf_path_switch_8822b(void *adapter,
-#endif
 				  boolean is_main);
 
 #endif /*__HALRF_8822B_H__*/

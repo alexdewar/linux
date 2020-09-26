@@ -28,15 +28,7 @@
 
 #define ODM_WIN 0x08
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-#if RT_PLATFORM == PLATFORM_MACOSX
-#include "phydm_precomp.h"
-#else
-#include "../phydm_precomp.h"
-#endif
-#else
 #include "../../phydm_precomp.h"
-#endif
 
 #define D_S_SIZE DELTA_SWINGIDX_SIZE
 #define D_ST_SIZE DELTA_SWINTSSI_SIZE
@@ -12188,38 +12180,14 @@ odm_read_and_config_mp_8822b_txpwr_lmt(struct dm_struct *dm)
 #ifdef CONFIG_8822B
 
 	u32	i = 0;
-#if (DM_ODM_SUPPORT_TYPE == ODM_IOT)
-	u32	array_len =
-			sizeof(array_mp_8822b_txpwr_lmt) / sizeof(u8);
-	u8	*array = (u8 *)array_mp_8822b_txpwr_lmt;
-#else
 	u32	array_len =
 			sizeof(array_mp_8822b_txpwr_lmt) / sizeof(u8 *);
 	u8	**array = (u8 **)array_mp_8822b_txpwr_lmt;
-#endif
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	void	*adapter = dm->adapter;
-	HAL_DATA_TYPE	*hal_data = GET_HAL_DATA(((PADAPTER)adapter));
-
-	odm_memory_set(dm, hal_data->BufOfLinesPwrLmt, 0,
-		       MAX_LINES_HWCONFIG_TXT *
-		       MAX_BYTES_LINE_HWCONFIG_TXT);
-	hal_data->nLinesReadPwrLmt = array_len / 7;
-#endif
 
 	PHYDM_DBG(dm, ODM_COMP_INIT, "===> %s\n", __func__);
 
 	for (i = 0; i < array_len; i += 7) {
-#if (DM_ODM_SUPPORT_TYPE == ODM_IOT)
-		u8	regulation = array[i];
-		u8	band = array[i + 1];
-		u8	bandwidth = array[i + 2];
-		u8	rate = array[i + 3];
-		u8	rf_path = array[i + 4];
-		u8	chnl = array[i + 5];
-		u8	val = array[i + 6];
-#else
 		u8	*regulation = array[i];
 		u8	*band = array[i + 1];
 		u8	*bandwidth = array[i + 2];
@@ -12227,14 +12195,9 @@ odm_read_and_config_mp_8822b_txpwr_lmt(struct dm_struct *dm)
 		u8	*rf_path = array[i + 4];
 		u8	*chnl = array[i + 5];
 		u8	*val = array[i + 6];
-#endif
 
 		odm_config_bb_txpwr_lmt_8822b(dm, regulation, band, bandwidth,
 					      rate, rf_path, chnl, val);
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-		rsprintf((char *)hal_data->BufOfLinesPwrLmt[i / 7], 100, "\"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\",",
-			 regulation, band, bandwidth, rate, rf_path, chnl, val);
-#endif
 	}
 
 #endif
@@ -12840,38 +12803,14 @@ odm_read_and_config_mp_8822b_txpwr_lmt_type12(struct dm_struct *dm)
 #ifdef CONFIG_8822B_TYPE12
 
 	u32	i = 0;
-#if (DM_ODM_SUPPORT_TYPE == ODM_IOT)
-	u32	array_len =
-			sizeof(array_mp_8822b_txpwr_lmt_type12) / sizeof(u8);
-	u8	*array = (u8 *)array_mp_8822b_txpwr_lmt_type12;
-#else
 	u32	array_len =
 			sizeof(array_mp_8822b_txpwr_lmt_type12) / sizeof(u8 *);
 	u8	**array = (u8 **)array_mp_8822b_txpwr_lmt_type12;
-#endif
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	void	*adapter = dm->adapter;
-	HAL_DATA_TYPE	*hal_data = GET_HAL_DATA(((PADAPTER)adapter));
-
-	odm_memory_set(dm, hal_data->BufOfLinesPwrLmt, 0,
-		       MAX_LINES_HWCONFIG_TXT *
-		       MAX_BYTES_LINE_HWCONFIG_TXT);
-	hal_data->nLinesReadPwrLmt = array_len / 7;
-#endif
 
 	PHYDM_DBG(dm, ODM_COMP_INIT, "===> %s\n", __func__);
 
 	for (i = 0; i < array_len; i += 7) {
-#if (DM_ODM_SUPPORT_TYPE == ODM_IOT)
-		u8	regulation = array[i];
-		u8	band = array[i + 1];
-		u8	bandwidth = array[i + 2];
-		u8	rate = array[i + 3];
-		u8	rf_path = array[i + 4];
-		u8	chnl = array[i + 5];
-		u8	val = array[i + 6];
-#else
 		u8	*regulation = array[i];
 		u8	*band = array[i + 1];
 		u8	*bandwidth = array[i + 2];
@@ -12879,14 +12818,9 @@ odm_read_and_config_mp_8822b_txpwr_lmt_type12(struct dm_struct *dm)
 		u8	*rf_path = array[i + 4];
 		u8	*chnl = array[i + 5];
 		u8	*val = array[i + 6];
-#endif
 
 		odm_config_bb_txpwr_lmt_8822b(dm, regulation, band, bandwidth,
 					      rate, rf_path, chnl, val);
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-		rsprintf((char *)hal_data->BufOfLinesPwrLmt[i / 7], 100, "\"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\",",
-			 regulation, band, bandwidth, rate, rf_path, chnl, val);
-#endif
 	}
 
 #endif
@@ -13492,38 +13426,14 @@ odm_read_and_config_mp_8822b_txpwr_lmt_type15(struct dm_struct *dm)
 #ifdef CONFIG_8822B_TYPE15
 
 	u32	i = 0;
-#if (DM_ODM_SUPPORT_TYPE == ODM_IOT)
-	u32	array_len =
-			sizeof(array_mp_8822b_txpwr_lmt_type15) / sizeof(u8);
-	u8	*array = (u8 *)array_mp_8822b_txpwr_lmt_type15;
-#else
 	u32	array_len =
 			sizeof(array_mp_8822b_txpwr_lmt_type15) / sizeof(u8 *);
 	u8	**array = (u8 **)array_mp_8822b_txpwr_lmt_type15;
-#endif
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	void	*adapter = dm->adapter;
-	HAL_DATA_TYPE	*hal_data = GET_HAL_DATA(((PADAPTER)adapter));
-
-	odm_memory_set(dm, hal_data->BufOfLinesPwrLmt, 0,
-		       MAX_LINES_HWCONFIG_TXT *
-		       MAX_BYTES_LINE_HWCONFIG_TXT);
-	hal_data->nLinesReadPwrLmt = array_len / 7;
-#endif
 
 	PHYDM_DBG(dm, ODM_COMP_INIT, "===> %s\n", __func__);
 
 	for (i = 0; i < array_len; i += 7) {
-#if (DM_ODM_SUPPORT_TYPE == ODM_IOT)
-		u8	regulation = array[i];
-		u8	band = array[i + 1];
-		u8	bandwidth = array[i + 2];
-		u8	rate = array[i + 3];
-		u8	rf_path = array[i + 4];
-		u8	chnl = array[i + 5];
-		u8	val = array[i + 6];
-#else
 		u8	*regulation = array[i];
 		u8	*band = array[i + 1];
 		u8	*bandwidth = array[i + 2];
@@ -13531,14 +13441,9 @@ odm_read_and_config_mp_8822b_txpwr_lmt_type15(struct dm_struct *dm)
 		u8	*rf_path = array[i + 4];
 		u8	*chnl = array[i + 5];
 		u8	*val = array[i + 6];
-#endif
 
 		odm_config_bb_txpwr_lmt_8822b(dm, regulation, band, bandwidth,
 					      rate, rf_path, chnl, val);
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-		rsprintf((char *)hal_data->BufOfLinesPwrLmt[i / 7], 100, "\"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\",",
-			 regulation, band, bandwidth, rate, rf_path, chnl, val);
-#endif
 	}
 
 #endif
@@ -14144,38 +14049,14 @@ odm_read_and_config_mp_8822b_txpwr_lmt_type16(struct dm_struct *dm)
 #ifdef CONFIG_8822B_TYPE16
 
 	u32	i = 0;
-#if (DM_ODM_SUPPORT_TYPE == ODM_IOT)
-	u32	array_len =
-			sizeof(array_mp_8822b_txpwr_lmt_type16) / sizeof(u8);
-	u8	*array = (u8 *)array_mp_8822b_txpwr_lmt_type16;
-#else
 	u32	array_len =
 			sizeof(array_mp_8822b_txpwr_lmt_type16) / sizeof(u8 *);
 	u8	**array = (u8 **)array_mp_8822b_txpwr_lmt_type16;
-#endif
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	void	*adapter = dm->adapter;
-	HAL_DATA_TYPE	*hal_data = GET_HAL_DATA(((PADAPTER)adapter));
-
-	odm_memory_set(dm, hal_data->BufOfLinesPwrLmt, 0,
-		       MAX_LINES_HWCONFIG_TXT *
-		       MAX_BYTES_LINE_HWCONFIG_TXT);
-	hal_data->nLinesReadPwrLmt = array_len / 7;
-#endif
 
 	PHYDM_DBG(dm, ODM_COMP_INIT, "===> %s\n", __func__);
 
 	for (i = 0; i < array_len; i += 7) {
-#if (DM_ODM_SUPPORT_TYPE == ODM_IOT)
-		u8	regulation = array[i];
-		u8	band = array[i + 1];
-		u8	bandwidth = array[i + 2];
-		u8	rate = array[i + 3];
-		u8	rf_path = array[i + 4];
-		u8	chnl = array[i + 5];
-		u8	val = array[i + 6];
-#else
 		u8	*regulation = array[i];
 		u8	*band = array[i + 1];
 		u8	*bandwidth = array[i + 2];
@@ -14183,14 +14064,9 @@ odm_read_and_config_mp_8822b_txpwr_lmt_type16(struct dm_struct *dm)
 		u8	*rf_path = array[i + 4];
 		u8	*chnl = array[i + 5];
 		u8	*val = array[i + 6];
-#endif
 
 		odm_config_bb_txpwr_lmt_8822b(dm, regulation, band, bandwidth,
 					      rate, rf_path, chnl, val);
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-		rsprintf((char *)hal_data->BufOfLinesPwrLmt[i / 7], 100, "\"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\",",
-			 regulation, band, bandwidth, rate, rf_path, chnl, val);
-#endif
 	}
 
 #endif
@@ -14796,38 +14672,14 @@ odm_read_and_config_mp_8822b_txpwr_lmt_type17(struct dm_struct *dm)
 #ifdef CONFIG_8822B_TYPE17
 
 	u32	i = 0;
-#if (DM_ODM_SUPPORT_TYPE == ODM_IOT)
-	u32	array_len =
-			sizeof(array_mp_8822b_txpwr_lmt_type17) / sizeof(u8);
-	u8	*array = (u8 *)array_mp_8822b_txpwr_lmt_type17;
-#else
 	u32	array_len =
 			sizeof(array_mp_8822b_txpwr_lmt_type17) / sizeof(u8 *);
 	u8	**array = (u8 **)array_mp_8822b_txpwr_lmt_type17;
-#endif
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	void	*adapter = dm->adapter;
-	HAL_DATA_TYPE	*hal_data = GET_HAL_DATA(((PADAPTER)adapter));
-
-	odm_memory_set(dm, hal_data->BufOfLinesPwrLmt, 0,
-		       MAX_LINES_HWCONFIG_TXT *
-		       MAX_BYTES_LINE_HWCONFIG_TXT);
-	hal_data->nLinesReadPwrLmt = array_len / 7;
-#endif
 
 	PHYDM_DBG(dm, ODM_COMP_INIT, "===> %s\n", __func__);
 
 	for (i = 0; i < array_len; i += 7) {
-#if (DM_ODM_SUPPORT_TYPE == ODM_IOT)
-		u8	regulation = array[i];
-		u8	band = array[i + 1];
-		u8	bandwidth = array[i + 2];
-		u8	rate = array[i + 3];
-		u8	rf_path = array[i + 4];
-		u8	chnl = array[i + 5];
-		u8	val = array[i + 6];
-#else
 		u8	*regulation = array[i];
 		u8	*band = array[i + 1];
 		u8	*bandwidth = array[i + 2];
@@ -14835,14 +14687,9 @@ odm_read_and_config_mp_8822b_txpwr_lmt_type17(struct dm_struct *dm)
 		u8	*rf_path = array[i + 4];
 		u8	*chnl = array[i + 5];
 		u8	*val = array[i + 6];
-#endif
 
 		odm_config_bb_txpwr_lmt_8822b(dm, regulation, band, bandwidth,
 					      rate, rf_path, chnl, val);
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-		rsprintf((char *)hal_data->BufOfLinesPwrLmt[i / 7], 100, "\"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\",",
-			 regulation, band, bandwidth, rate, rf_path, chnl, val);
-#endif
 	}
 
 #endif
@@ -15448,38 +15295,14 @@ odm_read_and_config_mp_8822b_txpwr_lmt_type18(struct dm_struct *dm)
 #ifdef CONFIG_8822B_TYPE18
 
 	u32	i = 0;
-#if (DM_ODM_SUPPORT_TYPE == ODM_IOT)
-	u32	array_len =
-			sizeof(array_mp_8822b_txpwr_lmt_type18) / sizeof(u8);
-	u8	*array = (u8 *)array_mp_8822b_txpwr_lmt_type18;
-#else
 	u32	array_len =
 			sizeof(array_mp_8822b_txpwr_lmt_type18) / sizeof(u8 *);
 	u8	**array = (u8 **)array_mp_8822b_txpwr_lmt_type18;
-#endif
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	void	*adapter = dm->adapter;
-	HAL_DATA_TYPE	*hal_data = GET_HAL_DATA(((PADAPTER)adapter));
-
-	odm_memory_set(dm, hal_data->BufOfLinesPwrLmt, 0,
-		       MAX_LINES_HWCONFIG_TXT *
-		       MAX_BYTES_LINE_HWCONFIG_TXT);
-	hal_data->nLinesReadPwrLmt = array_len / 7;
-#endif
 
 	PHYDM_DBG(dm, ODM_COMP_INIT, "===> %s\n", __func__);
 
 	for (i = 0; i < array_len; i += 7) {
-#if (DM_ODM_SUPPORT_TYPE == ODM_IOT)
-		u8	regulation = array[i];
-		u8	band = array[i + 1];
-		u8	bandwidth = array[i + 2];
-		u8	rate = array[i + 3];
-		u8	rf_path = array[i + 4];
-		u8	chnl = array[i + 5];
-		u8	val = array[i + 6];
-#else
 		u8	*regulation = array[i];
 		u8	*band = array[i + 1];
 		u8	*bandwidth = array[i + 2];
@@ -15487,14 +15310,9 @@ odm_read_and_config_mp_8822b_txpwr_lmt_type18(struct dm_struct *dm)
 		u8	*rf_path = array[i + 4];
 		u8	*chnl = array[i + 5];
 		u8	*val = array[i + 6];
-#endif
 
 		odm_config_bb_txpwr_lmt_8822b(dm, regulation, band, bandwidth,
 					      rate, rf_path, chnl, val);
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-		rsprintf((char *)hal_data->BufOfLinesPwrLmt[i / 7], 100, "\"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\",",
-			 regulation, band, bandwidth, rate, rf_path, chnl, val);
-#endif
 	}
 
 #endif
@@ -16100,38 +15918,14 @@ odm_read_and_config_mp_8822b_txpwr_lmt_type19(struct dm_struct *dm)
 #ifdef CONFIG_8822B_TYPE19
 
 	u32	i = 0;
-#if (DM_ODM_SUPPORT_TYPE == ODM_IOT)
-	u32	array_len =
-			sizeof(array_mp_8822b_txpwr_lmt_type19) / sizeof(u8);
-	u8	*array = (u8 *)array_mp_8822b_txpwr_lmt_type19;
-#else
 	u32	array_len =
 			sizeof(array_mp_8822b_txpwr_lmt_type19) / sizeof(u8 *);
 	u8	**array = (u8 **)array_mp_8822b_txpwr_lmt_type19;
-#endif
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	void	*adapter = dm->adapter;
-	HAL_DATA_TYPE	*hal_data = GET_HAL_DATA(((PADAPTER)adapter));
-
-	odm_memory_set(dm, hal_data->BufOfLinesPwrLmt, 0,
-		       MAX_LINES_HWCONFIG_TXT *
-		       MAX_BYTES_LINE_HWCONFIG_TXT);
-	hal_data->nLinesReadPwrLmt = array_len / 7;
-#endif
 
 	PHYDM_DBG(dm, ODM_COMP_INIT, "===> %s\n", __func__);
 
 	for (i = 0; i < array_len; i += 7) {
-#if (DM_ODM_SUPPORT_TYPE == ODM_IOT)
-		u8	regulation = array[i];
-		u8	band = array[i + 1];
-		u8	bandwidth = array[i + 2];
-		u8	rate = array[i + 3];
-		u8	rf_path = array[i + 4];
-		u8	chnl = array[i + 5];
-		u8	val = array[i + 6];
-#else
 		u8	*regulation = array[i];
 		u8	*band = array[i + 1];
 		u8	*bandwidth = array[i + 2];
@@ -16139,14 +15933,9 @@ odm_read_and_config_mp_8822b_txpwr_lmt_type19(struct dm_struct *dm)
 		u8	*rf_path = array[i + 4];
 		u8	*chnl = array[i + 5];
 		u8	*val = array[i + 6];
-#endif
 
 		odm_config_bb_txpwr_lmt_8822b(dm, regulation, band, bandwidth,
 					      rate, rf_path, chnl, val);
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-		rsprintf((char *)hal_data->BufOfLinesPwrLmt[i / 7], 100, "\"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\",",
-			 regulation, band, bandwidth, rate, rf_path, chnl, val);
-#endif
 	}
 
 #endif
@@ -16752,38 +16541,14 @@ odm_read_and_config_mp_8822b_txpwr_lmt_type2(struct dm_struct *dm)
 #ifdef CONFIG_8822B_TYPE2
 
 	u32	i = 0;
-#if (DM_ODM_SUPPORT_TYPE == ODM_IOT)
-	u32	array_len =
-			sizeof(array_mp_8822b_txpwr_lmt_type2) / sizeof(u8);
-	u8	*array = (u8 *)array_mp_8822b_txpwr_lmt_type2;
-#else
 	u32	array_len =
 			sizeof(array_mp_8822b_txpwr_lmt_type2) / sizeof(u8 *);
 	u8	**array = (u8 **)array_mp_8822b_txpwr_lmt_type2;
-#endif
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	void	*adapter = dm->adapter;
-	HAL_DATA_TYPE	*hal_data = GET_HAL_DATA(((PADAPTER)adapter));
-
-	odm_memory_set(dm, hal_data->BufOfLinesPwrLmt, 0,
-		       MAX_LINES_HWCONFIG_TXT *
-		       MAX_BYTES_LINE_HWCONFIG_TXT);
-	hal_data->nLinesReadPwrLmt = array_len / 7;
-#endif
 
 	PHYDM_DBG(dm, ODM_COMP_INIT, "===> %s\n", __func__);
 
 	for (i = 0; i < array_len; i += 7) {
-#if (DM_ODM_SUPPORT_TYPE == ODM_IOT)
-		u8	regulation = array[i];
-		u8	band = array[i + 1];
-		u8	bandwidth = array[i + 2];
-		u8	rate = array[i + 3];
-		u8	rf_path = array[i + 4];
-		u8	chnl = array[i + 5];
-		u8	val = array[i + 6];
-#else
 		u8	*regulation = array[i];
 		u8	*band = array[i + 1];
 		u8	*bandwidth = array[i + 2];
@@ -16791,14 +16556,9 @@ odm_read_and_config_mp_8822b_txpwr_lmt_type2(struct dm_struct *dm)
 		u8	*rf_path = array[i + 4];
 		u8	*chnl = array[i + 5];
 		u8	*val = array[i + 6];
-#endif
 
 		odm_config_bb_txpwr_lmt_8822b(dm, regulation, band, bandwidth,
 					      rate, rf_path, chnl, val);
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-		rsprintf((char *)hal_data->BufOfLinesPwrLmt[i / 7], 100, "\"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\",",
-			 regulation, band, bandwidth, rate, rf_path, chnl, val);
-#endif
 	}
 
 #endif
@@ -17404,38 +17164,14 @@ odm_read_and_config_mp_8822b_txpwr_lmt_type3(struct dm_struct *dm)
 #ifdef CONFIG_8822B_TYPE3
 
 	u32	i = 0;
-#if (DM_ODM_SUPPORT_TYPE == ODM_IOT)
-	u32	array_len =
-			sizeof(array_mp_8822b_txpwr_lmt_type3) / sizeof(u8);
-	u8	*array = (u8 *)array_mp_8822b_txpwr_lmt_type3;
-#else
 	u32	array_len =
 			sizeof(array_mp_8822b_txpwr_lmt_type3) / sizeof(u8 *);
 	u8	**array = (u8 **)array_mp_8822b_txpwr_lmt_type3;
-#endif
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	void	*adapter = dm->adapter;
-	HAL_DATA_TYPE	*hal_data = GET_HAL_DATA(((PADAPTER)adapter));
-
-	odm_memory_set(dm, hal_data->BufOfLinesPwrLmt, 0,
-		       MAX_LINES_HWCONFIG_TXT *
-		       MAX_BYTES_LINE_HWCONFIG_TXT);
-	hal_data->nLinesReadPwrLmt = array_len / 7;
-#endif
 
 	PHYDM_DBG(dm, ODM_COMP_INIT, "===> %s\n", __func__);
 
 	for (i = 0; i < array_len; i += 7) {
-#if (DM_ODM_SUPPORT_TYPE == ODM_IOT)
-		u8	regulation = array[i];
-		u8	band = array[i + 1];
-		u8	bandwidth = array[i + 2];
-		u8	rate = array[i + 3];
-		u8	rf_path = array[i + 4];
-		u8	chnl = array[i + 5];
-		u8	val = array[i + 6];
-#else
 		u8	*regulation = array[i];
 		u8	*band = array[i + 1];
 		u8	*bandwidth = array[i + 2];
@@ -17443,14 +17179,9 @@ odm_read_and_config_mp_8822b_txpwr_lmt_type3(struct dm_struct *dm)
 		u8	*rf_path = array[i + 4];
 		u8	*chnl = array[i + 5];
 		u8	*val = array[i + 6];
-#endif
 
 		odm_config_bb_txpwr_lmt_8822b(dm, regulation, band, bandwidth,
 					      rate, rf_path, chnl, val);
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-		rsprintf((char *)hal_data->BufOfLinesPwrLmt[i / 7], 100, "\"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\",",
-			 regulation, band, bandwidth, rate, rf_path, chnl, val);
-#endif
 	}
 
 #endif
@@ -18056,38 +17787,14 @@ odm_read_and_config_mp_8822b_txpwr_lmt_type4(struct dm_struct *dm)
 #ifdef CONFIG_8822B_TYPE4
 
 	u32	i = 0;
-#if (DM_ODM_SUPPORT_TYPE == ODM_IOT)
-	u32	array_len =
-			sizeof(array_mp_8822b_txpwr_lmt_type4) / sizeof(u8);
-	u8	*array = (u8 *)array_mp_8822b_txpwr_lmt_type4;
-#else
 	u32	array_len =
 			sizeof(array_mp_8822b_txpwr_lmt_type4) / sizeof(u8 *);
 	u8	**array = (u8 **)array_mp_8822b_txpwr_lmt_type4;
-#endif
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	void	*adapter = dm->adapter;
-	HAL_DATA_TYPE	*hal_data = GET_HAL_DATA(((PADAPTER)adapter));
-
-	odm_memory_set(dm, hal_data->BufOfLinesPwrLmt, 0,
-		       MAX_LINES_HWCONFIG_TXT *
-		       MAX_BYTES_LINE_HWCONFIG_TXT);
-	hal_data->nLinesReadPwrLmt = array_len / 7;
-#endif
 
 	PHYDM_DBG(dm, ODM_COMP_INIT, "===> %s\n", __func__);
 
 	for (i = 0; i < array_len; i += 7) {
-#if (DM_ODM_SUPPORT_TYPE == ODM_IOT)
-		u8	regulation = array[i];
-		u8	band = array[i + 1];
-		u8	bandwidth = array[i + 2];
-		u8	rate = array[i + 3];
-		u8	rf_path = array[i + 4];
-		u8	chnl = array[i + 5];
-		u8	val = array[i + 6];
-#else
 		u8	*regulation = array[i];
 		u8	*band = array[i + 1];
 		u8	*bandwidth = array[i + 2];
@@ -18095,14 +17802,9 @@ odm_read_and_config_mp_8822b_txpwr_lmt_type4(struct dm_struct *dm)
 		u8	*rf_path = array[i + 4];
 		u8	*chnl = array[i + 5];
 		u8	*val = array[i + 6];
-#endif
 
 		odm_config_bb_txpwr_lmt_8822b(dm, regulation, band, bandwidth,
 					      rate, rf_path, chnl, val);
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-		rsprintf((char *)hal_data->BufOfLinesPwrLmt[i / 7], 100, "\"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\",",
-			 regulation, band, bandwidth, rate, rf_path, chnl, val);
-#endif
 	}
 
 #endif
@@ -19878,38 +19580,14 @@ odm_read_and_config_mp_8822b_txpwr_lmt_type5(struct dm_struct *dm)
 #ifdef CONFIG_8822B_TYPE5
 
 	u32	i = 0;
-#if (DM_ODM_SUPPORT_TYPE == ODM_IOT)
-	u32	array_len =
-			sizeof(array_mp_8822b_txpwr_lmt_type5) / sizeof(u8);
-	u8	*array = (u8 *)array_mp_8822b_txpwr_lmt_type5;
-#else
 	u32	array_len =
 			sizeof(array_mp_8822b_txpwr_lmt_type5) / sizeof(u8 *);
 	u8	**array = (u8 **)array_mp_8822b_txpwr_lmt_type5;
-#endif
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	void	*adapter = dm->adapter;
-	HAL_DATA_TYPE	*hal_data = GET_HAL_DATA(((PADAPTER)adapter));
-
-	odm_memory_set(dm, hal_data->BufOfLinesPwrLmt, 0,
-		       MAX_LINES_HWCONFIG_TXT *
-		       MAX_BYTES_LINE_HWCONFIG_TXT);
-	hal_data->nLinesReadPwrLmt = array_len / 7;
-#endif
 
 	PHYDM_DBG(dm, ODM_COMP_INIT, "===> %s\n", __func__);
 
 	for (i = 0; i < array_len; i += 7) {
-#if (DM_ODM_SUPPORT_TYPE == ODM_IOT)
-		u8	regulation = array[i];
-		u8	band = array[i + 1];
-		u8	bandwidth = array[i + 2];
-		u8	rate = array[i + 3];
-		u8	rf_path = array[i + 4];
-		u8	chnl = array[i + 5];
-		u8	val = array[i + 6];
-#else
 		u8	*regulation = array[i];
 		u8	*band = array[i + 1];
 		u8	*bandwidth = array[i + 2];
@@ -19917,14 +19595,9 @@ odm_read_and_config_mp_8822b_txpwr_lmt_type5(struct dm_struct *dm)
 		u8	*rf_path = array[i + 4];
 		u8	*chnl = array[i + 5];
 		u8	*val = array[i + 6];
-#endif
 
 		odm_config_bb_txpwr_lmt_8822b(dm, regulation, band, bandwidth,
 					      rate, rf_path, chnl, val);
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-		rsprintf((char *)hal_data->BufOfLinesPwrLmt[i / 7], 100, "\"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\",",
-			 regulation, band, bandwidth, rate, rf_path, chnl, val);
-#endif
 	}
 
 #endif

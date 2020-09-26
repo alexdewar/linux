@@ -96,15 +96,6 @@ odm_txpowertracking_check_ce(
 	void		*dm_void
 );
 
-#if (DM_ODM_SUPPORT_TYPE & (ODM_WIN))
-
-
-void
-odm_txpowertracking_thermal_meter_check(
-	void		*adapter
-);
-
-#endif
 
 struct iqk_matrix_regs_setting {
 	boolean	is_iqk_done;
@@ -204,11 +195,7 @@ struct dm_rf_calibration_struct {
 
 	u8			bb_swing_idx_ofdm[MAX_RF_PATH];
 	u8			bb_swing_idx_ofdm_current;
-#if (DM_ODM_SUPPORT_TYPE & (ODM_WIN | ODM_CE))
 	u8			bb_swing_idx_ofdm_base[MAX_RF_PATH];
-#else
-	u8			bb_swing_idx_ofdm_base;
-#endif
 	boolean		default_bb_swing_index_flag;
 	boolean			bb_swing_flag_ofdm;
 	u8			bb_swing_idx_cck;

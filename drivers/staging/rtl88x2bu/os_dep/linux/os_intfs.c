@@ -601,7 +601,10 @@ uint rtw_pll_ref_clk_sel = CONFIG_RTW_PLL_REF_CLK_SEL;
 module_param(rtw_pll_ref_clk_sel, uint, 0644);
 MODULE_PARM_DESC(rtw_pll_ref_clk_sel, "force pll_ref_clk_sel, 0xF:use autoload value");
 
-int rtw_tx_pwr_by_rate = CONFIG_TXPWR_BY_RATE_EN;
+#if CONFIG_TXPWR_BY_RATE_EN
+#error booooooo
+#endif
+int rtw_tx_pwr_by_rate = 1;
 module_param(rtw_tx_pwr_by_rate, int, 0644);
 MODULE_PARM_DESC(rtw_tx_pwr_by_rate, "0:Disable, 1:Enable, 2: Depend on efuse");
 
@@ -676,7 +679,7 @@ int rtw_tsf_update_restore_factor = CONFIG_TSF_UPDATE_RESTORE_FACTOR;
 module_param(rtw_tsf_update_restore_factor, int, 0644);
 MODULE_PARM_DESC(rtw_tsf_update_restore_factor, "num of bcn intervals to stay TSF update restore status");
 
-char *rtw_phy_file_path = REALTEK_CONFIG_PATH;
+char *rtw_phy_file_path = "/lib/firmware/";
 module_param(rtw_phy_file_path, charp, 0644);
 MODULE_PARM_DESC(rtw_phy_file_path, "The path of phy parameter");
 /* PHY FILE Bit Map
@@ -739,7 +742,7 @@ MODULE_PARM_DESC(rtw_peer_alive_based_preq,
 	"On demand PREQ will reference peer alive status. 0: Off, 1: On");
 #endif
 
-int rtw_vht_2g4 = RTW_VHT_2G4;
+int rtw_vht_2g4 = 1;
 module_param(rtw_vht_2g4, int, 0644);
 MODULE_PARM_DESC(rtw_vht_2g4, "Allow VHT rate on 2.4G channel." \
 				"(0 for deny and 1 for allow)");

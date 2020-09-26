@@ -926,10 +926,6 @@ odm_txpowertracking_init(
 )
 {
 	struct dm_struct		*dm = (struct dm_struct *)dm_void;
-#if (DM_ODM_SUPPORT_TYPE & (ODM_AP))
-	if (!(dm->support_ic_type & (ODM_RTL8814A | ODM_RTL8822B | ODM_IC_11N_SERIES)))
-		return;
-#endif
 
 	odm_txpowertracking_thermal_meter_init(dm);
 }
@@ -1003,19 +999,6 @@ odm_txpowertracking_thermal_meter_init(
 		default_swing_index = get_swing_index(dm);
 #endif
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	void		*adapter = dm->adapter;
-	PMGNT_INFO	mgnt_info = &adapter->MgntInfo;
-	HAL_DATA_TYPE		*hal_data = GET_HAL_DATA(((PADAPTER)adapter));
-
-	mgnt_info->is_txpowertracking = true;
-	hal_data->tx_powercount       = 0;
-	hal_data->is_txpowertracking_init = false;
-
-	if (*(dm->mp_mode) == false)
-		hal_data->txpowertrack_control = true;
-	RF_DBG(dm, COMP_POWER_TRACKING, "mgnt_info->is_txpowertracking = %d\n", mgnt_info->is_txpowertracking);
-#elif (DM_ODM_SUPPORT_TYPE == ODM_CE)
 	{
 		void		*adapter = dm->adapter;
 		HAL_DATA_TYPE	*hal_data = GET_HAL_DATA(((PADAPTER)adapter));
@@ -1031,18 +1014,6 @@ odm_txpowertracking_thermal_meter_init(
 		MSG_8192C("pdmpriv->txpowertrack_control = %d\n", pdmpriv->txpowertrack_control);
 
 	}
-#elif (DM_ODM_SUPPORT_TYPE & (ODM_AP))
-
-#ifdef RTL8188E_SUPPORT
-	{
-		dm->rf_calibrate_info.is_txpowertracking = true;
-		dm->rf_calibrate_info.tx_powercount = 0;
-		dm->rf_calibrate_info.is_txpowertracking_init = false;
-		dm->rf_calibrate_info.txpowertrack_control = true;
-		dm->rf_calibrate_info.tm_trigger = 0;
-	}
-#endif
-#endif
 
 	dm->rf_calibrate_info.txpowertrack_control = true;
 	dm->rf_calibrate_info.delta_power_index = 0;
@@ -1136,7 +1107,6 @@ odm_txpowertracking_check_ce(
 	void		*dm_void
 )
 {
-#if (DM_ODM_SUPPORT_TYPE == ODM_CE)
 	struct dm_struct		*dm = (struct dm_struct *)dm_void;
 	void	*adapter = dm->adapter;
 	struct _hal_rf_				*rf = &(dm->rf_table);
@@ -1163,7 +1133,6 @@ odm_txpowertracking_check_ce(
 	}
 #endif
 
-#endif
 }
 
 void
@@ -1171,16 +1140,6 @@ odm_txpowertracking_check_mp(
 	void		*dm_void
 )
 {
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	struct dm_struct		*dm = (struct dm_struct *)dm_void;
-	void	*adapter = dm->adapter;
-
-	if (odm_check_power_status(adapter) == false)
-		return;
-
-	if (!adapter->is_slave_of_dmsp || adapter->dual_mac_smart_concurrent == false)
-		odm_txpowertracking_thermal_meter_check(adapter);
-#endif
 
 }
 

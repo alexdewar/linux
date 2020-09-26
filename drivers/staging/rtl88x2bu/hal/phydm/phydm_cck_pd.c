@@ -84,7 +84,6 @@ void phydm_cckpd_type1(void *dm_void)
 	boolean is_update = true;
 
 	if (dm->is_linked) {
-	#if (DM_ODM_SUPPORT_TYPE & (ODM_WIN | ODM_CE))
 		if (dm->rssi_min > 60) {
 			lv = CCK_PD_LV_3;
 		} else if (dm->rssi_min > 35) {
@@ -99,16 +98,6 @@ void phydm_cckpd_type1(void *dm_void)
 		} else { /*RSSI < 20*/
 			lv = CCK_PD_LV_1;
 		}
-	#else /*ODM_AP*/
-		if (dig_t->cur_ig_value > 0x32)
-			lv = CCK_PD_LV_4;
-		else if (dig_t->cur_ig_value > 0x2a)
-			lv = CCK_PD_LV_3;
-		else if (dig_t->cur_ig_value > 0x24)
-			lv = CCK_PD_LV_2;
-		else
-			lv = CCK_PD_LV_1;
-	#endif
 	} else {
 		if (cckpd_t->cck_fa_ma > 1000)
 			lv = CCK_PD_LV_1;
@@ -119,28 +108,6 @@ void phydm_cckpd_type1(void *dm_void)
 	}
 
 	/*[Abnormal case] =================================================*/
-	#if (DM_ODM_SUPPORT_TYPE & ODM_WIN)
-	/*@HP 22B LPS power consumption issue & [PCIE-1596]*/
-	if (dm->hp_hw_id && dm->traffic_load == TRAFFIC_ULTRA_LOW) {
-		lv = CCK_PD_LV_0;
-		PHYDM_DBG(dm, DBG_CCKPD, "CCKPD Abnormal case1\n");
-	} else if ((dm->p_advance_ota & PHYDM_ASUS_OTA_SETTING) &&
-	    cckpd_t->cck_fa_ma > 200 && dm->rssi_min <= 20) {
-		lv = CCK_PD_LV_1;
-		cckpd_t->cck_pd_lv = lv;
-		phydm_write_cck_pd_type1(dm, 0xc3); /*@for ASUS OTA test*/
-		is_update = false;
-		PHYDM_DBG(dm, DBG_CCKPD, "CCKPD Abnormal case2\n");
-	}
-	#elif (DM_ODM_SUPPORT_TYPE & (ODM_AP))
-		#ifdef MCR_WIRELESS_EXTEND
-		lv = CCK_PD_LV_2;
-		cckpd_t->cck_pd_lv = lv;
-		phydm_write_cck_pd_type1(dm, 0x43);
-		is_update = false;
-		PHYDM_DBG(dm, DBG_CCKPD, "CCKPD Abnormal case3\n");
-		#endif
-	#endif
 	/*=================================================================*/
 
 	if (is_update)
@@ -262,16 +229,6 @@ void phydm_cckpd_type2(void *dm_void)
 	}
 
 	/*[Abnormal case] =================================================*/
-	#if (DM_ODM_SUPPORT_TYPE & ODM_WIN)
-	/*@21C Miracast lag issue & [PCIE-3298]*/
-	if (dm->support_ic_type & ODM_RTL8821C && rssi_min > 60) {
-		lv = CCK_PD_LV_4;
-		cckpd_t->cck_pd_lv = lv;
-		phydm_write_cck_pd_type2(dm, 0x1d, (cckpd_t->aaa_default + 8));
-		is_update = false;
-		PHYDM_DBG(dm, DBG_CCKPD, "CCKPD Abnormal case1\n");
-	}
-	#endif
 	/*=================================================================*/
 
 	if (is_update) {

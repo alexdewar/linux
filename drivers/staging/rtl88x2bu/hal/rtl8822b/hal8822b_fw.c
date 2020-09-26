@@ -17,7 +17,7 @@
 #include "drv_types.h"
 
 
-#if (defined(CONFIG_AP_WOWLAN) || (DM_ODM_SUPPORT_TYPE & (ODM_AP)))
+#if (defined(CONFIG_AP_WOWLAN) || (DM_ODM_SUPPORT_TYPE_AP))
 
 u8 array_mp_8822b_fw_ap[] = {
 0x22, 0x88, 0x00, 0x00, 0x1E, 0x00, 0x0B, 0x00,
@@ -13380,9 +13380,8 @@ u8 array_mp_8822b_fw_ap[] = {
 
 u32 array_length_mp_8822b_fw_ap = 106848;
 
-#endif /*defined(CONFIG_AP_WOWLAN) || (DM_ODM_SUPPORT_TYPE & (ODM_AP))*/
+#endif /*defined(CONFIG_AP_WOWLAN) || (DM_ODM_SUPPORT_TYPE_AP)*/
 
-#if (DM_ODM_SUPPORT_TYPE & (ODM_WIN)) || (DM_ODM_SUPPORT_TYPE & (ODM_CE))
 
 u8 array_mp_8822b_fw_nic[] = {
 0x22, 0x88, 0x00, 0x00, 0x1E, 0x00, 0x0B, 0x00,
@@ -33453,6 +33452,5 @@ u8 array_mp_8822b_fw_nic[] = {
 u32 array_length_mp_8822b_fw_nic = 160504;
 
 
-#endif
 
 

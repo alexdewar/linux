@@ -623,432 +623,6 @@ void odm_update_tx_ant(void *dm_void, u8 ant, u32 mac_id)
 }
 
 #ifdef PHYDM_BEAMFORMING_SUPPORT
-#if (DM_ODM_SUPPORT_TYPE == ODM_AP)
-
-void odm_bdc_init(
-	void *dm_void)
-{
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-	struct _BF_DIV_COEX_ *dm_bdc_table = &dm->dm_bdc_table;
-
-	PHYDM_DBG(dm, DBG_ANT_DIV, "\n[ BDC Initialization......]\n");
-	dm_bdc_table->BDC_state = BDC_DIV_TRAIN_STATE;
-	dm_bdc_table->bdc_mode = BDC_MODE_NULL;
-	dm_bdc_table->bdc_try_flag = 0;
-	dm_bdc_table->bd_ccoex_type_wbfer = 0;
-	dm->bdc_holdstate = 0xff;
-
-	if (dm->support_ic_type == ODM_RTL8192E) {
-		odm_set_bb_reg(dm, R_0xd7c, 0x0FFFFFFF, 0x1081008);
-		odm_set_bb_reg(dm, R_0xd80, 0x0FFFFFFF, 0);
-	} else if (dm->support_ic_type == ODM_RTL8812) {
-		odm_set_bb_reg(dm, R_0x9b0, 0x0FFFFFFF, 0x1081008);
-			/* @0x9b0[30:0] = 01081008 */
-		odm_set_bb_reg(dm, R_0x9b4, 0x0FFFFFFF, 0);
-			/* @0x9b4[31:0] = 00000000 */
-	}
-}
-
-void odm_CSI_on_off(
-	void *dm_void,
-	u8 CSI_en)
-{
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-	if (CSI_en == CSI_ON) {
-		if (dm->support_ic_type == ODM_RTL8192E)
-			odm_set_mac_reg(dm, R_0xd84, BIT(11), 1);
-				/* @0xd84[11]=1 */
-		else if (dm->support_ic_type == ODM_RTL8812)
-			odm_set_mac_reg(dm, R_0x9b0, BIT(31), 1);
-				/* @0x9b0[31]=1 */
-
-	} else if (CSI_en == CSI_OFF) {
-		if (dm->support_ic_type == ODM_RTL8192E)
-			odm_set_mac_reg(dm, R_0xd84, BIT(11), 0);
-				/* @0xd84[11]=0 */
-		else if (dm->support_ic_type == ODM_RTL8812)
-			odm_set_mac_reg(dm, R_0x9b0, BIT(31), 0);
-				/* @0x9b0[31]=0 */
-	}
-}
-
-void odm_bd_ccoex_type_with_bfer_client(
-	void *dm_void,
-	u8 swch)
-{
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-	struct _BF_DIV_COEX_ *dm_bdc_table = &dm->dm_bdc_table;
-	u8 bd_ccoex_type_wbfer;
-
-	if (swch == DIVON_CSIOFF) {
-		PHYDM_DBG(dm, DBG_ANT_DIV,
-			  "[BDCcoexType: 1] {DIV,CSI} ={1,0}\n");
-		bd_ccoex_type_wbfer = 1;
-
-		if (bd_ccoex_type_wbfer != dm_bdc_table->bd_ccoex_type_wbfer) {
-			odm_ant_div_on_off(dm, ANTDIV_ON, ANT_PATH_A);
-			odm_CSI_on_off(dm, CSI_OFF);
-			dm_bdc_table->bd_ccoex_type_wbfer = 1;
-		}
-	} else if (swch == DIVOFF_CSION) {
-		PHYDM_DBG(dm, DBG_ANT_DIV,
-			  "[BDCcoexType: 2] {DIV,CSI} ={0,1}\n");
-		bd_ccoex_type_wbfer = 2;
-
-		if (bd_ccoex_type_wbfer != dm_bdc_table->bd_ccoex_type_wbfer) {
-			odm_ant_div_on_off(dm, ANTDIV_OFF, ANT_PATH_A);
-			odm_CSI_on_off(dm, CSI_ON);
-			dm_bdc_table->bd_ccoex_type_wbfer = 2;
-		}
-	}
-}
-
-void odm_bf_ant_div_mode_arbitration(
-	void *dm_void)
-{
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-	struct _BF_DIV_COEX_ *dm_bdc_table = &dm->dm_bdc_table;
-	u8 current_bdc_mode;
-
-#if (DM_ODM_SUPPORT_TYPE == ODM_AP)
-	PHYDM_DBG(dm, DBG_ANT_DIV, "\n");
-
-	/* @2 mode 1 */
-	if (dm_bdc_table->num_txbfee_client != 0 &&
-	    dm_bdc_table->num_txbfer_client == 0) {
-		current_bdc_mode = BDC_MODE_1;
-
-		if (current_bdc_mode != dm_bdc_table->bdc_mode) {
-			dm_bdc_table->bdc_mode = BDC_MODE_1;
-			odm_bd_ccoex_type_with_bfer_client(dm, DIVON_CSIOFF);
-			dm_bdc_table->bdc_rx_idle_update_counter = 1;
-			PHYDM_DBG(dm, DBG_ANT_DIV, "Change to (( Mode1 ))\n");
-		}
-
-		PHYDM_DBG(dm, DBG_ANT_DIV,
-			  "[Antdiv + BF coextance mode] : (( Mode1 ))\n");
-	}
-	/* @2 mode 2 */
-	else if ((dm_bdc_table->num_txbfee_client == 0) &&
-		 (dm_bdc_table->num_txbfer_client != 0)) {
-		current_bdc_mode = BDC_MODE_2;
-
-		if (current_bdc_mode != dm_bdc_table->bdc_mode) {
-			dm_bdc_table->bdc_mode = BDC_MODE_2;
-			dm_bdc_table->BDC_state = BDC_DIV_TRAIN_STATE;
-			dm_bdc_table->bdc_try_flag = 0;
-			PHYDM_DBG(dm, DBG_ANT_DIV, "Change to (( Mode2 ))\n");
-		}
-		PHYDM_DBG(dm, DBG_ANT_DIV,
-			  "[Antdiv + BF coextance mode] : (( Mode2 ))\n");
-	}
-	/* @2 mode 3 */
-	else if ((dm_bdc_table->num_txbfee_client != 0) &&
-		 (dm_bdc_table->num_txbfer_client != 0)) {
-		current_bdc_mode = BDC_MODE_3;
-
-		if (current_bdc_mode != dm_bdc_table->bdc_mode) {
-			dm_bdc_table->bdc_mode = BDC_MODE_3;
-			dm_bdc_table->BDC_state = BDC_DIV_TRAIN_STATE;
-			dm_bdc_table->bdc_try_flag = 0;
-			dm_bdc_table->bdc_rx_idle_update_counter = 1;
-			PHYDM_DBG(dm, DBG_ANT_DIV, "Change to (( Mode3 ))\n");
-		}
-
-		PHYDM_DBG(dm, DBG_ANT_DIV,
-			  "[Antdiv + BF coextance mode] : (( Mode3 ))\n");
-	}
-	/* @2 mode 4 */
-	else if ((dm_bdc_table->num_txbfee_client == 0) &&
-		 (dm_bdc_table->num_txbfer_client == 0)) {
-		current_bdc_mode = BDC_MODE_4;
-
-		if (current_bdc_mode != dm_bdc_table->bdc_mode) {
-			dm_bdc_table->bdc_mode = BDC_MODE_4;
-			odm_bd_ccoex_type_with_bfer_client(dm, DIVON_CSIOFF);
-			PHYDM_DBG(dm, DBG_ANT_DIV, "Change to (( Mode4 ))\n");
-		}
-
-		PHYDM_DBG(dm, DBG_ANT_DIV,
-			  "[Antdiv + BF coextance mode] : (( Mode4 ))\n");
-	}
-#endif
-}
-
-void odm_div_train_state_setting(
-	void *dm_void)
-{
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-	struct _BF_DIV_COEX_ *dm_bdc_table = &dm->dm_bdc_table;
-
-	PHYDM_DBG(dm, DBG_ANT_DIV,
-		  "\n*****[S T A R T ]*****  [2-0. DIV_TRAIN_STATE]\n");
-	dm_bdc_table->bdc_try_counter = 2;
-	dm_bdc_table->bdc_try_flag = 1;
-	dm_bdc_table->BDC_state = bdc_bfer_train_state;
-	odm_bd_ccoex_type_with_bfer_client(dm, DIVON_CSIOFF);
-}
-
-void odm_bd_ccoex_bfee_rx_div_arbitration(
-	void *dm_void)
-{
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-	struct _BF_DIV_COEX_ *dm_bdc_table = &dm->dm_bdc_table;
-	boolean stop_bf_flag;
-	u8 bdc_active_mode;
-
-#if (DM_ODM_SUPPORT_TYPE == ODM_AP)
-
-	PHYDM_DBG(dm, DBG_ANT_DIV,
-		  "***{ num_BFee,  num_BFer, num_client}  = (( %d  ,  %d  ,  %d))\n",
-		  dm_bdc_table->num_txbfee_client,
-		  dm_bdc_table->num_txbfer_client, dm_bdc_table->num_client);
-	PHYDM_DBG(dm, DBG_ANT_DIV,
-		  "***{ num_BF_tars,  num_DIV_tars }  = ((  %d  ,  %d ))\n",
-		  dm_bdc_table->num_bf_tar, dm_bdc_table->num_div_tar);
-
-	/* @2 [ MIB control ] */
-	if (dm->bdc_holdstate == 2) {
-		odm_bd_ccoex_type_with_bfer_client(dm, DIVOFF_CSION);
-		dm_bdc_table->BDC_state = BDC_BF_HOLD_STATE;
-		PHYDM_DBG(dm, DBG_ANT_DIV, "Force in [ BF STATE]\n");
-		return;
-	} else if (dm->bdc_holdstate == 1) {
-		dm_bdc_table->BDC_state = BDC_DIV_HOLD_STATE;
-		odm_bd_ccoex_type_with_bfer_client(dm, DIVON_CSIOFF);
-		PHYDM_DBG(dm, DBG_ANT_DIV, "Force in [ DIV STATE]\n");
-		return;
-	}
-
-	/* @------------------------------------------------------------ */
-
-	/* @2 mode 2 & 3 */
-	if (dm_bdc_table->bdc_mode == BDC_MODE_2 ||
-	    dm_bdc_table->bdc_mode == BDC_MODE_3) {
-		PHYDM_DBG(dm, DBG_ANT_DIV,
-			  "\n{ Try_flag,  Try_counter } = {  %d , %d  }\n",
-			  dm_bdc_table->bdc_try_flag,
-			  dm_bdc_table->bdc_try_counter);
-		PHYDM_DBG(dm, DBG_ANT_DIV, "BDCcoexType = (( %d ))\n\n",
-			  dm_bdc_table->bd_ccoex_type_wbfer);
-
-		/* @All Client have Bfer-Cap------------------------------- */
-		if (dm_bdc_table->num_txbfer_client == dm_bdc_table->num_client) {
-			/* @BFer STA Only?: yes */
-			PHYDM_DBG(dm, DBG_ANT_DIV,
-				  "BFer STA only?  (( Yes ))\n");
-			dm_bdc_table->bdc_try_flag = 0;
-			dm_bdc_table->BDC_state = BDC_DIV_TRAIN_STATE;
-			odm_bd_ccoex_type_with_bfer_client(dm, DIVOFF_CSION);
-			return;
-		} else
-			PHYDM_DBG(dm, DBG_ANT_DIV,
-				  "BFer STA only?  (( No ))\n");
-		if (dm_bdc_table->is_all_bf_sta_idle == false && dm_bdc_table->is_all_div_sta_idle == true) {
-			PHYDM_DBG(dm, DBG_ANT_DIV,
-				  "All DIV-STA are idle, but BF-STA not\n");
-			dm_bdc_table->bdc_try_flag = 0;
-			dm_bdc_table->BDC_state = bdc_bfer_train_state;
-			odm_bd_ccoex_type_with_bfer_client(dm, DIVOFF_CSION);
-			return;
-		} else if (dm_bdc_table->is_all_bf_sta_idle == true && dm_bdc_table->is_all_div_sta_idle == false) {
-			PHYDM_DBG(dm, DBG_ANT_DIV,
-				  "All BF-STA are idle, but DIV-STA not\n");
-			dm_bdc_table->bdc_try_flag = 0;
-			dm_bdc_table->BDC_state = BDC_DIV_TRAIN_STATE;
-			odm_bd_ccoex_type_with_bfer_client(dm, DIVON_CSIOFF);
-			return;
-		}
-
-		/* Select active mode-------------------------------------- */
-		if (dm_bdc_table->num_bf_tar == 0) { /* Selsect_1,  Selsect_2 */
-			if (dm_bdc_table->num_div_tar == 0) { /* Selsect_3 */
-				PHYDM_DBG(dm, DBG_ANT_DIV,
-					  "Select active mode (( 1 ))\n");
-				dm_bdc_table->bdc_active_mode = 1;
-			} else {
-				PHYDM_DBG(dm, DBG_ANT_DIV,
-					  "Select active mode  (( 2 ))\n");
-				dm_bdc_table->bdc_active_mode = 2;
-			}
-			dm_bdc_table->bdc_try_flag = 0;
-			dm_bdc_table->BDC_state = BDC_DIV_TRAIN_STATE;
-			odm_bd_ccoex_type_with_bfer_client(dm, DIVON_CSIOFF);
-			return;
-		} else { /* num_bf_tar > 0 */
-			if (dm_bdc_table->num_div_tar == 0) { /* Selsect_3 */
-				PHYDM_DBG(dm, DBG_ANT_DIV,
-					  "Select active mode (( 3 ))\n");
-				dm_bdc_table->bdc_active_mode = 3;
-				dm_bdc_table->bdc_try_flag = 0;
-				dm_bdc_table->BDC_state = bdc_bfer_train_state;
-				odm_bd_ccoex_type_with_bfer_client(dm,
-								   DIVOFF_CSION)
-								   ;
-				return;
-			} else { /* Selsect_4 */
-				bdc_active_mode = 4;
-				PHYDM_DBG(dm, DBG_ANT_DIV,
-					  "Select active mode (( 4 ))\n");
-
-				if (bdc_active_mode != dm_bdc_table->bdc_active_mode) {
-					dm_bdc_table->bdc_active_mode = 4;
-					PHYDM_DBG(dm, DBG_ANT_DIV, "Change to active mode (( 4 ))  &  return!!!\n");
-					return;
-				}
-			}
-		}
-
-#if 1
-		if (dm->bdc_holdstate == 0xff) {
-			dm_bdc_table->BDC_state = BDC_DIV_HOLD_STATE;
-			odm_bd_ccoex_type_with_bfer_client(dm, DIVON_CSIOFF);
-			PHYDM_DBG(dm, DBG_ANT_DIV, "Force in [ DIV STATE]\n");
-			return;
-		}
-#endif
-
-		/* @Does Client number changed ? ------------------------------- */
-		if (dm_bdc_table->num_client != dm_bdc_table->pre_num_client) {
-			dm_bdc_table->bdc_try_flag = 0;
-			dm_bdc_table->BDC_state = BDC_DIV_TRAIN_STATE;
-			PHYDM_DBG(dm, DBG_ANT_DIV,
-				  "[  The number of client has been changed !!!]   return to (( BDC_DIV_TRAIN_STATE ))\n");
-		}
-		dm_bdc_table->pre_num_client = dm_bdc_table->num_client;
-
-		if (dm_bdc_table->bdc_try_flag == 0) {
-			/* @2 DIV_TRAIN_STATE (mode 2-0) */
-			if (dm_bdc_table->BDC_state == BDC_DIV_TRAIN_STATE)
-				odm_div_train_state_setting(dm);
-			/* @2 BFer_TRAIN_STATE (mode 2-1) */
-			else if (dm_bdc_table->BDC_state == bdc_bfer_train_state) {
-				PHYDM_DBG(dm, DBG_ANT_DIV,
-					  "*****[2-1. BFer_TRAIN_STATE ]*****\n");
-
-#if 0
-				/* @if(dm_bdc_table->num_bf_tar==0) */
-				/* @{ */
-				/*	PHYDM_DBG(dm,DBG_ANT_DIV, "BF_tars exist?  : (( No )),   [ bdc_bfer_train_state ] >> [BDC_DIV_TRAIN_STATE]\n"); */
-				/*	odm_div_train_state_setting( dm); */
-				/* @} */
-				/* else */ /* num_bf_tar != 0 */
-				/* @{ */
-#endif
-				dm_bdc_table->bdc_try_counter = 2;
-				dm_bdc_table->bdc_try_flag = 1;
-				dm_bdc_table->BDC_state = BDC_DECISION_STATE;
-				odm_bd_ccoex_type_with_bfer_client(dm, DIVOFF_CSION);
-				PHYDM_DBG(dm, DBG_ANT_DIV,
-					  "BF_tars exist?  : (( Yes )),   [ bdc_bfer_train_state ] >> [BDC_DECISION_STATE]\n");
-				/* @} */
-			}
-			/* @2 DECISION_STATE (mode 2-2) */
-			else if (dm_bdc_table->BDC_state == BDC_DECISION_STATE) {
-				PHYDM_DBG(dm, DBG_ANT_DIV,
-					  "*****[2-2. DECISION_STATE]*****\n");
-#if 0
-				/* @if(dm_bdc_table->num_bf_tar==0) */
-				/* @{ */
-				/*	ODM_AntDiv_Printk(("BF_tars exist?  : (( No )),   [ DECISION_STATE ] >> [BDC_DIV_TRAIN_STATE]\n")); */
-				/*	odm_div_train_state_setting( dm); */
-				/* @} */
-				/* else */ /* num_bf_tar != 0 */
-				/* @{ */
-#endif
-				if (dm_bdc_table->BF_pass == false || dm_bdc_table->DIV_pass == false)
-					stop_bf_flag = true;
-				else
-					stop_bf_flag = false;
-
-				PHYDM_DBG(dm, DBG_ANT_DIV,
-					  "BF_tars exist?  : (( Yes )),  {BF_pass, DIV_pass, stop_bf_flag }  = { %d, %d, %d }\n",
-					  dm_bdc_table->BF_pass,
-					  dm_bdc_table->DIV_pass, stop_bf_flag);
-
-				if (stop_bf_flag == true) { /* @DIV_en */
-					dm_bdc_table->bdc_hold_counter = 10; /* @20 */
-					odm_bd_ccoex_type_with_bfer_client(dm, DIVON_CSIOFF);
-					dm_bdc_table->BDC_state = BDC_DIV_HOLD_STATE;
-					PHYDM_DBG(dm, DBG_ANT_DIV, "[ stop_bf_flag= ((true)),   BDC_DECISION_STATE ] >> [BDC_DIV_HOLD_STATE]\n");
-				} else { /* @BF_en */
-					dm_bdc_table->bdc_hold_counter = 10; /* @20 */
-					odm_bd_ccoex_type_with_bfer_client(dm, DIVOFF_CSION);
-					dm_bdc_table->BDC_state = BDC_BF_HOLD_STATE;
-					PHYDM_DBG(dm, DBG_ANT_DIV, "[stop_bf_flag= ((false)),   BDC_DECISION_STATE ] >> [BDC_BF_HOLD_STATE]\n");
-				}
-				/* @} */
-			}
-			/* @2 BF-HOLD_STATE (mode 2-3) */
-			else if (dm_bdc_table->BDC_state == BDC_BF_HOLD_STATE) {
-				PHYDM_DBG(dm, DBG_ANT_DIV,
-					  "*****[2-3. BF_HOLD_STATE ]*****\n");
-
-				PHYDM_DBG(dm, DBG_ANT_DIV,
-					  "bdc_hold_counter = (( %d ))\n",
-					  dm_bdc_table->bdc_hold_counter);
-
-				if (dm_bdc_table->bdc_hold_counter == 1) {
-					PHYDM_DBG(dm, DBG_ANT_DIV, "[ BDC_BF_HOLD_STATE ] >> [BDC_DIV_TRAIN_STATE]\n");
-					odm_div_train_state_setting(dm);
-				} else {
-					dm_bdc_table->bdc_hold_counter--;
-
-#if 0
-					/* @if(dm_bdc_table->num_bf_tar==0) */
-					/* @{ */
-					/*	PHYDM_DBG(dm,DBG_ANT_DIV, "BF_tars exist?  : (( No )),   [ BDC_BF_HOLD_STATE ] >> [BDC_DIV_TRAIN_STATE]\n"); */
-					/*	odm_div_train_state_setting( dm); */
-					/* @} */
-					/* else */ /* num_bf_tar != 0 */
-					/* @{ */
-					/* PHYDM_DBG(dm,DBG_ANT_DIV, "BF_tars exist?  : (( Yes ))\n"); */
-#endif
-					dm_bdc_table->BDC_state = BDC_BF_HOLD_STATE;
-					odm_bd_ccoex_type_with_bfer_client(dm, DIVOFF_CSION);
-					PHYDM_DBG(dm, DBG_ANT_DIV, "[ BDC_BF_HOLD_STATE ] >> [BDC_BF_HOLD_STATE]\n");
-					/* @} */
-				}
-			}
-			/* @2 DIV-HOLD_STATE (mode 2-4) */
-			else if (dm_bdc_table->BDC_state == BDC_DIV_HOLD_STATE) {
-				PHYDM_DBG(dm, DBG_ANT_DIV,
-					  "*****[2-4. DIV_HOLD_STATE ]*****\n");
-
-				PHYDM_DBG(dm, DBG_ANT_DIV,
-					  "bdc_hold_counter = (( %d ))\n",
-					  dm_bdc_table->bdc_hold_counter);
-
-				if (dm_bdc_table->bdc_hold_counter == 1) {
-					PHYDM_DBG(dm, DBG_ANT_DIV, "[ BDC_DIV_HOLD_STATE ] >> [BDC_DIV_TRAIN_STATE]\n");
-					odm_div_train_state_setting(dm);
-				} else {
-					dm_bdc_table->bdc_hold_counter--;
-					dm_bdc_table->BDC_state = BDC_DIV_HOLD_STATE;
-					odm_bd_ccoex_type_with_bfer_client(dm, DIVON_CSIOFF);
-					PHYDM_DBG(dm, DBG_ANT_DIV, "[ BDC_DIV_HOLD_STATE ] >> [BDC_DIV_HOLD_STATE]\n");
-				}
-			}
-
-		} else if (dm_bdc_table->bdc_try_flag == 1) {
-			/* @2 Set Training counter */
-			if (dm_bdc_table->bdc_try_counter > 1) {
-				dm_bdc_table->bdc_try_counter--;
-				if (dm_bdc_table->bdc_try_counter == 1)
-					dm_bdc_table->bdc_try_flag = 0;
-
-				PHYDM_DBG(dm, DBG_ANT_DIV, "Training !!\n");
-				/* return ; */
-			}
-		}
-	}
-
-	PHYDM_DBG(dm, DBG_ANT_DIV, "\n[end]\n");
-
-#endif /* @#if(DM_ODM_SUPPORT_TYPE  == ODM_AP) */
-}
-
-#endif
 #endif /* @#ifdef PHYDM_BEAMFORMING_SUPPORT*/
 
 #if (RTL8188E_SUPPORT == 1)
@@ -1694,11 +1268,9 @@ void odm_update_rx_idle_ant_8723d(void *dm_void, u8 ant, u32 default_ant,
 	void *adapter = dm->adapter;
 	u8 count = 0;
 
-#if (DM_ODM_SUPPORT_TYPE & (ODM_CE))
 	/*score board to BT ,a002:WL to do ant-div*/
 	odm_set_mac_reg(dm, R_0xa8, MASKHWORD, 0xa002);
 	ODM_delay_us(50);
-#endif
 #if 0
 	/*	odm_set_bb_reg(dm, R_0x948, BIT(6), 0x1);	*/
 #endif
@@ -1713,13 +1285,11 @@ void odm_update_rx_idle_ant_8723d(void *dm_void, u8 ant, u32 default_ant,
 	odm_set_bb_reg(dm, R_0x860, BIT(14) | BIT(13) | BIT(12), default_ant);
 		/*@Default TX*/
 	fat_tab->rx_idle_ant = ant;
-#if (DM_ODM_SUPPORT_TYPE & (ODM_CE))
 	/*score board to BT ,a000:WL@S1 a001:WL@S0*/
 	if (default_ant == ANT1_2G)
 		odm_set_mac_reg(dm, R_0xa8, MASKHWORD, 0xa000);
 	else
 		odm_set_mac_reg(dm, R_0xa8, MASKHWORD, 0xa001);
-#endif
 }
 
 void phydm_set_tx_ant_pwr_8723d(void *dm_void, u8 ant)
@@ -1730,11 +1300,7 @@ void phydm_set_tx_ant_pwr_8723d(void *dm_void, u8 ant)
 
 	fat_tab->rx_idle_ant = ant;
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	((PADAPTER)adapter)->HalFunc.SetTxPowerLevelHandler(adapter, *dm->channel);
-#elif (DM_ODM_SUPPORT_TYPE == ODM_CE)
 	rtw_hal_set_tx_power_level(adapter, *dm->channel);
-#endif
 }
 #endif
 
@@ -1882,11 +1448,7 @@ void odm_update_rx_idle_ant_8723b(
 
 			/* Set TX AGC by S0/S1 */
 			/* Need to consider Linux driver */
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-			adapter->hal_func.set_tx_power_level_handler(adapter, *dm->channel);
-#elif (DM_ODM_SUPPORT_TYPE == ODM_CE)
 			rtw_hal_set_tx_power_level(adapter, *dm->channel);
-#endif
 
 			/* Set IQC by S0/S1 */
 			odm_set_iqc_by_rfpath(dm, default_ant);
@@ -1917,11 +1479,7 @@ void odm_update_rx_idle_ant_8723b(
 
 /* Set TX AGC by S0/S1 */
 /* Need to consider Linux driver */
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	((PADAPTER)adapter)->HalFunc.SetTxPowerLevelHandler(adapter, *dm->channel);
-#elif (DM_ODM_SUPPORT_TYPE == ODM_CE)
 	rtw_hal_set_tx_power_level(adapter, *dm->channel);
-#endif
 
 	/* Set IQC by S0/S1 */
 	odm_set_iqc_by_rfpath(dm, default_ant);
@@ -2440,11 +1998,7 @@ void phydm_evm_sw_antdiv_init(void *dm_void)
 	odm_set_bb_reg(dm, R_0x910, 0x3f, 0xf);
 	dm->antdiv_evm_en = 1;
 	/*@dm->antdiv_period=1;*/
-#if (DM_ODM_SUPPORT_TYPE & (ODM_WIN | ODM_CE))
 	dm->evm_antdiv_period = 1;
-#else
-	dm->evm_antdiv_period = 3;
-#endif
 	dm->stop_antdiv_rssi_th = 3;
 	dm->stop_antdiv_tp_th = 80;
 	dm->antdiv_tp_period = 3;
@@ -2880,38 +2434,6 @@ void odm_evm_enhance_ant_div(void *dm_void)
 	}
 }
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-void phydm_evm_antdiv_callback(
-	struct phydm_timer_list *timer)
-{
-	void *adapter = (void *)timer->Adapter;
-	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(((PADAPTER)adapter));
-	struct dm_struct *dm = &hal_data->DM_OutSrc;
-
-	#if DEV_BUS_TYPE == RT_PCI_INTERFACE
-	#if USE_WORKITEM
-	odm_schedule_work_item(&dm->phydm_evm_antdiv_workitem);
-	#else
-	{
-		odm_hw_ant_div(dm);
-	}
-	#endif
-	#else
-	odm_schedule_work_item(&dm->phydm_evm_antdiv_workitem);
-	#endif
-}
-
-void phydm_evm_antdiv_workitem_callback(
-	void *context)
-{
-	void *adapter = (void *)context;
-	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(((PADAPTER)adapter));
-	struct dm_struct *dm = &hal_data->DM_OutSrc;
-
-	odm_hw_ant_div(dm);
-}
-
-#elif (DM_ODM_SUPPORT_TYPE == ODM_CE)
 void phydm_evm_antdiv_callback(void *dm_void)
 {
 	struct dm_struct *dm = (struct dm_struct *)dm_void;
@@ -2938,16 +2460,6 @@ void phydm_evm_antdiv_workitem_callback(void *context)
 	odm_hw_ant_div(dm);
 }
 
-#else
-void phydm_evm_antdiv_callback(
-	void *dm_void)
-{
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-
-	PHYDM_DBG(dm, DBG_ANT_DIV, "******AntDiv_Callback******\n");
-	odm_hw_ant_div(dm);
-}
-#endif
 
 #endif
 
@@ -2962,21 +2474,6 @@ void odm_hw_ant_div(void *dm_void)
 	struct cmn_sta_info *sta;
 
 #ifdef PHYDM_BEAMFORMING_SUPPORT
-#if (DM_ODM_SUPPORT_TYPE == ODM_AP)
-	struct _BF_DIV_COEX_ *dm_bdc_table = &dm->dm_bdc_table;
-	u32 TH1 = 500000;
-	u32 TH2 = 10000000;
-	u32 ma_rx_temp, degrade_TP_temp, improve_TP_temp;
-	u8 monitor_rssi_threshold = 30;
-
-	dm_bdc_table->BF_pass = true;
-	dm_bdc_table->DIV_pass = true;
-	dm_bdc_table->is_all_div_sta_idle = true;
-	dm_bdc_table->is_all_bf_sta_idle = true;
-	dm_bdc_table->num_bf_tar = 0;
-	dm_bdc_table->num_div_tar = 0;
-	dm_bdc_table->num_client = 0;
-#endif
 #endif
 
 	if (!dm->is_linked) { /* @is_linked==False */
@@ -3036,9 +2533,6 @@ void odm_hw_ant_div(void *dm_void)
 
 			/* @ BDC Init */
 			#ifdef PHYDM_BEAMFORMING_SUPPORT
-			#if (DM_ODM_SUPPORT_TYPE == ODM_AP)
-			odm_bdc_init(dm);
-			#endif
 			#endif
 
 			#ifdef ODM_EVM_ENHANCE_ANTDIV
@@ -3065,10 +2559,6 @@ void odm_hw_ant_div(void *dm_void)
 
 /* @2 BDC mode Arbitration */
 #ifdef PHYDM_BEAMFORMING_SUPPORT
-#if (DM_ODM_SUPPORT_TYPE == ODM_AP)
-	if (dm->antdiv_evm_en == 0 || fat_tab->evm_method_enable == 0)
-		odm_bf_ant_div_mode_arbitration(dm);
-#endif
 #endif
 
 	for (i = 0; i < ODM_ASSOCIATE_ENTRY_NUM; i++) {
@@ -3140,9 +2630,6 @@ void odm_hw_ant_div(void *dm_void)
 		/* @2 Select TX Antenna */
 		if (dm->ant_div_type != CGCS_RX_HW_ANTDIV) {
 			#ifdef PHYDM_BEAMFORMING_SUPPORT
-			#if (DM_ODM_SUPPORT_TYPE == ODM_AP)
-			if (dm_bdc_table->w_bfee_client[i] == 0)
-			#endif
 			#endif
 			{
 				odm_update_tx_ant(dm, target_ant, i);
@@ -3152,65 +2639,9 @@ void odm_hw_ant_div(void *dm_void)
 /* @------------------------------------------------------------ */
 
 		#ifdef PHYDM_BEAMFORMING_SUPPORT
-		#if (DM_ODM_SUPPORT_TYPE == ODM_AP)
-
-		dm_bdc_table->num_client++;
-
-		if (dm_bdc_table->bdc_mode == BDC_MODE_2 || dm_bdc_table->bdc_mode == BDC_MODE_3) {
-			/* @2 Byte counter */
-
-			ma_rx_temp = sta->rx_moving_average_tp; /* RX  TP   ( bit /sec) */
-
-			if (dm_bdc_table->BDC_state == bdc_bfer_train_state)
-				dm_bdc_table->MA_rx_TP_DIV[i] = ma_rx_temp;
-			else
-				dm_bdc_table->MA_rx_TP[i] = ma_rx_temp;
-
-			if (ma_rx_temp < TH2 && ma_rx_temp > TH1 && local_max_rssi <= monitor_rssi_threshold) {
-				if (dm_bdc_table->w_bfer_client[i] == 1) { /* @Bfer_Target */
-					dm_bdc_table->num_bf_tar++;
-
-					if (dm_bdc_table->BDC_state == BDC_DECISION_STATE && dm_bdc_table->bdc_try_flag == 0) {
-						improve_TP_temp = (dm_bdc_table->MA_rx_TP_DIV[i] * 9) >> 3; /* @* 1.125 */
-						dm_bdc_table->BF_pass = (dm_bdc_table->MA_rx_TP[i] > improve_TP_temp) ? true : false;
-						PHYDM_DBG(dm, DBG_ANT_DIV, "*** Client[ %d ] :  { MA_rx_TP,improve_TP_temp, MA_rx_TP_DIV,  BF_pass}={ %d,  %d, %d , %d }\n", i, dm_bdc_table->MA_rx_TP[i], improve_TP_temp, dm_bdc_table->MA_rx_TP_DIV[i], dm_bdc_table->BF_pass);
-					}
-				} else { /* @DIV_Target */
-					dm_bdc_table->num_div_tar++;
-
-					if (dm_bdc_table->BDC_state == BDC_DECISION_STATE && dm_bdc_table->bdc_try_flag == 0) {
-						degrade_TP_temp = (dm_bdc_table->MA_rx_TP_DIV[i] * 5) >> 3; /* @* 0.625 */
-						dm_bdc_table->DIV_pass = (dm_bdc_table->MA_rx_TP[i] > degrade_TP_temp) ? true : false;
-						PHYDM_DBG(dm, DBG_ANT_DIV, "*** Client[ %d ] :  { MA_rx_TP, degrade_TP_temp, MA_rx_TP_DIV,  DIV_pass}=\n{ %d,  %d, %d , %d }\n", i, dm_bdc_table->MA_rx_TP[i], degrade_TP_temp, dm_bdc_table->MA_rx_TP_DIV[i], dm_bdc_table->DIV_pass);
-					}
-				}
-			}
-
-			if (ma_rx_temp > TH1) {
-				if (dm_bdc_table->w_bfer_client[i] == 1) /* @Bfer_Target */
-					dm_bdc_table->is_all_bf_sta_idle = false;
-				else /* @DIV_Target */
-					dm_bdc_table->is_all_div_sta_idle = false;
-			}
-
-			PHYDM_DBG(dm, DBG_ANT_DIV,
-				  "*** Client[ %d ] :  { BFmeeCap, BFmerCap}  = { %d , %d }\n",
-				  i, dm_bdc_table->w_bfee_client[i],
-				  dm_bdc_table->w_bfer_client[i]);
-
-			if (dm_bdc_table->BDC_state == bdc_bfer_train_state)
-				PHYDM_DBG(dm, DBG_ANT_DIV, "*** Client[ %d ] :    MA_rx_TP_DIV = (( %d ))\n", i, dm_bdc_table->MA_rx_TP_DIV[i]);
-
-			else
-				PHYDM_DBG(dm, DBG_ANT_DIV, "*** Client[ %d ] :    MA_rx_TP = (( %d ))\n", i, dm_bdc_table->MA_rx_TP[i]);
-		}
-		#endif
 		#endif
 
 		#ifdef PHYDM_BEAMFORMING_SUPPORT
-		#if (DM_ODM_SUPPORT_TYPE == ODM_AP)
-		if (dm_bdc_table->bdc_try_flag == 0)
-		#endif
 		#endif
 		{
 			phydm_antdiv_reset_statistic(dm, i);
@@ -3218,46 +2649,12 @@ void odm_hw_ant_div(void *dm_void)
 	}
 
 /* @2 Set RX Idle Antenna & TX Antenna(Because of HW Bug ) */
-#if (DM_ODM_SUPPORT_TYPE == ODM_AP)
-	PHYDM_DBG(dm, DBG_ANT_DIV, "*** rx_idle_ant = (( %s ))\n",
-		  (rx_idle_ant == MAIN_ANT) ? "MAIN_ANT" : "AUX_ANT");
-
-#ifdef PHYDM_BEAMFORMING_SUPPORT
-#if (DM_ODM_SUPPORT_TYPE == ODM_AP)
-	if (dm_bdc_table->bdc_mode == BDC_MODE_1 || dm_bdc_table->bdc_mode == BDC_MODE_3) {
-		PHYDM_DBG(dm, DBG_ANT_DIV,
-			  "*** bdc_rx_idle_update_counter = (( %d ))\n",
-			  dm_bdc_table->bdc_rx_idle_update_counter);
-
-		if (dm_bdc_table->bdc_rx_idle_update_counter == 1) {
-			PHYDM_DBG(dm, DBG_ANT_DIV,
-				  "***Update RxIdle Antenna!!!\n");
-			dm_bdc_table->bdc_rx_idle_update_counter = 30;
-			odm_update_rx_idle_ant(dm, rx_idle_ant);
-		} else {
-			dm_bdc_table->bdc_rx_idle_update_counter--;
-			PHYDM_DBG(dm, DBG_ANT_DIV,
-				  "***NOT update RxIdle Antenna because of BF  ( need to fix TX-ant)\n");
-		}
-	} else
-#endif
-#endif
-		odm_update_rx_idle_ant(dm, rx_idle_ant);
-#else
 
 	odm_update_rx_idle_ant(dm, rx_idle_ant);
 
-#endif /* @#if(DM_ODM_SUPPORT_TYPE  == ODM_AP) */
 
 /* @2 BDC Main Algorithm */
 #ifdef PHYDM_BEAMFORMING_SUPPORT
-#if (DM_ODM_SUPPORT_TYPE == ODM_AP)
-	if (dm->antdiv_evm_en == 0 || fat_tab->evm_method_enable == 0)
-		odm_bd_ccoex_bfee_rx_div_arbitration(dm);
-
-	dm_bdc_table->num_txbfee_client = 0;
-	dm_bdc_table->num_txbfer_client = 0;
-#endif
 #endif
 
 	if (ant_div_max_rssi == 0)
@@ -3839,41 +3236,6 @@ void odm_s0s1_sw_ant_div(void *dm_void, u8 step)
 								/*@ms*/
 }
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-void odm_sw_antdiv_callback(struct phydm_timer_list *timer)
-{
-	void *adapter = (void *)timer->Adapter;
-	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(((PADAPTER)adapter));
-	struct sw_antenna_switch *swat_tab = &hal_data->DM_OutSrc.dm_swat_table;
-
-#if DEV_BUS_TYPE == RT_PCI_INTERFACE
-#if USE_WORKITEM
-	odm_schedule_work_item(&swat_tab->phydm_sw_antenna_switch_workitem);
-#else
-	{
-#if 0
-		/* @dbg_print("SW_antdiv_Callback"); */
-#endif
-		odm_s0s1_sw_ant_div(&hal_data->DM_OutSrc, SWAW_STEP_DETERMINE);
-	}
-#endif
-#else
-	odm_schedule_work_item(&swat_tab->phydm_sw_antenna_switch_workitem);
-#endif
-}
-
-void odm_sw_antdiv_workitem_callback(void *context)
-{
-	void *adapter = (void *)context;
-	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(((PADAPTER)adapter));
-
-#if 0
-	/* @dbg_print("SW_antdiv_Workitem_Callback"); */
-#endif
-	odm_s0s1_sw_ant_div(&hal_data->DM_OutSrc, SWAW_STEP_DETERMINE);
-}
-
-#elif (DM_ODM_SUPPORT_TYPE == ODM_CE)
 
 void odm_sw_antdiv_workitem_callback(void *context)
 {
@@ -3903,7 +3265,6 @@ void odm_sw_antdiv_callback(void *function_context)
 #endif
 }
 
-#endif
 
 void odm_s0s1_sw_ant_div_by_ctrl_frame(void *dm_void, u8 step)
 {
@@ -4269,10 +3630,8 @@ void odm_fast_ant_training_callback(
 {
 	struct dm_struct *dm = (struct dm_struct *)dm_void;
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_CE)
 	if (*(dm->is_net_closed) == true)
 		return;
-#endif
 
 #if USE_WORKITEM
 	odm_schedule_work_item(&dm->fast_ant_training_workitem);
@@ -4305,22 +3664,6 @@ void odm_ant_div_init(void *dm_void)
 		return;
 	}
 /* @--- */
-#if (DM_ODM_SUPPORT_TYPE == ODM_AP)
-	if (fat_tab->ant_div_2g_5g == ODM_ANTDIV_2G) {
-		PHYDM_DBG(dm, DBG_ANT_DIV,
-			  "[2G AntDiv Init]: Only Support 2G Antenna Diversity Function\n");
-		if (!(dm->support_ic_type & ODM_ANTDIV_2G_SUPPORT_IC))
-			return;
-	} else if (fat_tab->ant_div_2g_5g == ODM_ANTDIV_5G) {
-		PHYDM_DBG(dm, DBG_ANT_DIV,
-			  "[5G AntDiv Init]: Only Support 5G Antenna Diversity Function\n");
-		if (!(dm->support_ic_type & ODM_ANTDIV_5G_SUPPORT_IC))
-			return;
-	} else if (fat_tab->ant_div_2g_5g == (ODM_ANTDIV_2G | ODM_ANTDIV_5G))
-		PHYDM_DBG(dm, DBG_ANT_DIV,
-			  "[2G & 5G AntDiv Init]:Support Both 2G & 5G Antenna Diversity Function\n");
-
-#endif
 	/* @--- */
 
 	/* @2 [--General---] */
@@ -4330,19 +3673,6 @@ void odm_ant_div_init(void *dm_void)
 	fat_tab->ant_div_on_off = 0xff;
 
 /* @3       -   AP   - */
-#if (DM_ODM_SUPPORT_TYPE == ODM_AP)
-
-#ifdef PHYDM_BEAMFORMING_SUPPORT
-#if (DM_ODM_SUPPORT_TYPE == ODM_AP)
-	odm_bdc_init(dm);
-#endif
-#endif
-
-/* @3     -   WIN   - */
-#elif (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	swat_tab->ant_5g = MAIN_ANT;
-	swat_tab->ant_2g = MAIN_ANT;
-#endif
 
 	/* @2 [---Set MAIN_ANT as default antenna if Auto-ant enable---] */
 	if (fat_tab->div_path_type == ANT_PATH_A)
@@ -4678,7 +4008,6 @@ void odm_ant_div(void *dm_void)
 			fat_tab->idx_ant_div_counter_2g = 0;
 	}
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN || DM_ODM_SUPPORT_TYPE == ODM_CE)
 
 	if (fat_tab->enable_ctrl_frame_antdiv) {
 		if (dm->data_frame_num <= 10 && dm->is_linked)
@@ -4742,22 +4071,6 @@ void odm_ant_div(void *dm_void)
 		}
 #endif
 	}
-#elif (DM_ODM_SUPPORT_TYPE == ODM_AP)
-	/* @----------just for fool proof */
-
-	if (dm->antdiv_rssi)
-		dm->debug_components |= DBG_ANT_DIV;
-	else
-		dm->debug_components &= ~DBG_ANT_DIV;
-
-	if (fat_tab->ant_div_2g_5g == ODM_ANTDIV_2G) {
-		if (!(dm->support_ic_type & ODM_ANTDIV_2G_SUPPORT_IC))
-			return;
-	} else if (fat_tab->ant_div_2g_5g == ODM_ANTDIV_5G) {
-		if (!(dm->support_ic_type & ODM_ANTDIV_5G_SUPPORT_IC))
-			return;
-	}
-#endif
 
 	/* @---------- */
 
@@ -4768,15 +4081,6 @@ void odm_ant_div(void *dm_void)
 	else { /* @if (dm->antdiv_select==0) */
 		dm->ant_type = ODM_AUTO_ANT;
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-		/*Stop Antenna diversity for CMW500 testing case*/
-		if (dm->consecutive_idlel_time >= 10) {
-			dm->ant_type = ODM_FIX_MAIN_ANT;
-			PHYDM_DBG(dm, DBG_ANT_DIV,
-				  "[AntDiv: OFF] No TP case, consecutive_idlel_time=((%d))\n",
-				  dm->consecutive_idlel_time);
-		}
-#endif
 	}
 
 	/*PHYDM_DBG(dm, DBG_ANT_DIV,"ant_type= (%d), pre_ant_type= (%d)\n",*/
@@ -5423,7 +4727,6 @@ void odm_process_rssi_for_ant_div(void *dm_void, void *phy_info_void,
 #endif
 }
 
-#if (DM_ODM_SUPPORT_TYPE & (ODM_WIN | ODM_CE | ODM_IOT))
 void odm_set_tx_ant_by_tx_info(void *dm_void, u8 *desc, u8 mac_id)
 {
 	struct dm_struct *dm = (struct dm_struct *)dm_void;
@@ -5480,130 +4783,11 @@ void odm_set_tx_ant_by_tx_info(void *dm_void, u8 *desc, u8 mac_id)
 
 	}
 }
-#elif (DM_ODM_SUPPORT_TYPE == ODM_AP)
-
-void odm_set_tx_ant_by_tx_info(
-	struct rtl8192cd_priv *priv,
-	struct tx_desc *pdesc,
-	unsigned short aid)
-{
-	struct dm_struct *dm = GET_PDM_ODM(priv); /*@&(priv->pshare->_dmODM);*/
-	struct phydm_fat_struct *fat_tab = &dm->dm_fat_table;
-
-	if (!(dm->support_ability & ODM_BB_ANT_DIV))
-		return;
-
-	if (dm->ant_div_type == CGCS_RX_HW_ANTDIV)
-		return;
-
-	if (dm->support_ic_type == ODM_RTL8881A) {
-#if 0
-		/*panic_printk("[%s] [%d]   ******ODM_SetTxAntByTxInfo_8881E******\n",__FUNCTION__,__LINE__);	*/
-#endif
-		pdesc->Dword6 &= set_desc(~(BIT(18) | BIT(17) | BIT(16)));
-		pdesc->Dword6 |= set_desc(fat_tab->antsel_a[aid] << 16);
-	} else if (dm->support_ic_type == ODM_RTL8192E) {
-#if 0
-		/*panic_printk("[%s] [%d]   ******ODM_SetTxAntByTxInfo_8192E******\n",__FUNCTION__,__LINE__);	*/
-#endif
-		pdesc->Dword6 &= set_desc(~(BIT(18) | BIT(17) | BIT(16)));
-		pdesc->Dword6 |= set_desc(fat_tab->antsel_a[aid] << 16);
-	} else if (dm->support_ic_type == ODM_RTL8197F) {
-#if 0
-		/*panic_printk("[%s] [%d]   ******ODM_SetTxAntByTxInfo_8192E******\n",__FUNCTION__,__LINE__);	*/
-#endif
-		pdesc->Dword6 &= set_desc(~(BIT(17) | BIT(16)));
-		pdesc->Dword6 |= set_desc(fat_tab->antsel_a[aid] << 16);
-	} else if (dm->support_ic_type == ODM_RTL8822B) {
-		pdesc->Dword6 &= set_desc(~(BIT(17) | BIT(16)));
-		pdesc->Dword6 |= set_desc(fat_tab->antsel_a[aid] << 16);
-	} else if (dm->support_ic_type == ODM_RTL8188E) {
-#if 0
-		/*panic_printk("[%s] [%d]   ******ODM_SetTxAntByTxInfo_8188E******\n",__FUNCTION__,__LINE__);*/
-#endif
-		pdesc->Dword2 &= set_desc(~BIT(24));
-		pdesc->Dword2 &= set_desc(~BIT(25));
-		pdesc->Dword7 &= set_desc(~BIT(29));
-
-		pdesc->Dword2 |= set_desc(fat_tab->antsel_a[aid] << 24);
-		pdesc->Dword2 |= set_desc(fat_tab->antsel_b[aid] << 25);
-		pdesc->Dword7 |= set_desc(fat_tab->antsel_c[aid] << 29);
-
-	} else if (dm->support_ic_type == ODM_RTL8812) {
-		/*@[path-A]*/
-#if 0
-		/*panic_printk("[%s] [%d]   ******ODM_SetTxAntByTxInfo_8881E******\n",__FUNCTION__,__LINE__);*/
-#endif
-
-		pdesc->Dword6 &= set_desc(~BIT(16));
-		pdesc->Dword6 &= set_desc(~BIT(17));
-		pdesc->Dword6 &= set_desc(~BIT(18));
-
-		pdesc->Dword6 |= set_desc(fat_tab->antsel_a[aid] << 16);
-		pdesc->Dword6 |= set_desc(fat_tab->antsel_b[aid] << 17);
-		pdesc->Dword6 |= set_desc(fat_tab->antsel_c[aid] << 18);
-	}
-}
-
-#if 1 /*@def CONFIG_WLAN_HAL*/
-void odm_set_tx_ant_by_tx_info_hal(
-	struct rtl8192cd_priv *priv,
-	void *pdesc_data,
-	u16 aid)
-{
-	struct dm_struct *dm = GET_PDM_ODM(priv); /*@&(priv->pshare->_dmODM);*/
-	struct phydm_fat_struct *fat_tab = &dm->dm_fat_table;
-	PTX_DESC_DATA_88XX pdescdata = (PTX_DESC_DATA_88XX)pdesc_data;
-
-	if (!(dm->support_ability & ODM_BB_ANT_DIV))
-		return;
-
-	if (dm->ant_div_type == CGCS_RX_HW_ANTDIV)
-		return;
-
-	if (dm->support_ic_type & (ODM_RTL8881A | ODM_RTL8192E | ODM_RTL8814A |
-	    ODM_RTL8197F | ODM_RTL8822B)) {
-#if 0
-		/*panic_printk("[%s] [%d] **odm_set_tx_ant_by_tx_info_hal**\n",
-		 *	       __FUNCTION__,__LINE__);
-		 */
-#endif
-		pdescdata->ant_sel = 1;
-		pdescdata->ant_sel_a = fat_tab->antsel_a[aid];
-	}
-}
-#endif /*@#ifdef CONFIG_WLAN_HAL*/
-
-#endif
 
 void odm_ant_div_config(void *dm_void)
 {
 	struct dm_struct *dm = (struct dm_struct *)dm_void;
 	struct phydm_fat_struct *fat_tab = &dm->dm_fat_table;
-#if (DM_ODM_SUPPORT_TYPE & (ODM_WIN))
-	PHYDM_DBG(dm, DBG_ANT_DIV, "WIN Config Antenna Diversity\n");
-	/*@
-	if(dm->support_ic_type==ODM_RTL8723B)
-	{
-		if((!dm->swat_tab.ANTA_ON || !dm->swat_tab.ANTB_ON))
-			dm->support_ability &= ~(ODM_BB_ANT_DIV);
-	}
-	*/
-	#if (defined(CONFIG_2T3R_ANTENNA))
-	#if (RTL8822B_SUPPORT == 1)
-		dm->rfe_type = ANT_2T3R_RFE_TYPE;
-	#endif
-	#endif
-
-	#if (defined(CONFIG_2T4R_ANTENNA))
-	#if (RTL8822B_SUPPORT == 1)
-		dm->rfe_type = ANT_2T4R_RFE_TYPE;
-	#endif
-	#endif
-
-	if (dm->support_ic_type == ODM_RTL8723D)
-		dm->ant_div_type = S0S1_SW_ANTDIV;
-#elif (DM_ODM_SUPPORT_TYPE & (ODM_CE))
 
 	PHYDM_DBG(dm, DBG_ANT_DIV, "CE Config Antenna Diversity\n");
 
@@ -5612,137 +4796,6 @@ void odm_ant_div_config(void *dm_void)
 
 	if (dm->support_ic_type == ODM_RTL8723D)
 		dm->ant_div_type = S0S1_SW_ANTDIV;
-#elif (DM_ODM_SUPPORT_TYPE & (ODM_IOT))
-
-	PHYDM_DBG(dm, DBG_ANT_DIV, "IOT Config Antenna Diversity\n");
-
-	if (dm->support_ic_type == ODM_RTL8721D)
-		dm->ant_div_type = CG_TRX_HW_ANTDIV;
-
-#elif (DM_ODM_SUPPORT_TYPE & (ODM_AP))
-
-	PHYDM_DBG(dm, DBG_ANT_DIV, "AP Config Antenna Diversity\n");
-
-	/* @2 [ NOT_SUPPORT_ANTDIV ] */
-#if (defined(CONFIG_NOT_SUPPORT_ANTDIV))
-	dm->support_ability &= ~(ODM_BB_ANT_DIV);
-	PHYDM_DBG(dm, DBG_ANT_DIV,
-		  "[ Disable AntDiv function] : Not Support 2.4G & 5G Antenna Diversity\n");
-
-	/* @2 [ 2G&5G_SUPPORT_ANTDIV ] */
-#elif (defined(CONFIG_2G5G_SUPPORT_ANTDIV))
-	PHYDM_DBG(dm, DBG_ANT_DIV,
-		  "[ Enable AntDiv function] : 2.4G & 5G Support Antenna Diversity Simultaneously\n");
-	fat_tab->ant_div_2g_5g = (ODM_ANTDIV_2G | ODM_ANTDIV_5G);
-
-	if (dm->support_ic_type & ODM_ANTDIV_SUPPORT)
-		dm->support_ability |= ODM_BB_ANT_DIV;
-	if (*dm->band_type == ODM_BAND_5G) {
-#if (defined(CONFIG_5G_CGCS_RX_DIVERSITY))
-		dm->ant_div_type = CGCS_RX_HW_ANTDIV;
-		PHYDM_DBG(dm, DBG_ANT_DIV,
-			  "[ 5G] : AntDiv type = CGCS_RX_HW_ANTDIV\n");
-		panic_printk("[ 5G] : AntDiv type = CGCS_RX_HW_ANTDIV\n");
-#elif (defined(CONFIG_5G_CG_TRX_DIVERSITY) ||\
-	defined(CONFIG_2G5G_CG_TRX_DIVERSITY_8881A))
-		dm->ant_div_type = CG_TRX_HW_ANTDIV;
-		PHYDM_DBG(dm, DBG_ANT_DIV,
-			  "[ 5G] : AntDiv type = CG_TRX_HW_ANTDIV\n");
-		panic_printk("[ 5G] : AntDiv type = CG_TRX_HW_ANTDIV\n");
-#elif (defined(CONFIG_5G_CG_SMART_ANT_DIVERSITY))
-		dm->ant_div_type = CG_TRX_SMART_ANTDIV;
-		PHYDM_DBG(dm, DBG_ANT_DIV,
-			  "[ 5G] : AntDiv type = CG_SMART_ANTDIV\n");
-#elif (defined(CONFIG_5G_S0S1_SW_ANT_DIVERSITY))
-		dm->ant_div_type = S0S1_SW_ANTDIV;
-		PHYDM_DBG(dm, DBG_ANT_DIV,
-			  "[ 5G] : AntDiv type = S0S1_SW_ANTDIV\n");
-#endif
-	} else if (*dm->band_type == ODM_BAND_2_4G) {
-#if (defined(CONFIG_2G_CGCS_RX_DIVERSITY))
-		dm->ant_div_type = CGCS_RX_HW_ANTDIV;
-		PHYDM_DBG(dm, DBG_ANT_DIV,
-			  "[ 2.4G] : AntDiv type = CGCS_RX_HW_ANTDIV\n");
-#elif (defined(CONFIG_2G_CG_TRX_DIVERSITY) ||\
-	defined(CONFIG_2G5G_CG_TRX_DIVERSITY_8881A))
-		dm->ant_div_type = CG_TRX_HW_ANTDIV;
-		PHYDM_DBG(dm, DBG_ANT_DIV,
-			  "[ 2.4G] : AntDiv type = CG_TRX_HW_ANTDIV\n");
-#elif (defined(CONFIG_2G_CG_SMART_ANT_DIVERSITY))
-		dm->ant_div_type = CG_TRX_SMART_ANTDIV;
-		PHYDM_DBG(dm, DBG_ANT_DIV,
-			  "[ 2.4G] : AntDiv type = CG_SMART_ANTDIV\n");
-#elif (defined(CONFIG_2G_S0S1_SW_ANT_DIVERSITY))
-		dm->ant_div_type = S0S1_SW_ANTDIV;
-		PHYDM_DBG(dm, DBG_ANT_DIV,
-			  "[ 2.4G] : AntDiv type = S0S1_SW_ANTDIV\n");
-#endif
-	}
-
-	/* @2 [ 5G_SUPPORT_ANTDIV ] */
-#elif (defined(CONFIG_5G_SUPPORT_ANTDIV))
-	PHYDM_DBG(dm, DBG_ANT_DIV,
-		  "[ Enable AntDiv function] : Only 5G Support Antenna Diversity\n");
-	panic_printk("[ Enable AntDiv function] : Only 5G Support Antenna Diversity\n");
-	fat_tab->ant_div_2g_5g = (ODM_ANTDIV_5G);
-	if (*dm->band_type == ODM_BAND_5G) {
-		if (dm->support_ic_type & ODM_ANTDIV_5G_SUPPORT_IC)
-			dm->support_ability |= ODM_BB_ANT_DIV;
-#if (defined(CONFIG_5G_CGCS_RX_DIVERSITY))
-		dm->ant_div_type = CGCS_RX_HW_ANTDIV;
-		PHYDM_DBG(dm, DBG_ANT_DIV,
-			  "[ 5G] : AntDiv type = CGCS_RX_HW_ANTDIV\n");
-		panic_printk("[ 5G] : AntDiv type = CGCS_RX_HW_ANTDIV\n");
-#elif (defined(CONFIG_5G_CG_TRX_DIVERSITY))
-		dm->ant_div_type = CG_TRX_HW_ANTDIV;
-		panic_printk("[ 5G] : AntDiv type = CG_TRX_HW_ANTDIV\n");
-		PHYDM_DBG(dm, DBG_ANT_DIV,
-			  "[ 5G] : AntDiv type = CG_TRX_HW_ANTDIV\n");
-#elif (defined(CONFIG_5G_CG_SMART_ANT_DIVERSITY))
-		dm->ant_div_type = CG_TRX_SMART_ANTDIV;
-		PHYDM_DBG(dm, DBG_ANT_DIV,
-			  "[ 5G] : AntDiv type = CG_SMART_ANTDIV\n");
-#elif (defined(CONFIG_5G_S0S1_SW_ANT_DIVERSITY))
-		dm->ant_div_type = S0S1_SW_ANTDIV;
-		PHYDM_DBG(dm, DBG_ANT_DIV,
-			  "[ 5G] : AntDiv type = S0S1_SW_ANTDIV\n");
-#endif
-	} else if (*dm->band_type == ODM_BAND_2_4G) {
-		PHYDM_DBG(dm, DBG_ANT_DIV, "Not Support 2G ant_div_type\n");
-		dm->support_ability &= ~(ODM_BB_ANT_DIV);
-	}
-
-	/* @2 [ 2G_SUPPORT_ANTDIV ] */
-#elif (defined(CONFIG_2G_SUPPORT_ANTDIV))
-	PHYDM_DBG(dm, DBG_ANT_DIV,
-		  "[ Enable AntDiv function] : Only 2.4G Support Antenna Diversity\n");
-	fat_tab->ant_div_2g_5g = (ODM_ANTDIV_2G);
-	if (*dm->band_type == ODM_BAND_2_4G) {
-		if (dm->support_ic_type & ODM_ANTDIV_2G_SUPPORT_IC)
-			dm->support_ability |= ODM_BB_ANT_DIV;
-#if (defined(CONFIG_2G_CGCS_RX_DIVERSITY))
-		dm->ant_div_type = CGCS_RX_HW_ANTDIV;
-		PHYDM_DBG(dm, DBG_ANT_DIV,
-			  "[ 2.4G] : AntDiv type = CGCS_RX_HW_ANTDIV\n");
-#elif (defined(CONFIG_2G_CG_TRX_DIVERSITY))
-		dm->ant_div_type = CG_TRX_HW_ANTDIV;
-		PHYDM_DBG(dm, DBG_ANT_DIV,
-			  "[ 2.4G] : AntDiv type = CG_TRX_HW_ANTDIV\n");
-#elif (defined(CONFIG_2G_CG_SMART_ANT_DIVERSITY))
-		dm->ant_div_type = CG_TRX_SMART_ANTDIV;
-		PHYDM_DBG(dm, DBG_ANT_DIV,
-			  "[ 2.4G] : AntDiv type = CG_SMART_ANTDIV\n");
-#elif (defined(CONFIG_2G_S0S1_SW_ANT_DIVERSITY))
-		dm->ant_div_type = S0S1_SW_ANTDIV;
-		PHYDM_DBG(dm, DBG_ANT_DIV,
-			  "[ 2.4G] : AntDiv type = S0S1_SW_ANTDIV\n");
-#endif
-	} else if (*dm->band_type == ODM_BAND_5G) {
-		PHYDM_DBG(dm, DBG_ANT_DIV, "Not Support 5G ant_div_type\n");
-		dm->support_ability &= ~(ODM_BB_ANT_DIV);
-	}
-#endif
-#endif
 
 	PHYDM_DBG(dm, DBG_ANT_DIV,
 		  "[AntDiv Config Info] AntDiv_SupportAbility = (( %x ))\n",

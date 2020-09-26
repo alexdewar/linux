@@ -24,15 +24,7 @@
  *****************************************************************************/
 
 #include "mp_precomp.h"
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-#if RT_PLATFORM == PLATFORM_MACOSX
-#include "phydm_precomp.h"
-#else
-#include "../phydm_precomp.h"
-#endif
-#else
 #include "../../phydm_precomp.h"
-#endif
 
 #if (RTL8822B_SUPPORT == 1)
 void halrf_rf_lna_setting_8822b(struct dm_struct *dm_void,
@@ -213,27 +205,15 @@ void odm_tx_pwr_track_set_pwr8822b(void *dm_void, enum pwrtrack_method method,
 	PHALMAC_PWR_TRACKING_OPTION p_pwr_tracking_opt = &(cali_info->HALMAC_PWR_TRACKING_INFO);
 
 	if (*dm->mp_mode == true) {
-#if (DM_ODM_SUPPORT_TYPE & (ODM_WIN | ODM_CE))
-#if (DM_ODM_SUPPORT_TYPE & ODM_WIN)
-		PMPT_CONTEXT p_mpt_ctx = &(adapter->mpt_ctx);
-
-		tx_rate = mpt_to_mgnt_rate(p_mpt_ctx->mpt_rate_index);
-#elif (DM_ODM_SUPPORT_TYPE & ODM_CE)
 		PMPT_CONTEXT p_mpt_ctx = &(adapter->mppriv.mpt_ctx);
 
 		tx_rate = mpt_to_mgnt_rate(p_mpt_ctx->mpt_rate_index);
-#endif
-#endif
 	} else {
 		u16	rate	 = *(dm->forced_data_rate);
 
 		if (!rate) { /*auto rate*/
-#if (DM_ODM_SUPPORT_TYPE & ODM_WIN)
-			tx_rate = ((PADAPTER)adapter)->HalFunc.GetHwRateFromMRateHandler(dm->tx_rate);
-#elif (DM_ODM_SUPPORT_TYPE & ODM_CE)
 			if (dm->number_linked_client != 0)
 				tx_rate = hw_rate_to_m_rate(dm->tx_rate);
-#endif
 		} else   /*force rate*/
 			tx_rate = (u8) rate;
 	}
@@ -280,48 +260,28 @@ void odm_tx_pwr_track_set_pwr8822b(void *dm_void, enum pwrtrack_method method,
 
 #endif
 	struct dm_struct *dm = (struct dm_struct *)dm_void;
-#if (DM_ODM_SUPPORT_TYPE & ODM_WIN)
-	struct _ADAPTER *adapter = dm->adapter;
-#endif
 	struct dm_rf_calibration_struct *cali_info = &dm->rf_calibrate_info;
 	struct _hal_rf_ *rf = &dm->rf_table;
 	u8 tx_pwr_idx_offset = 0;
 	u8 tx_pwr_idx = 0;
 	u8 mpt_rate_index = 0;
-#if (DM_ODM_SUPPORT_TYPE & (ODM_WIN | ODM_CE))
 	u8 channel = *dm->channel;
 	u8 band_width = *dm->band_width;
 	u8 tx_rate = 0xFF;
 
 	if (*dm->mp_mode == 1) {
-#if (DM_ODM_SUPPORT_TYPE & (ODM_WIN | ODM_CE))
-#if (DM_ODM_SUPPORT_TYPE & ODM_WIN)
-		PMPT_CONTEXT p_mpt_ctx = &adapter->MptCtx;
-
-		tx_rate = MptToMgntRate(p_mpt_ctx->MptRateIndex);
-#elif (DM_ODM_SUPPORT_TYPE & ODM_CE)
 		if (rf->mp_rate_index)
 			mpt_rate_index = *rf->mp_rate_index;
 
 		tx_rate = mpt_to_mgnt_rate(mpt_rate_index);
-#endif
-#endif
 	} else {
 		u16 rate = *dm->forced_data_rate;
 
 		if (!rate) { /*auto rate*/
-#if (DM_ODM_SUPPORT_TYPE & ODM_WIN)
-			struct _ADAPTER *adapter = dm->adapter;
-
-			tx_rate = ((PADAPTER)adapter)->HalFunc.GetHwRateFromMRateHandler(dm->tx_rate);
-#elif (DM_ODM_SUPPORT_TYPE & ODM_CE) && defined(DM_ODM_CE_MAC80211)
-			tx_rate = dm->tx_rate;
-#elif (DM_ODM_SUPPORT_TYPE & ODM_CE)
 			if (dm->number_linked_client != 0)
 				tx_rate = hw_rate_to_m_rate(dm->tx_rate);
 			else
 				tx_rate = rf->p_rate_index;
-#endif
 		} else { /*force rate*/
 			tx_rate = (u8)rate;
 		}
@@ -329,7 +289,6 @@ void odm_tx_pwr_track_set_pwr8822b(void *dm_void, enum pwrtrack_method method,
 
 	RF_DBG(dm, DBG_RF_TX_PWR_TRACK, "Call:%s tx_rate=0x%X\n", __func__,
 	       tx_rate);
-#endif
 
 	RF_DBG(dm, DBG_RF_TX_PWR_TRACK,
 	       "pRF->default_ofdm_index=%d   pRF->default_cck_index=%d\n",
@@ -345,15 +304,8 @@ void odm_tx_pwr_track_set_pwr8822b(void *dm_void, enum pwrtrack_method method,
 	       cali_info->absolute_cck_swing_idx[rf_path],
 	       cali_info->remnant_cck_swing_idx, rf_path);
 
-#if (DM_ODM_SUPPORT_TYPE & ODM_WIN)
-	tx_pwr_idx = odm_get_tx_power_index(dm, (enum rf_path)rf_path, tx_rate, (enum channel_width)band_width, channel);
-#elif (DM_ODM_SUPPORT_TYPE & ODM_CE)
 	tx_pwr_idx = odm_get_tx_power_index(dm, (enum rf_path)rf_path,
 					    tx_rate, band_width, channel);
-#else
-	/*0x04(TX_AGC_OFDM_6M)*/
-	tx_pwr_idx = config_phydm_read_txagc_8822b(dm, rf_path, 0x04);
-#endif
 
 	if (tx_pwr_idx >= 63)
 		tx_pwr_idx = 63;
@@ -369,30 +321,15 @@ void odm_tx_pwr_track_set_pwr8822b(void *dm_void, enum pwrtrack_method method,
 }
 
 void get_delta_swing_table_8822b(void *dm_void,
-#if (DM_ODM_SUPPORT_TYPE & ODM_AP)
-				 u8 **temperature_up_a, u8 **temperature_down_a,
-				 u8 **temperature_up_b, u8 **temperature_down_b,
-				 u8 **temperature_up_cck_a,
-				 u8 **temperature_down_cck_a,
-				 u8 **temperature_up_cck_b,
-				 u8 **temperature_down_cck_b)
-#else
 				 u8 **temperature_up_a,
 				 u8 **temperature_down_a,
 				 u8 **temperature_up_b,
 				 u8 **temperature_down_b)
-#endif
 {
 	struct dm_struct *dm = (struct dm_struct *)dm_void;
 	struct dm_rf_calibration_struct *cali_info = &dm->rf_calibrate_info;
 	u8 channel = *dm->channel;
 
-#if (DM_ODM_SUPPORT_TYPE & ODM_AP)
-	*temperature_up_cck_a = cali_info->delta_swing_table_idx_2g_cck_a_p;
-	*temperature_down_cck_a = cali_info->delta_swing_table_idx_2g_cck_a_n;
-	*temperature_up_cck_b = cali_info->delta_swing_table_idx_2g_cck_b_p;
-	*temperature_down_cck_b = cali_info->delta_swing_table_idx_2g_cck_b_n;
-#endif
 	*temperature_up_a = cali_info->delta_swing_table_idx_2ga_p;
 	*temperature_down_a = cali_info->delta_swing_table_idx_2ga_n;
 	*temperature_up_b = cali_info->delta_swing_table_idx_2gb_p;
@@ -491,25 +428,11 @@ void configure_txpower_track_8822b(struct txpwrtrack_cfg *config)
 	config->do_iqk = do_iqk_8822b;
 	config->phy_lc_calibrate = halrf_lck_trigger;
 
-#if (DM_ODM_SUPPORT_TYPE & ODM_AP)
-	config->get_delta_all_swing_table = get_delta_swing_table_8822b;
-#else
 	config->get_delta_swing_table = get_delta_swing_table_8822b;
-#endif
 }
 
-#if ((DM_ODM_SUPPORT_TYPE & ODM_AP) || (DM_ODM_SUPPORT_TYPE == ODM_CE))
 void phy_set_rf_path_switch_8822b(struct dm_struct *dm, boolean is_main)
-#else
-void phy_set_rf_path_switch_8822b(void *adapter, boolean is_main)
-#endif
 {
-#if !(DM_ODM_SUPPORT_TYPE & ODM_AP)
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(((PADAPTER)adapter));
-	struct dm_struct *dm = &hal_data->DM_OutSrc;
-#endif
-#endif
 	/*BY SY Request */
 	odm_set_bb_reg(dm, R_0x4c, (BIT(24) | BIT(23)), 0x2);
 
@@ -546,35 +469,17 @@ void phy_set_rf_path_switch_8822b(void *adapter, boolean is_main)
 	}
 }
 
-#if ((DM_ODM_SUPPORT_TYPE & ODM_AP) || (DM_ODM_SUPPORT_TYPE == ODM_CE))
 boolean _phy_query_rf_path_switch_8822b(struct dm_struct *dm)
-#else
-boolean _phy_query_rf_path_switch_8822b(void *adapter)
-#endif
 {
-#if !(DM_ODM_SUPPORT_TYPE & ODM_AP)
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(((PADAPTER)adapter));
-	struct dm_struct *dm = &hal_data->DM_OutSrc;
-#endif
-#endif
 	if (odm_get_bb_reg(dm, R_0xcbc, (BIT(9) | BIT(8))) == 0x2) /*WiFi*/
 		return true;
 	else
 		return false;
 }
 
-#if ((DM_ODM_SUPPORT_TYPE & ODM_AP) || (DM_ODM_SUPPORT_TYPE == ODM_CE))
 boolean phy_query_rf_path_switch_8822b(struct dm_struct *dm)
-#else
-boolean phy_query_rf_path_switch_8822b(void *adapter)
-#endif
 {
-#if ((DM_ODM_SUPPORT_TYPE & ODM_AP) || (DM_ODM_SUPPORT_TYPE == ODM_CE))
 	return _phy_query_rf_path_switch_8822b(dm);
-#else
-	return _phy_query_rf_path_switch_8822b(adapter);
-#endif
 }
 
 #endif /*(RTL8822B_SUPPORT == 0)*/

@@ -17,15 +17,13 @@
 #ifndef _FW_HEADER_8822B_H
 #define _FW_HEADER_8822B_H
 
-#if (defined(CONFIG_AP_WOWLAN) || (DM_ODM_SUPPORT_TYPE & (ODM_AP)))
+#if (defined(CONFIG_AP_WOWLAN) || (DM_ODM_SUPPORT_TYPE_AP))
 extern u8 array_mp_8822b_fw_ap[106848];
 extern u32 array_length_mp_8822b_fw_ap;
 #endif
 
-#if (DM_ODM_SUPPORT_TYPE & (ODM_WIN)) || (DM_ODM_SUPPORT_TYPE & (ODM_CE))
 extern u8 array_mp_8822b_fw_nic[160504];
 extern u32 array_length_mp_8822b_fw_nic;
-#endif
 
 #endif
 

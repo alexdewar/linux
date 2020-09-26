@@ -108,13 +108,7 @@ odm_clear_txpowertracking_state(
 
 void
 odm_txpowertracking_callback_thermal_meter(
-#if (DM_ODM_SUPPORT_TYPE & ODM_AP)
-	void					*dm_void
-#elif (DM_ODM_SUPPORT_TYPE & ODM_CE)
 	void	*dm
-#else
-	void	*adapter
-#endif
 );
 
 

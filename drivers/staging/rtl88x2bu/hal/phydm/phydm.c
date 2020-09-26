@@ -259,11 +259,6 @@ void phydm_common_info_self_init(struct dm_struct *dm)
 	reg_tmp = ODM_REG(BB_RX_PATH, dm);
 	mask_tmp = ODM_BIT(BB_RX_PATH, dm);
 	dm->rf_path_rx_enable = (u8)odm_get_bb_reg(dm, reg_tmp, mask_tmp);
-#if (DM_ODM_SUPPORT_TYPE != ODM_CE)
-	dm->is_net_closed = &dm->BOOLEAN_temp;
-
-	phydm_init_debug_setting(dm);
-#endif
 	phydm_init_soft_ml_setting(dm);
 
 	dm->phydm_sys_up_time = 0;
@@ -315,12 +310,6 @@ void phydm_common_info_self_init(struct dm_struct *dm)
 	dm->pause_lv_table.lv_dig = PHYDM_PAUSE_RELEASE;
 	dm->pre_is_linked = false;
 	dm->is_linked = false;
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	if (!(dm->is_fcs_mode_enable)) {
-		dm->is_fcs_mode_enable = &dm->boolean_dummy;
-		pr_debug("[Warning] is_fcs_mode_enable=NULL\n");
-	}
-#endif
 }
 
 void phydm_cmn_sta_info_update(void *dm_void, u8 macid)
@@ -358,36 +347,6 @@ void phydm_common_info_self_update(struct dm_struct *dm)
 	u32 ma_rx_tp = 0;
 	u32 tp_diff = 0;
 	struct cmn_sta_info *sta;
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	PADAPTER adapter = (PADAPTER)dm->adapter;
-	PMGNT_INFO mgnt_info = &((PADAPTER)adapter)->MgntInfo;
-
-	sta = dm->phydm_sta_info[0];
-
-	#if 0
-	if (mgnt_info->mAssoc) {
-		sta->dm_ctrl |= STA_DM_CTRL_ACTIVE;
-		for (i = 0; i < 6; i++)
-			sta->mac_addr[i] = mgnt_info->Bssid[i];
-	} else if (GetFirstClientPort(adapter)) {
-		struct _ADAPTER *client_adapter = GetFirstClientPort(adapter);
-
-		sta->dm_ctrl |= STA_DM_CTRL_ACTIVE;
-		for (i = 0; i < 6; i++)
-			sta->mac_addr[i] = client_adapter->MgntInfo.Bssid[i];
-	} else {
-		sta->dm_ctrl = sta->dm_ctrl & (~STA_DM_CTRL_ACTIVE);
-		for (i = 0; i < 6; i++)
-			sta->mac_addr[i] = 0;
-	}
-	#endif
-
-	/* STA mode is linked to AP */
-	if (is_sta_active(sta) && !ACTING_AS_AP(adapter))
-		dm->bsta_state = true;
-	else
-		dm->bsta_state = false;
-#endif
 
 	for (i = 0; i < ODM_ASSOCIATE_ENTRY_NUM; i++) {
 		sta = dm->phydm_sta_info[i];
@@ -413,9 +372,6 @@ void phydm_common_info_self_update(struct dm_struct *dm)
 		}
 	}
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	dm->is_linked = (sta_cnt != 0) ? true : false;
-#endif
 
 	if (sta_cnt == 1) {
 		dm->is_one_entry_only = true;
@@ -553,290 +509,7 @@ void phydm_hw_setting(struct dm_struct *dm)
 #endif
 }
 
-#if (DM_ODM_SUPPORT_TYPE & (ODM_WIN))
-u64 phydm_supportability_init_win(
-	void *dm_void)
-{
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-	u64 support_ability = 0;
 
-	switch (dm->support_ic_type) {
-/*@---------------N Series--------------------*/
-#if (RTL8188E_SUPPORT)
-	case ODM_RTL8188E:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			/*ODM_BB_DYNAMIC_TXPWR |*/
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			/*ODM_BB_PWR_TRAIN |*/
-			ODM_BB_RATE_ADAPTIVE |
-			ODM_BB_ADAPTIVITY |
-			ODM_BB_CFO_TRACKING |
-			ODM_BB_ENV_MONITOR |
-			ODM_BB_PRIMARY_CCA;
-		break;
-#endif
-
-#if (RTL8192E_SUPPORT)
-	case ODM_RTL8192E:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			/*ODM_BB_DYNAMIC_TXPWR |*/
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			/*ODM_BB_PWR_TRAIN |*/
-			ODM_BB_RATE_ADAPTIVE |
-			ODM_BB_ADAPTIVITY |
-			ODM_BB_CFO_TRACKING |
-			ODM_BB_ENV_MONITOR |
-			ODM_BB_PRIMARY_CCA;
-		break;
-#endif
-
-#if (RTL8723B_SUPPORT)
-	case ODM_RTL8723B:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			/*ODM_BB_DYNAMIC_TXPWR |*/
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			/*ODM_BB_PWR_TRAIN |*/
-			ODM_BB_RATE_ADAPTIVE |
-			ODM_BB_ADAPTIVITY |
-			ODM_BB_CFO_TRACKING |
-			ODM_BB_ENV_MONITOR |
-			ODM_BB_PRIMARY_CCA;
-		break;
-#endif
-
-#if (RTL8703B_SUPPORT)
-	case ODM_RTL8703B:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			/*ODM_BB_DYNAMIC_TXPWR |*/
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			/*ODM_BB_PWR_TRAIN |*/
-			ODM_BB_RATE_ADAPTIVE |
-			ODM_BB_ADAPTIVITY |
-			ODM_BB_CFO_TRACKING |
-			ODM_BB_ENV_MONITOR;
-		break;
-#endif
-
-#if (RTL8723D_SUPPORT)
-	case ODM_RTL8723D:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			/*ODM_BB_DYNAMIC_TXPWR |*/
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			ODM_BB_PWR_TRAIN |
-			ODM_BB_RATE_ADAPTIVE |
-			ODM_BB_ADAPTIVITY |
-			ODM_BB_CFO_TRACKING |
-			ODM_BB_ENV_MONITOR;
-		break;
-#endif
-
-#if (RTL8710B_SUPPORT)
-	case ODM_RTL8710B:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			/*ODM_BB_DYNAMIC_TXPWR |*/
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			ODM_BB_PWR_TRAIN |
-			ODM_BB_RATE_ADAPTIVE |
-			ODM_BB_ADAPTIVITY |
-			ODM_BB_CFO_TRACKING |
-			ODM_BB_ENV_MONITOR;
-		break;
-#endif
-
-#if (RTL8188F_SUPPORT)
-	case ODM_RTL8188F:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			/*ODM_BB_DYNAMIC_TXPWR |*/
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			/*ODM_BB_PWR_TRAIN |*/
-			ODM_BB_RATE_ADAPTIVE |
-			ODM_BB_ADAPTIVITY |
-			ODM_BB_CFO_TRACKING |
-			ODM_BB_ENV_MONITOR;
-		break;
-#endif
-
-#if (RTL8192F_SUPPORT)
-	case ODM_RTL8192F:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			ODM_BB_PWR_TRAIN	|
-			ODM_BB_RATE_ADAPTIVE |
-			/*ODM_BB_PATH_DIV |*/
-			ODM_BB_ADAPTIVITY |
-			ODM_BB_CFO_TRACKING |
-			ODM_BB_ADAPTIVE_SOML |
-			ODM_BB_ENV_MONITOR;
-			/*ODM_BB_LNA_SAT_CHK |*/
-			/*ODM_BB_PRIMARY_CCA*/
-
-		break;
-#endif
-
-/*@---------------AC Series-------------------*/
-
-#if (RTL8812A_SUPPORT || RTL8821A_SUPPORT)
-	case ODM_RTL8812:
-	case ODM_RTL8821:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			ODM_BB_DYNAMIC_TXPWR |
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			/*ODM_BB_PWR_TRAIN |*/
-			ODM_BB_RATE_ADAPTIVE |
-			ODM_BB_ADAPTIVITY |
-			ODM_BB_CFO_TRACKING |
-			ODM_BB_ENV_MONITOR;
-		break;
-#endif
-
-#if (RTL8814A_SUPPORT)
-	case ODM_RTL8814A:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			ODM_BB_DYNAMIC_TXPWR |
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			/*ODM_BB_PWR_TRAIN |*/
-			ODM_BB_RATE_ADAPTIVE |
-			ODM_BB_ADAPTIVITY |
-			ODM_BB_CFO_TRACKING |
-			ODM_BB_ENV_MONITOR;
-		break;
-#endif
-
-#if (RTL8822B_SUPPORT)
-	case ODM_RTL8822B:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			/*ODM_BB_DYNAMIC_TXPWR	|*/
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			/*ODM_BB_PWR_TRAIN |*/
-			/*ODM_BB_ADAPTIVE_SOML |*/
-			ODM_BB_RATE_ADAPTIVE |
-			/*ODM_BB_PATH_DIV |*/
-			ODM_BB_ADAPTIVITY |
-			ODM_BB_CFO_TRACKING |
-			ODM_BB_ENV_MONITOR;
-		break;
-#endif
-
-#if (RTL8821C_SUPPORT)
-	case ODM_RTL8821C:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			/*ODM_BB_DYNAMIC_TXPWR	|*/
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			/*ODM_BB_PWR_TRAIN |*/
-			ODM_BB_RATE_ADAPTIVE |
-			ODM_BB_ADAPTIVITY |
-			ODM_BB_CFO_TRACKING |
-			ODM_BB_ENV_MONITOR;
-		break;
-#endif
-
-/*@---------------JGR3 Series-------------------*/
-
-#if (RTL8822C_SUPPORT)
-	case ODM_RTL8822C:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			/* ODM_BB_DYNAMIC_TXPWR |*/
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			ODM_BB_RATE_ADAPTIVE |
-			ODM_BB_PATH_DIV |
-			ODM_BB_ADAPTIVITY |
-			ODM_BB_CFO_TRACKING |
-			ODM_BB_ENV_MONITOR;
-		break;
-#endif
-
-#if (RTL8814B_SUPPORT)
-	case ODM_RTL8814B:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			/*ODM_BB_DYNAMIC_TXPWR |*/
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			/*ODM_BB_PWR_TRAIN |*/
-			ODM_BB_RATE_ADAPTIVE |
-			ODM_BB_ADAPTIVITY |
-			ODM_BB_CFO_TRACKING;
-			/*ODM_BB_ENV_MONITOR;*/
-		break;
-#endif
-
-	default:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			/*ODM_BB_DYNAMIC_TXPWR |*/
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			/*ODM_BB_PWR_TRAIN |*/
-			ODM_BB_RATE_ADAPTIVE |
-			ODM_BB_ADAPTIVITY |
-			ODM_BB_CFO_TRACKING |
-			ODM_BB_ENV_MONITOR;
-
-		pr_debug("[Warning] Supportability Init Warning !!!\n");
-		break;
-	}
-
-	return support_ability;
-}
-#endif
-
-#if (DM_ODM_SUPPORT_TYPE & (ODM_CE))
 u64 phydm_supportability_init_ce(void *dm_void)
 {
 	struct dm_struct *dm = (struct dm_struct *)dm_void;
@@ -1113,382 +786,8 @@ u64 phydm_supportability_init_ce(void *dm_void)
 
 	return support_ability;
 }
-#endif
 
-#if (DM_ODM_SUPPORT_TYPE & (ODM_AP))
-u64 phydm_supportability_init_ap(
-	void *dm_void)
-{
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-	u64 support_ability = 0;
 
-	switch (dm->support_ic_type) {
-/*@---------------N Series--------------------*/
-#if (RTL8188E_SUPPORT)
-	case ODM_RTL8188E:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			/*ODM_BB_PWR_TRAIN |*/
-			ODM_BB_RATE_ADAPTIVE |
-			ODM_BB_ADAPTIVITY |
-			ODM_BB_CFO_TRACKING |
-			ODM_BB_ENV_MONITOR |
-			ODM_BB_PRIMARY_CCA;
-		break;
-#endif
-
-#if (RTL8192E_SUPPORT)
-	case ODM_RTL8192E:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			/*ODM_BB_PWR_TRAIN |*/
-			ODM_BB_RATE_ADAPTIVE |
-			ODM_BB_ADAPTIVITY |
-			ODM_BB_CFO_TRACKING |
-			ODM_BB_ENV_MONITOR |
-			ODM_BB_PRIMARY_CCA;
-		break;
-#endif
-
-#if (RTL8723B_SUPPORT)
-	case ODM_RTL8723B:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			/*ODM_BB_PWR_TRAIN		|*/
-			ODM_BB_RATE_ADAPTIVE |
-			ODM_BB_ADAPTIVITY |
-			ODM_BB_CFO_TRACKING |
-			ODM_BB_ENV_MONITOR;
-		break;
-#endif
-
-#if (RTL8198F_SUPPORT || RTL8197F_SUPPORT)
-	case ODM_RTL8198F:
-		support_ability |=
-			/*ODM_BB_DIG |*/
-			ODM_BB_RA_MASK |
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			/*ODM_BB_PWR_TRAIN |*/
-			/*ODM_BB_RATE_ADAPTIVE |*/
-			ODM_BB_ADAPTIVITY;
-			/*ODM_BB_CFO_TRACKING |*/
-			/*ODM_BB_ADAPTIVE_SOML |*/
-			/*ODM_BB_ENV_MONITOR |*/
-			/*ODM_BB_LNA_SAT_CHK |*/
-			/*ODM_BB_PRIMARY_CCA;*/
-		break;
-	case ODM_RTL8197F:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			/*ODM_BB_PWR_TRAIN |*/
-			ODM_BB_RATE_ADAPTIVE |
-			ODM_BB_ADAPTIVITY |
-			ODM_BB_CFO_TRACKING |
-			ODM_BB_ADAPTIVE_SOML |
-			ODM_BB_ENV_MONITOR |
-			ODM_BB_LNA_SAT_CHK |
-			ODM_BB_PRIMARY_CCA;
-		break;
-#endif
-
-#if (RTL8192F_SUPPORT)
-	case ODM_RTL8192F:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			/*ODM_BB_PWR_TRAIN |*/
-			ODM_BB_RATE_ADAPTIVE |
-			ODM_BB_ADAPTIVITY |
-			/*ODM_BB_CFO_TRACKING |*/
-			ODM_BB_ADAPTIVE_SOML |
-			/*ODM_BB_PATH_DIV |*/
-			ODM_BB_ENV_MONITOR |
-			/*ODM_BB_LNA_SAT_CHK |*/
-			/*ODM_BB_PRIMARY_CCA |*/
-			0;
-		break;
-#endif
-
-/*@---------------AC Series-------------------*/
-
-#if (RTL8881A_SUPPORT)
-	case ODM_RTL8881A:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			/*ODM_BB_PWR_TRAIN |*/
-			ODM_BB_RATE_ADAPTIVE |
-			ODM_BB_ADAPTIVITY |
-			ODM_BB_CFO_TRACKING |
-			ODM_BB_ENV_MONITOR;
-		break;
-#endif
-
-#if (RTL8814A_SUPPORT)
-	case ODM_RTL8814A:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			/*ODM_BB_PWR_TRAIN |*/
-			ODM_BB_RATE_ADAPTIVE |
-			ODM_BB_ADAPTIVITY |
-			ODM_BB_CFO_TRACKING |
-			ODM_BB_ENV_MONITOR;
-		break;
-#endif
-
-#if (RTL8822B_SUPPORT)
-	case ODM_RTL8822B:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			/*ODM_BB_PWR_TRAIN |*/
-			/*ODM_BB_ADAPTIVE_SOML |*/
-			ODM_BB_RATE_ADAPTIVE |
-			ODM_BB_ADAPTIVITY |
-			ODM_BB_CFO_TRACKING |
-			ODM_BB_ENV_MONITOR;
-		break;
-#endif
-
-#if (RTL8821C_SUPPORT)
-	case ODM_RTL8821C:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			/*ODM_BB_PWR_TRAIN |*/
-			ODM_BB_RATE_ADAPTIVE |
-			ODM_BB_ADAPTIVITY |
-			ODM_BB_CFO_TRACKING |
-			ODM_BB_ENV_MONITOR;
-
-		break;
-#endif
-
-/*@---------------JGR3 Series-------------------*/
-
-#if (RTL8814B_SUPPORT)
-	case ODM_RTL8814B:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			/*ODM_BB_PWR_TRAIN |*/
-			/*ODM_BB_RATE_ADAPTIVE |*/
-			ODM_BB_ADAPTIVITY;
-			/*ODM_BB_CFO_TRACKING |*/
-			/*ODM_BB_ENV_MONITOR;*/
-		break;
-#endif
-
-#if (RTL8197G_SUPPORT)
-	case ODM_RTL8197G:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			/*ODM_BB_PWR_TRAIN |*/
-			ODM_BB_RATE_ADAPTIVE |
-			ODM_BB_ADAPTIVITY |
-			ODM_BB_CFO_TRACKING |
-			ODM_BB_ENV_MONITOR;
-		break;
-#endif
-
-#if (RTL8812F_SUPPORT)
-	case ODM_RTL8812F:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			/*ODM_BB_CCK_PD |*/
-			/*ODM_BB_PWR_TRAIN |*/
-			ODM_BB_RATE_ADAPTIVE |
-			ODM_BB_ADAPTIVITY |
-			ODM_BB_CFO_TRACKING |
-			ODM_BB_ENV_MONITOR;
-		break;
-#endif
-
-	default:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			/*ODM_BB_PWR_TRAIN |*/
-			ODM_BB_RATE_ADAPTIVE |
-			ODM_BB_ADAPTIVITY |
-			ODM_BB_CFO_TRACKING |
-			ODM_BB_ENV_MONITOR;
-
-		pr_debug("[Warning] Supportability Init Warning !!!\n");
-		break;
-	}
-
-#if 0
-	/*@[Config Antenna Diveristy]*/
-	if (*dm->enable_antdiv)
-		support_ability |= ODM_BB_ANT_DIV;
-
-	/*@[Config Adaptivity]*/
-	if (*dm->edcca_mode)
-		support_ability |= ODM_BB_ADAPTIVITY;
-#endif
-
-	return support_ability;
-}
-#endif
-
-#if (DM_ODM_SUPPORT_TYPE & (ODM_IOT))
-u64 phydm_supportability_init_iot(
-	void *dm_void)
-{
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-	u64 support_ability = 0;
-
-	switch (dm->support_ic_type) {
-#if (RTL8710B_SUPPORT)
-	case ODM_RTL8710B:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			/*ODM_BB_DYNAMIC_TXPWR |*/
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			/*ODM_BB_PWR_TRAIN |*/
-			ODM_BB_RATE_ADAPTIVE |
-			ODM_BB_CFO_TRACKING |
-			ODM_BB_ENV_MONITOR;
-		break;
-#endif
-
-#if (RTL8195A_SUPPORT)
-	case ODM_RTL8195A:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			/*ODM_BB_DYNAMIC_TXPWR |*/
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			/*ODM_BB_PWR_TRAIN |*/
-			ODM_BB_RATE_ADAPTIVE |
-			ODM_BB_CFO_TRACKING |
-			ODM_BB_ENV_MONITOR;
-		break;
-#endif
-
-#if (RTL8195B_SUPPORT)
-	case ODM_RTL8195B:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			/*ODM_BB_DYNAMIC_TXPWR |*/
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			/*ODM_BB_PWR_TRAIN |*/
-			ODM_BB_RATE_ADAPTIVE |
-			ODM_BB_ADAPTIVITY |
-			ODM_BB_CFO_TRACKING;
-			/*ODM_BB_ENV_MONITOR*/
-		break;
-#endif
-
-#if (RTL8721D_SUPPORT)
-	case ODM_RTL8721D:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			/*ODM_BB_DYNAMIC_TXPWR |*/
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			/*ODM_BB_PWR_TRAIN |*/
-			ODM_BB_RATE_ADAPTIVE |
-			ODM_BB_ADAPTIVITY |
-			ODM_BB_CFO_TRACKING |
-			ODM_BB_ENV_MONITOR;
-		break;
-#endif
-
-#if (RTL8710C_SUPPORT)
-	case ODM_RTL8710C:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			/*ODM_BB_DYNAMIC_TXPWR |*/
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			/*ODM_BB_PWR_TRAIN |*/
-			ODM_BB_RATE_ADAPTIVE |
-			ODM_BB_ADAPTIVITY |
-			ODM_BB_CFO_TRACKING |
-			ODM_BB_ENV_MONITOR;
-		break;
-#endif
-	default:
-		support_ability |=
-			ODM_BB_DIG |
-			ODM_BB_RA_MASK |
-			/*ODM_BB_DYNAMIC_TXPWR |*/
-			ODM_BB_FA_CNT |
-			ODM_BB_RSSI_MONITOR |
-			ODM_BB_CCK_PD |
-			/*ODM_BB_PWR_TRAIN |*/
-			ODM_BB_RATE_ADAPTIVE |
-			ODM_BB_CFO_TRACKING |
-			ODM_BB_ENV_MONITOR;
-
-		pr_debug("[Warning] Supportability Init Warning !!!\n");
-		break;
-	}
-
-	return support_ability;
-}
-#endif
 
 void phydm_fwoffload_ability_init(struct dm_struct *dm,
 				  enum phydm_offload_ability offload_ability)
@@ -1547,15 +846,7 @@ void phydm_supportability_init(void *dm_void)
 	} else if (*dm->mp_mode) {
 		support_ability = 0;
 	} else {
-		#if (DM_ODM_SUPPORT_TYPE & (ODM_WIN))
-		support_ability = phydm_supportability_init_win(dm);
-		#elif (DM_ODM_SUPPORT_TYPE & (ODM_AP))
-		support_ability = phydm_supportability_init_ap(dm);
-		#elif(DM_ODM_SUPPORT_TYPE & (ODM_CE))
 		support_ability = phydm_supportability_init_ce(dm);
-		#elif(DM_ODM_SUPPORT_TYPE & (ODM_IOT))
-		support_ability = phydm_supportability_init_iot(dm);
-		#endif
 
 		/*@[Config Antenna Diversity]*/
 		if (IS_FUNC_EN(dm->enable_antdiv))
@@ -1588,9 +879,7 @@ void phydm_rfe_init(void *dm_void)
 
 void phydm_dm_early_init(struct dm_struct *dm)
 {
-#if (DM_ODM_SUPPORT_TYPE == ODM_CE)
 	phydm_init_debug_setting(dm);
-#endif
 }
 
 void odm_dm_init(struct dm_struct *dm)
@@ -1815,7 +1104,6 @@ void phydm_watchdog_lps_32k(struct dm_struct *dm)
 
 void phydm_watchdog_lps(struct dm_struct *dm)
 {
-#if (DM_ODM_SUPPORT_TYPE & (ODM_WIN | ODM_CE | ODM_IOT))
 	PHYDM_DBG(dm, DBG_COMMON_FLOW, "%s ======>\n", __func__);
 
 	phydm_common_info_self_update(dm);
@@ -1828,14 +1116,11 @@ void phydm_watchdog_lps(struct dm_struct *dm)
 	phydm_cck_pd_th(dm);
 	#endif
 	phydm_adaptivity(dm);
-	#if (DM_ODM_SUPPORT_TYPE & (ODM_CE))
 	#ifdef CONFIG_PHYDM_ANTENNA_DIVERSITY
 	/*@enable AntDiv in PS mode, request from SD4 Jeff*/
 	odm_antenna_diversity(dm);
 	#endif
-	#endif
 	phydm_common_info_self_reset(dm);
-#endif
 }
 
 void phydm_watchdog_mp(struct dm_struct *dm)
@@ -2219,9 +1504,7 @@ void phydm_watchdog(struct dm_struct *dm)
 #ifdef PHYDM_PRIMARY_CCA
 	phydm_primary_cca(dm);
 #endif
-#if (DM_ODM_SUPPORT_TYPE == ODM_CE)
 	odm_dtc(dm);
-#endif
 
 	phydm_env_mntr_watchdog(dm);
 
@@ -2382,11 +1665,6 @@ void odm_cmn_info_init(struct dm_struct *dm, enum odm_cmninfo cmn_info,
 	case ODM_CMNINFO_SMART_CONCURRENT:
 		dm->is_dual_mac_smart_concurrent = (boolean)value;
 		break;
-#if (DM_ODM_SUPPORT_TYPE & (ODM_AP))
-	case ODM_CMNINFO_CONFIG_BB_RF:
-		dm->config_bbrf = (boolean)value;
-		break;
-#endif
 	case ODM_CMNINFO_IQKPAOFF:
 		dm->rf_calibrate_info.is_iqk_pa_off = (boolean)value;
 		break;
@@ -2795,187 +2073,6 @@ u32 phydm_cmn_info_query(struct dm_struct *dm, enum phydm_info_query info_type)
 	}
 }
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-void odm_init_all_work_items(struct dm_struct *dm)
-{
-	void *adapter = dm->adapter;
-#if USE_WORKITEM
-
-#ifdef CONFIG_ADAPTIVE_SOML
-	odm_initialize_work_item(dm,
-				 &dm->dm_soml_table.phydm_adaptive_soml_workitem,
-				 (RT_WORKITEM_CALL_BACK)phydm_adaptive_soml_workitem_callback,
-				 (void *)adapter,
-				 "AdaptiveSOMLWorkitem");
-#endif
-
-#ifdef ODM_EVM_ENHANCE_ANTDIV
-	odm_initialize_work_item(dm,
-				 &dm->phydm_evm_antdiv_workitem,
-				 (RT_WORKITEM_CALL_BACK)phydm_evm_antdiv_workitem_callback,
-				 (void *)adapter,
-				 "EvmAntdivWorkitem");
-#endif
-
-#ifdef CONFIG_S0S1_SW_ANTENNA_DIVERSITY
-	odm_initialize_work_item(dm,
-				 &dm->dm_swat_table.phydm_sw_antenna_switch_workitem,
-				 (RT_WORKITEM_CALL_BACK)odm_sw_antdiv_workitem_callback,
-				 (void *)adapter,
-				 "AntennaSwitchWorkitem");
-#endif
-#if (defined(CONFIG_HL_SMART_ANTENNA))
-	odm_initialize_work_item(dm,
-				 &dm->dm_sat_table.hl_smart_antenna_workitem,
-				 (RT_WORKITEM_CALL_BACK)phydm_beam_switch_workitem_callback,
-				 (void *)adapter,
-				 "hl_smart_ant_workitem");
-
-	odm_initialize_work_item(dm,
-				 &dm->dm_sat_table.hl_smart_antenna_decision_workitem,
-				 (RT_WORKITEM_CALL_BACK)phydm_beam_decision_workitem_callback,
-				 (void *)adapter,
-				 "hl_smart_ant_decision_workitem");
-#endif
-
-	odm_initialize_work_item(
-		dm,
-		&dm->ra_rpt_workitem,
-		(RT_WORKITEM_CALL_BACK)halrf_update_init_rate_work_item_callback,
-		(void *)adapter,
-		"ra_rpt_workitem");
-
-#if (defined(CONFIG_5G_CG_SMART_ANT_DIVERSITY)) || (defined(CONFIG_2G_CG_SMART_ANT_DIVERSITY))
-	odm_initialize_work_item(
-		dm,
-		&dm->fast_ant_training_workitem,
-		(RT_WORKITEM_CALL_BACK)odm_fast_ant_training_work_item_callback,
-		(void *)adapter,
-		"fast_ant_training_workitem");
-#endif
-
-#endif /*#if USE_WORKITEM*/
-
-#ifdef PHYDM_BEAMFORMING_SUPPORT
-	odm_initialize_work_item(
-		dm,
-		&dm->beamforming_info.txbf_info.txbf_enter_work_item,
-		(RT_WORKITEM_CALL_BACK)hal_com_txbf_enter_work_item_callback,
-		(void *)adapter,
-		"txbf_enter_work_item");
-
-	odm_initialize_work_item(
-		dm,
-		&dm->beamforming_info.txbf_info.txbf_leave_work_item,
-		(RT_WORKITEM_CALL_BACK)hal_com_txbf_leave_work_item_callback,
-		(void *)adapter,
-		"txbf_leave_work_item");
-
-	odm_initialize_work_item(
-		dm,
-		&dm->beamforming_info.txbf_info.txbf_fw_ndpa_work_item,
-		(RT_WORKITEM_CALL_BACK)hal_com_txbf_fw_ndpa_work_item_callback,
-		(void *)adapter,
-		"txbf_fw_ndpa_work_item");
-
-	odm_initialize_work_item(
-		dm,
-		&dm->beamforming_info.txbf_info.txbf_clk_work_item,
-		(RT_WORKITEM_CALL_BACK)hal_com_txbf_clk_work_item_callback,
-		(void *)adapter,
-		"txbf_clk_work_item");
-
-	odm_initialize_work_item(
-		dm,
-		&dm->beamforming_info.txbf_info.txbf_rate_work_item,
-		(RT_WORKITEM_CALL_BACK)hal_com_txbf_rate_work_item_callback,
-		(void *)adapter,
-		"txbf_rate_work_item");
-
-	odm_initialize_work_item(
-		dm,
-		&dm->beamforming_info.txbf_info.txbf_status_work_item,
-		(RT_WORKITEM_CALL_BACK)hal_com_txbf_status_work_item_callback,
-		(void *)adapter,
-		"txbf_status_work_item");
-
-	odm_initialize_work_item(
-		dm,
-		&dm->beamforming_info.txbf_info.txbf_reset_tx_path_work_item,
-		(RT_WORKITEM_CALL_BACK)hal_com_txbf_reset_tx_path_work_item_callback,
-		(void *)adapter,
-		"txbf_reset_tx_path_work_item");
-
-	odm_initialize_work_item(
-		dm,
-		&dm->beamforming_info.txbf_info.txbf_get_tx_rate_work_item,
-		(RT_WORKITEM_CALL_BACK)hal_com_txbf_get_tx_rate_work_item_callback,
-		(void *)adapter,
-		"txbf_get_tx_rate_work_item");
-#endif
-
-#if (PHYDM_LA_MODE_SUPPORT == 1)
-	odm_initialize_work_item(
-		dm,
-		&dm->adcsmp.adc_smp_work_item,
-		(RT_WORKITEM_CALL_BACK)adc_smp_work_item_callback,
-		(void *)adapter,
-		"adc_smp_work_item");
-
-	odm_initialize_work_item(
-		dm,
-		&dm->adcsmp.adc_smp_work_item_1,
-		(RT_WORKITEM_CALL_BACK)adc_smp_work_item_callback,
-		(void *)adapter,
-		"adc_smp_work_item_1");
-#endif
-}
-
-void odm_free_all_work_items(struct dm_struct *dm)
-{
-#if USE_WORKITEM
-
-#ifdef CONFIG_S0S1_SW_ANTENNA_DIVERSITY
-	odm_free_work_item(&dm->dm_swat_table.phydm_sw_antenna_switch_workitem);
-#endif
-
-#ifdef CONFIG_ADAPTIVE_SOML
-	odm_free_work_item(&dm->dm_soml_table.phydm_adaptive_soml_workitem);
-#endif
-
-#ifdef ODM_EVM_ENHANCE_ANTDIV
-	odm_free_work_item(&dm->phydm_evm_antdiv_workitem);
-#endif
-
-#if (defined(CONFIG_HL_SMART_ANTENNA))
-	odm_free_work_item(&dm->dm_sat_table.hl_smart_antenna_workitem);
-	odm_free_work_item(&dm->dm_sat_table.hl_smart_antenna_decision_workitem);
-#endif
-
-#if (defined(CONFIG_5G_CG_SMART_ANT_DIVERSITY)) || (defined(CONFIG_2G_CG_SMART_ANT_DIVERSITY))
-	odm_free_work_item(&dm->fast_ant_training_workitem);
-#endif
-	odm_free_work_item(&dm->ra_rpt_workitem);
-/*odm_free_work_item((&dm->sbdcnt_workitem));*/
-#endif
-
-#ifdef PHYDM_BEAMFORMING_SUPPORT
-	odm_free_work_item((&dm->beamforming_info.txbf_info.txbf_enter_work_item));
-	odm_free_work_item((&dm->beamforming_info.txbf_info.txbf_leave_work_item));
-	odm_free_work_item((&dm->beamforming_info.txbf_info.txbf_fw_ndpa_work_item));
-	odm_free_work_item((&dm->beamforming_info.txbf_info.txbf_clk_work_item));
-	odm_free_work_item((&dm->beamforming_info.txbf_info.txbf_rate_work_item));
-	odm_free_work_item((&dm->beamforming_info.txbf_info.txbf_status_work_item));
-	odm_free_work_item((&dm->beamforming_info.txbf_info.txbf_reset_tx_path_work_item));
-	odm_free_work_item((&dm->beamforming_info.txbf_info.txbf_get_tx_rate_work_item));
-#endif
-
-#if (PHYDM_LA_MODE_SUPPORT == 1)
-	odm_free_work_item((&dm->adcsmp.adc_smp_work_item));
-	odm_free_work_item((&dm->adcsmp.adc_smp_work_item_1));
-#endif
-}
-#endif /*#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)*/
 
 void odm_init_all_timers(struct dm_struct *dm)
 {
@@ -2996,32 +2093,16 @@ void odm_init_all_timers(struct dm_struct *dm)
 #endif
 #endif
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	odm_initialize_timer(dm, &dm->sbdcnt_timer,
-			     (void *)phydm_sbd_callback, NULL, "SbdTimer");
-#ifdef PHYDM_BEAMFORMING_SUPPORT
-	odm_initialize_timer(dm, &dm->beamforming_info.txbf_info.txbf_fw_ndpa_timer,
-			     (void *)hal_com_txbf_fw_ndpa_timer_callback, NULL,
-			     "txbf_fw_ndpa_timer");
-#endif
-#endif
 
-#if (DM_ODM_SUPPORT_TYPE & (ODM_WIN | ODM_CE))
 #ifdef PHYDM_BEAMFORMING_SUPPORT
 	odm_initialize_timer(dm, &dm->beamforming_info.beamforming_timer,
 			     (void *)beamforming_sw_timer_callback, NULL,
 			     "beamforming_timer");
 #endif
-#endif
 }
 
 void odm_cancel_all_timers(struct dm_struct *dm)
 {
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	/* @2012/01/12 MH Temp BSOD fix. We need to find NIC allocate mem fail reason in win7*/
-	if (dm->adapter == NULL)
-		return;
-#endif
 
 #if (defined(CONFIG_PHYDM_ANTENNA_DIVERSITY))
 	odm_ant_div_timers(dm, CANCEL_ANTDIV_TIMMER);
@@ -3040,17 +2121,9 @@ void odm_cancel_all_timers(struct dm_struct *dm)
 #endif
 #endif
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	odm_cancel_timer(dm, &dm->sbdcnt_timer);
-#ifdef PHYDM_BEAMFORMING_SUPPORT
-	odm_cancel_timer(dm, &dm->beamforming_info.txbf_info.txbf_fw_ndpa_timer);
-#endif
-#endif
 
-#if (DM_ODM_SUPPORT_TYPE & (ODM_WIN | ODM_CE))
 #ifdef PHYDM_BEAMFORMING_SUPPORT
 	odm_cancel_timer(dm, &dm->beamforming_info.beamforming_timer);
-#endif
 #endif
 }
 
@@ -3073,39 +2146,13 @@ void odm_release_all_timers(struct dm_struct *dm)
 #endif
 #endif
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	odm_release_timer(dm, &dm->sbdcnt_timer);
-#ifdef PHYDM_BEAMFORMING_SUPPORT
-	odm_release_timer(dm, &dm->beamforming_info.txbf_info.txbf_fw_ndpa_timer);
-#endif
-#endif
 
-#if (DM_ODM_SUPPORT_TYPE & (ODM_WIN | ODM_CE))
 #ifdef PHYDM_BEAMFORMING_SUPPORT
 	odm_release_timer(dm, &dm->beamforming_info.beamforming_timer);
 #endif
-#endif
 }
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_AP)
-void odm_init_all_threads(
-	struct dm_struct *dm)
-{
-#ifdef TPT_THREAD
-	k_tpt_task_init(dm->priv);
-#endif
-}
 
-void odm_stop_all_threads(
-	struct dm_struct *dm)
-{
-#ifdef TPT_THREAD
-	k_tpt_task_stop(dm->priv);
-#endif
-}
-#endif
-
-#if (DM_ODM_SUPPORT_TYPE == ODM_CE)
 /* @Justin: According to the current RRSI to adjust Response Frame TX power,
  * 2012/11/05
  */
@@ -3190,7 +2237,6 @@ void odm_dtc(struct dm_struct *dm)
 #endif /* @CONFIG_RESP_TXAGC_ADJUST */
 }
 
-#endif /* @#if (DM_ODM_SUPPORT_TYPE == ODM_CE) */
 
 /*@<20170126, BB-Kevin>8188F D-CUT DC cancellation and 8821C*/
 void phydm_dc_cancellation(struct dm_struct *dm)

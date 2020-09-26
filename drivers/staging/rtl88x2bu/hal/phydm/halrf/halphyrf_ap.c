@@ -20,8 +20,6 @@
 	#define	index_mapping_NUM_88E	15
 #endif
 
-/* #if(DM_ODM_SUPPORT_TYPE & ODM_WIN) */
-
 #define	CALCULATE_SWINGTALBE_OFFSET(_offset, _direction, _size, _delta_thermal) \
 	do {\
 		for (_offset = 0; _offset < _size; _offset++) { \
@@ -67,12 +65,6 @@ void configure_txpower_track(
 {
 	struct dm_struct		*dm = (struct dm_struct *)dm_void;
 #if RTL8812A_SUPPORT
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	/* if (IS_HARDWARE_TYPE_8812(dm->adapter)) */
-	if (dm->support_ic_type == ODM_RTL8812)
-		configure_txpower_track_8812a(config);
-	/* else */
-#endif
 #endif
 
 #if RTL8814A_SUPPORT
@@ -1361,10 +1353,8 @@ odm_txpowertracking_callback_thermal_meter(
 	}
 #endif
 
-#if !(DM_ODM_SUPPORT_TYPE & ODM_AP)
 	HAL_DATA_TYPE	*hal_data = GET_HAL_DATA(((PADAPTER)adapter));
 	/* PMGNT_INFO      		mgnt_info = &adapter->mgnt_info; */
-#endif
 
 
 	u8			thermal_value = 0, delta, delta_LCK, delta_IQK, offset;
@@ -1395,9 +1385,6 @@ odm_txpowertracking_callback_thermal_meter(
 		{0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 27}, {0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 25, 25, 25}
 	};
 
-#if (DM_ODM_SUPPORT_TYPE & ODM_AP)
-	struct rtl8192cd_priv	*priv = dm->priv;
-#endif
 
 	/* 4 2. Initilization ( 7 steps in total ) */
 
@@ -1410,12 +1397,6 @@ odm_txpowertracking_callback_thermal_meter(
      * <Kordan> rf_calibrate_info.rega24 will be initialized when ODM HW configuring, but MP configures with para files. */
 	dm->rf_calibrate_info.rega24 = 0x090e1317;
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_AP) && defined(MP_TEST)
-	if ((OPMODE & WIFI_MP_STATE) || *(dm->mp_mode)) {
-		if (dm->priv->pshare->mp_txpwr_tracking == false)
-			return;
-	}
-#endif
 	RF_DBG(dm, DBG_RF_TX_PWR_TRACK, "===>odm_txpowertracking_callback_thermal_meter_8188e, dm->bb_swing_idx_cck_base: %d, dm->bb_swing_idx_ofdm_base: %d\n", cali_info->bb_swing_idx_cck_base, cali_info->bb_swing_idx_ofdm_base);
 	/*
 		if (!dm->rf_calibrate_info.tm_trigger) {
@@ -1425,11 +1406,7 @@ odm_txpowertracking_callback_thermal_meter(
 		}
 	*/
 	thermal_value = (u8)odm_get_rf_reg(dm, RF_PATH_A, c.thermal_reg_addr, 0xfc00);	/* 0x42: RF Reg[15:10] 88E */
-#if !(DM_ODM_SUPPORT_TYPE & ODM_AP)
 	if (!thermal_value || !dm->rf_calibrate_info.txpowertrack_control)
-#else
-	if (!dm->rf_calibrate_info.txpowertrack_control)
-#endif
 		return;
 
 	/* 4 3. Initialize ThermalValues of rf_calibrate_info */
@@ -1589,7 +1566,7 @@ odm_reset_iqk_result(
 {
 	return;
 }
-#if 1/* !(DM_ODM_SUPPORT_TYPE & ODM_AP) */
+#if 1/* !(DM_ODM_SUPPORT_TYPE_AP) */
 u8 odm_get_right_chnl_place_for_iqk(u8 chnl)
 {
 	u8	channel_all[ODM_TARGET_CHNL_NUM_2G_5G] = {
@@ -1637,12 +1614,6 @@ void phydm_rf_init(void		*dm_void)
 	struct dm_struct		*dm = (struct dm_struct *)dm_void;
 	odm_txpowertracking_init(dm);
 
-#if (DM_ODM_SUPPORT_TYPE & (ODM_AP))
-#if (RTL8814A_SUPPORT == 1)
-	if (dm->support_ic_type & ODM_RTL8814A)
-		phy_iq_calibrate_8814a_init(dm);
-#endif
-#endif
 
 }
 
@@ -1651,8 +1622,6 @@ void phydm_rf_watchdog(void		*dm_void)
 	struct dm_struct		*dm = (struct dm_struct *)dm_void;
 
 	odm_txpowertracking_check(dm);
-#if (DM_ODM_SUPPORT_TYPE & (ODM_WIN | ODM_CE))
 	if (dm->support_ic_type & ODM_IC_11AC_SERIES)
 		odm_iq_calibrate(dm);
-#endif
 }

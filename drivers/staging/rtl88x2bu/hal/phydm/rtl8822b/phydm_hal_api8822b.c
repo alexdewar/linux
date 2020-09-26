@@ -1651,17 +1651,12 @@ config_phydm_switch_band_8822b(struct dm_struct *dm,
 		odm_set_bb_reg(dm, R_0x808, BIT(28), 0x0);
 
 /*@CCA Mask*/
-#if (DM_ODM_SUPPORT_TYPE == ODM_AP)
-		/*@CCA mask = 13.6us*/
-		odm_set_bb_reg(dm, R_0x814, 0x0000FC00, 34);
-#else
 		if (!dm->wifi_test)
 			/*@CCA mask = 13.6us*/
 			odm_set_bb_reg(dm, R_0x814, 0x0000FC00, 34);
 		else
 			/*@default value*/
 			odm_set_bb_reg(dm, R_0x814, 0x0000FC00, 15);
-#endif
 
 		/* RF band */
 		rf_reg18 = (rf_reg18 & (~(BIT(16) | BIT(9) | BIT(8))));
@@ -1827,11 +1822,6 @@ config_phydm_switch_channel_8822b(struct dm_struct *dm,
 		PHYDM_DBG(dm, ODM_PHY_CONFIG, "disable PHY API for dbg\n");
 		return true;
 	}
-#if (DM_ODM_SUPPORT_TYPE & ODM_AP)
-	/*@Make protection*/
-	if (central_ch == 165 && bw_8822b != CHANNEL_WIDTH_20)
-		config_phydm_switch_bandwidth_8822b(dm, 0, CHANNEL_WIDTH_20);
-#endif
 	central_ch_8822b = central_ch;
 
 	/* @Errir handling for wrong HW setting due to wrong channel setting */
@@ -2037,11 +2027,9 @@ config_phydm_switch_bandwidth_8822b(struct dm_struct *dm,
 		PHYDM_DBG(dm, ODM_PHY_CONFIG, "Fail 1\n");
 		return false;
 	}
-#if (DM_ODM_SUPPORT_TYPE & (ODM_CE | ODM_WIN))
 	/*@Make protection*/
 	if (central_ch_8822b == 165 && !(*dm->mp_mode))
 		bandwidth = CHANNEL_WIDTH_20;
-#endif
 	bw_8822b = bandwidth;
 	rf_reg18 = config_phydm_read_rf_reg_8822b(dm, RF_PATH_A, 0x18,
 						  RFREG_MASK);

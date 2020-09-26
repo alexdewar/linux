@@ -39,13 +39,8 @@
 #define RXIQK 1
 #define SS_8822B 2
 /*@-------------------------End Define Parameters-------------------------*/
-#if !(DM_ODM_SUPPORT_TYPE & ODM_AP)
 void do_iqk_8822b(void *dm_void, u8 delta_thermal_index, u8 thermal_value,
 		  u8 threshold);
-#else
-void do_iqk_8822b(void *dm_void, u8 delta_thermal_index, u8 thermal_value,
-		  u8 threshold);
-#endif
 
 void phy_iq_calibrate_8822b(void *dm_void, boolean clear, boolean segment_iqk);
 

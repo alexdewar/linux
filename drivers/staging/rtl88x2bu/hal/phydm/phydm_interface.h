@@ -107,15 +107,6 @@ enum phydm_halmac_param {
 ODM_REG(DIG,_pdm_odm)
 #endif
 
-#if defined(DM_ODM_CE_MAC80211)
-#define ODM_BIT(name, dm)				\
-	((dm->support_ic_type & ODM_IC_11N_SERIES) ?	\
-	 ODM_BIT_##name##_11N : ODM_BIT_##name##_11AC)
-
-#define ODM_REG(name, dm)				\
-	((dm->support_ic_type & ODM_IC_11N_SERIES) ?	\
-	 ODM_REG_##name##_11N : ODM_REG_##name##_11AC)
-#else
 #define _reg_11N(_name)			ODM_REG_##_name##_11N
 #define _reg_11AC(_name)		ODM_REG_##_name##_11AC
 #define _bit_11N(_name)			ODM_BIT_##_name##_11N
@@ -159,7 +150,6 @@ ODM_REG(DIG,_pdm_odm)
 		_cat(_name, _pdm_odm->support_ic_type, _bit)
 #endif
 
-#endif
 /*@
  * =========== Extern Variable ??? It should be forbidden.
  */
@@ -215,33 +205,6 @@ void odm_acquire_spin_lock(struct dm_struct *dm, enum rt_spinlock_type type);
 
 void odm_release_spin_lock(struct dm_struct *dm, enum rt_spinlock_type type);
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-/*@
- * ODM MISC-workitem relative API.
- */
-void odm_initialize_work_item(
-	struct dm_struct *dm,
-	PRT_WORK_ITEM p_rt_work_item,
-	RT_WORKITEM_CALL_BACK rt_work_item_callback,
-	void *context,
-	const char *sz_id);
-
-void odm_start_work_item(
-	PRT_WORK_ITEM p_rt_work_item);
-
-void odm_stop_work_item(
-	PRT_WORK_ITEM p_rt_work_item);
-
-void odm_free_work_item(
-	PRT_WORK_ITEM p_rt_work_item);
-
-void odm_schedule_work_item(
-	PRT_WORK_ITEM p_rt_work_item);
-
-boolean
-odm_is_work_item_scheduled(
-	PRT_WORK_ITEM p_rt_work_item);
-#endif
 
 /*@
  * ODM Timer relative API.
@@ -281,17 +244,12 @@ u8 phydm_c2H_content_parsing(void *dm_void, u8 c2h_cmd_id, u8 c2h_cmd_len,
 u64 odm_get_current_time(struct dm_struct *dm);
 u64 odm_get_progressing_time(struct dm_struct *dm, u64 start_time);
 
-#if (DM_ODM_SUPPORT_TYPE & (ODM_WIN | ODM_CE)) && \
-	(!defined(DM_ODM_CE_MAC80211) && !defined(DM_ODM_CE_MAC80211_V2))
-
 void phydm_set_hw_reg_handler_interface(struct dm_struct *dm, u8 reg_Name,
 					u8 *val);
 
 void phydm_get_hal_def_var_handler_interface(struct dm_struct *dm,
 					     enum _HAL_DEF_VARIABLE e_variable,
 					     void *value);
-
-#endif
 
 void odm_set_tx_power_index_by_rate_section(struct dm_struct *dm,
 					    enum rf_path path, u8 channel,

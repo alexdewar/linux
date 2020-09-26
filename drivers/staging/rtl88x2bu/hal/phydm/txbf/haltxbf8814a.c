@@ -370,9 +370,6 @@ hal_txbf_8814a_download_ndpa(
 	struct _RT_BEAMFORMEE_ENTRY	*p_beam_entry = beam_info->beamformee_entry + idx;
 	void		*adapter = dm->adapter;
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	*dm->is_fw_dw_rsvd_page_in_progress = true;
-#endif
 	PHYDM_DBG(dm, DBG_TXBF, "[%s] Start!\n", __func__);
 
 	phydm_get_hal_def_var_handler_interface(dm, HAL_DEF_TX_PAGE_BOUNDARY, (u16 *)&tx_page_bndy);
@@ -440,9 +437,6 @@ hal_txbf_8814a_download_ndpa(
 
 	p_beam_entry->beamform_entry_state = BEAMFORMING_ENTRY_STATE_PROGRESSED;
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	*dm->is_fw_dw_rsvd_page_in_progress = false;
-#endif
 }
 
 void

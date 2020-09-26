@@ -36,11 +36,6 @@
  * 1 ============================================================
  */
 
-#if (DM_ODM_SUPPORT_TYPE & ODM_AP)
-#if (RTL8197F_SUPPORT || RTL8198F_SUPPORT || RTL8197G_SUPPORT)
-	#define PHYDM_COMPILE_LA_STORE_IN_IMEM
-#endif
-#endif
 
 #define PHYDM_LA_STORE_IN_IMEM_IC (ODM_RTL8197F | ODM_RTL8198F | ODM_RTL8197G)
 
@@ -138,11 +133,6 @@ struct rt_adcsmp {
 	u32			backup_dma;
 #endif
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	u8			la_work_item_index;
-	RT_WORK_ITEM		adc_smp_work_item;
-	RT_WORK_ITEM		adc_smp_work_item_1;
-#endif
 
 #ifdef PHYDM_IC_JGR3_SERIES_SUPPORT
 	struct la_adv_trig	adv_trig_table;
@@ -165,16 +155,8 @@ void phydm_la_init(void *dm_void);
 
 void adc_smp_de_init(void *dm_void);
 
-#if (DM_ODM_SUPPORT_TYPE & ODM_WIN)
-void adc_smp_work_item_callback(void *context);
-#endif
 
 #if 0
-#if (DM_ODM_SUPPORT_TYPE & ODM_WIN)
-enum rt_status adc_smp_query(void *dm_void, ULONG info_buf_length,
-			     void *info_buf, PULONG bytes_written);
-
-#elif (DM_ODM_SUPPORT_TYPE & ODM_CE)
 
 void adc_smp_query(void *dm_void, void *output, u32 out_len, u32 *pused);
 
@@ -182,7 +164,6 @@ s32 adc_smp_get_sample_counts(void *dm_void);
 
 s32 adc_smp_query_single_data(void *dm_void, void *output, u32 out_len,
 			      u32 idx);
-#endif
 #endif
 
 #endif

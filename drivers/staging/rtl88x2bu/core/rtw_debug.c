@@ -109,7 +109,7 @@ void dump_drv_cfg(void *sel)
 	RTW_PRINT_SEL(sel, "CONFIG_RTW_TPT_MODE\n");
 #endif 
 
-	RTW_PRINT_SEL(sel, "RTW_VHT_2G4=%d\n", RTW_VHT_2G4);
+	RTW_PRINT_SEL(sel, "RTW_VHT_2G4=%d\n", 1);
 
 #ifdef CONFIG_USB_INTERRUPT_IN_PIPE
 	RTW_PRINT_SEL(sel, "CONFIG_USB_INTERRUPT_IN_PIPE\n");

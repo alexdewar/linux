@@ -587,7 +587,6 @@ odm_reset_iqk_result(
 	return;
 }
 
-#if !(DM_ODM_SUPPORT_TYPE & ODM_AP)
 u8 odm_get_right_chnl_place_for_iqk(u8 chnl)
 {
 	u8 channel_all[ODM_TARGET_CHNL_NUM_2G_5G] = {
@@ -606,7 +605,6 @@ u8 odm_get_right_chnl_place_for_iqk(u8 chnl)
 	}
 	return 0;
 }
-#endif
 
 void
 odm_rf_calibrate(struct dm_struct *dm)

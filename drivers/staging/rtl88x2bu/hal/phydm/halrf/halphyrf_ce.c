@@ -391,20 +391,9 @@ void odm_pwrtrk_method(void *dm_void)
 	}
 }
 
-#if (DM_ODM_SUPPORT_TYPE & ODM_AP)
-void odm_txpowertracking_callback_thermal_meter(struct dm_struct *dm)
-#elif (DM_ODM_SUPPORT_TYPE == ODM_CE)
 void odm_txpowertracking_callback_thermal_meter(void *dm_void)
-#else
-void odm_txpowertracking_callback_thermal_meter(void *adapter)
-#endif
 {
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(((PADAPTER)adapter));
-	struct dm_struct *dm = &hal_data->DM_OutSrc;
-#elif (DM_ODM_SUPPORT_TYPE == ODM_CE)
 	struct dm_struct *dm = (struct dm_struct *)dm_void;
-#endif
 
 	struct _hal_rf_ *rf = &dm->rf_table;
 	struct dm_rf_calibration_struct *cali_info = &dm->rf_calibrate_info;
@@ -415,12 +404,6 @@ void odm_txpowertracking_callback_thermal_meter(void *adapter)
 	u32 thermal_value_avg = 0, regc80, regcd0, regcd4, regab4;
 
 	/* OFDM BB Swing should be less than +3.0dB, required by Arthur */
-#if 0
-	u8 OFDM_min_index = 0;
-#endif
-#if 0
-	/* get_right_chnl_place_for_iqk(hal_data->current_channel) */
-#endif
 	u8 power_tracking_type = rf->pwt_type;
 	s8 thermal_value_temp = 0;
 
@@ -717,11 +700,7 @@ void odm_txpowertracking_callback_thermal_meter(void *adapter)
 		}
 #endif
 
-#if !(DM_ODM_SUPPORT_TYPE & ODM_AP)
 		if (thermal_value > rf->eeprom_thermal) {
-#else
-		if (thermal_value > dm->priv->pmib->dot11RFEntry.ther) {
-#endif
 			RF_DBG(dm, DBG_RF_TX_PWR_TRACK,
 			       "Temperature(%d) higher than PG value(%d)\n",
 			       thermal_value, rf->eeprom_thermal);
@@ -756,11 +735,7 @@ void odm_txpowertracking_callback_thermal_meter(void *adapter)
 			RF_DBG(dm, DBG_RF_TX_PWR_TRACK,
 			       "**********Enter Xtal Tracking**********\n");
 
-#if !(DM_ODM_SUPPORT_TYPE & ODM_AP)
 			if (thermal_value > rf->eeprom_thermal) {
-#else
-			if (thermal_value > dm->priv->pmib->dot11RFEntry.ther) {
-#endif
 				RF_DBG(dm, DBG_RF_TX_PWR_TRACK,
 				       "Temperature(%d) higher than PG (%d)\n",
 				       thermal_value, rf->eeprom_thermal);
@@ -776,7 +751,6 @@ void odm_txpowertracking_callback_thermal_meter(void *adapter)
 		       "**********End Xtal Tracking**********\n");
 	}
 
-#if !(DM_ODM_SUPPORT_TYPE & ODM_AP)
 
 	/* Wait sacn to do IQK by RF Jenyu*/
 	if (!(*dm->is_scan_in_process) && !iqk_info->rfk_forbidden &&
@@ -833,7 +807,6 @@ void odm_txpowertracking_callback_thermal_meter(void *adapter)
 	}
 #endif
 
-#endif
 
 	RF_DBG(dm, DBG_RF_TX_PWR_TRACK, "<===%s\n", __func__);
 
@@ -1078,7 +1051,6 @@ void odm_reset_iqk_result(void *dm_void)
 {
 }
 
-#if !(DM_ODM_SUPPORT_TYPE & ODM_AP)
 u8 odm_get_right_chnl_place_for_iqk(u8 chnl)
 {
 	u8 channel_all[ODM_TARGET_CHNL_NUM_2G_5G] = {
@@ -1097,22 +1069,15 @@ u8 odm_get_right_chnl_place_for_iqk(u8 chnl)
 	}
 	return 0;
 }
-#endif
 
 void odm_iq_calibrate(struct dm_struct *dm)
 {
 	void *adapter = dm->adapter;
 	struct dm_iqk_info *iqk_info = &dm->IQK_info;
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	if (*dm->is_fcs_mode_enable)
-		return;
-#endif
 
-#if (DM_ODM_SUPPORT_TYPE & (ODM_CE))
 	if (IS_HARDWARE_TYPE_8812AU(adapter))
 		return;
-#endif
 
 	if (dm->is_linked && !iqk_info->rfk_forbidden) {
 		if ((*dm->channel != dm->pre_channel) &&
@@ -1137,26 +1102,16 @@ void phydm_rf_init(void *dm_void)
 
 	odm_txpowertracking_init(dm);
 
-#if (DM_ODM_SUPPORT_TYPE & (ODM_WIN | ODM_CE))
 	odm_clear_txpowertracking_state(dm);
-#endif
-#if (DM_ODM_SUPPORT_TYPE & (ODM_AP))
-#if (RTL8814A_SUPPORT == 1)
-	if (dm->support_ic_type & ODM_RTL8814A)
-		phy_iq_calibrate_8814a_init(dm);
-#endif
-#endif
 }
 
 void phydm_rf_watchdog(void *dm_void)
 {
 	struct dm_struct *dm = (struct dm_struct *)dm_void;
 
-#if (DM_ODM_SUPPORT_TYPE & (ODM_WIN | ODM_CE))
 	odm_txpowertracking_check(dm);
 #if 0
 /*if (dm->support_ic_type & ODM_IC_11AC_SERIES)*/
 /*odm_iq_calibrate(dm);*/
-#endif
 #endif
 }
