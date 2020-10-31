@@ -19,6 +19,7 @@ rtl_pci-objs	:=		pci.o
 obj-$(CONFIG_RTLWIFI_USB)	+= rtl_usb.o
 rtl_usb-objs	:=		usb.o
 
+obj-$(CONFIG_RTL88X2BU)		+= rtl88x2bu/
 obj-$(CONFIG_RTL8192C_COMMON)	+= rtl8192c/
 obj-$(CONFIG_RTL8192CE)		+= rtl8192ce/
 obj-$(CONFIG_RTL8192CU)		+= rtl8192cu/

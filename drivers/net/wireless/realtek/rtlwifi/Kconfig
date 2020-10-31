@@ -11,6 +11,14 @@ menuconfig RTL_CARDS
 
 if RTL_CARDS
 
+config RTL88X2BU
+	tristate "Realtek RTL8192CU/RTL8188CU USB Wireless Network Adapter"
+	depends on USB
+	select RTLWIFI
+	select RTLWIFI_USB
+	help
+	!!!! booooo
+
 config RTL8192CE
 	tristate "Realtek RTL8192CE/RTL8188CE Wireless Network Adapter"
 	depends on PCI
