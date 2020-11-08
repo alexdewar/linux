@@ -7,5 +7,6 @@ obj-$(CONFIG_RTL8180)		+= rtl818x/
 obj-$(CONFIG_RTL8187)		+= rtl818x/
 obj-$(CONFIG_RTLWIFI)		+= rtlwifi/
 obj-$(CONFIG_RTL8XXXU)		+= rtl8xxxu/
+obj-$(CONFIG_RTL8XXXU_COPY)		+= rtl8xxxu_copy/
 obj-$(CONFIG_RTW88)		+= rtw88/
 
