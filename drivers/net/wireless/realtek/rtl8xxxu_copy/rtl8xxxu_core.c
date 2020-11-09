@@ -3909,6 +3909,10 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
 		goto exit;
 	}
 
+	printk("POWERED ON");
+	ret = -1;
+	goto exit;
+
 	if (!macpower)
 		rtl8xxxu_init_queue_reserved_page(priv);
 
@@ -6642,7 +6646,7 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
 	ret = rtl8xxxu_init_device(hw);
 	if (ret)
 		goto exit;
-
+	
 	hw->wiphy->max_scan_ssids = 1;
 	hw->wiphy->max_scan_ie_len = IEEE80211_MAX_DATA_LEN;
 	hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
