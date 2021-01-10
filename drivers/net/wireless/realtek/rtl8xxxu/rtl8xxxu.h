@@ -64,9 +64,9 @@
 #define RTL8XXXU_MAX_CHANNEL_GROUPS	6
 #define RF6052_MAX_TX_PWR		0x3f
 
-#define EFUSE_MAP_LEN			512
+#define EFUSE_MAP_LEN			1024
 #define EFUSE_MAX_SECTION_8723A		64
-#define EFUSE_REAL_CONTENT_LEN_8723A	512
+#define EFUSE_REAL_CONTENT_LEN_8723A	1024
 #define EFUSE_BT_MAP_LEN_8723A		1024
 #define EFUSE_MAX_WORD_UNIT		4
 
@@ -864,6 +864,12 @@ struct rtl8192eu_efuse {
 	u8 res14[0xc3];
 };
 
+struct rtl8822bu_efuse {
+	__le16 rtl_id;
+	u8 res0[0x105];
+	u8 mac_addr[ETH_ALEN]; /* 0x107 */
+};
+
 struct rtl8xxxu_reg8val {
 	u16 reg;
 	u8 val;
@@ -1373,6 +1379,7 @@ struct rtl8xxxu_priv {
 		struct rtl8723bu_efuse efuse8723bu;
 		struct rtl8192cu_efuse efuse8192;
 		struct rtl8192eu_efuse efuse8192eu;
+		struct rtl8822bu_efuse efuse8822bu;
 	} efuse_wifi;
 	u32 adda_backup[RTL8XXXU_ADDA_REGS];
 	u32 mac_backup[RTL8XXXU_MAC_REGS];
@@ -1546,5 +1553,6 @@ void rtl8723bu_set_ps_tdma(struct rtl8xxxu_priv *priv,
 
 extern struct rtl8xxxu_fileops rtl8192cu_fops;
 extern struct rtl8xxxu_fileops rtl8192eu_fops;
+extern struct rtl8xxxu_fileops rtl8822bu_fops;
 extern struct rtl8xxxu_fileops rtl8723au_fops;
 extern struct rtl8xxxu_fileops rtl8723bu_fops;

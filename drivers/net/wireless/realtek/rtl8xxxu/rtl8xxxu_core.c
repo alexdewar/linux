@@ -32,7 +32,7 @@
 #include "rtl8xxxu.h"
 #include "rtl8xxxu_regs.h"
 
-#define DRIVER_NAME "rtl8xxxu"
+#define DRIVER_NAME "rtl8xxxu_copy"
 
 int rtl8xxxu_debug = RTL8XXXU_DEBUG_EFUSE;
 static bool rtl8xxxu_ht40_2g;
@@ -2093,6 +2093,7 @@ int rtl8xxxu_load_firmware(struct rtl8xxxu_priv *priv, char *fw_name)
 	case 0x92e0:
 	case 0x92c0:
 	case 0x88c0:
+	case 0x8820:
 	case 0x5300:
 	case 0x2300:
 		break;
@@ -3907,6 +3908,10 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
 		dev_warn(dev, "%s: Failed power on\n", __func__);
 		goto exit;
 	}
+
+	printk("POWERED ON");
+	ret = -1;
+	goto exit;
 
 	if (!macpower)
 		rtl8xxxu_init_queue_reserved_page(priv);
@@ -6642,10 +6647,14 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
 		goto exit;
 	}
 
+	printk("LOADED FIRMWARE :-D");
+	// ret = -1;
+	// goto exit;
+
 	ret = rtl8xxxu_init_device(hw);
 	if (ret)
 		goto exit;
-
+	
 	hw->wiphy->max_scan_ssids = 1;
 	hw->wiphy->max_scan_ie_len = IEEE80211_MAX_DATA_LEN;
 	hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
@@ -6765,6 +6774,10 @@ static const struct usb_device_id dev_table[] = {
 	.driver_info = (unsigned long)&rtl8723bu_fops},
 {USB_DEVICE_AND_INTERFACE_INFO(0x7392, 0xa611, 0xff, 0xff, 0xff),
 	.driver_info = (unsigned long)&rtl8723bu_fops},
+
+// MY DONGLE :-)
+{USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0xb812, 0xff, 0xff, 0xff),
+	.driver_info = (unsigned long)&rtl8822bu_fops},
 #ifdef CONFIG_RTL8XXXU_UNTESTED
 /* Still supported by rtlwifi */
 {USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x8176, 0xff, 0xff, 0xff),
